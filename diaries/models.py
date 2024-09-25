@@ -25,7 +25,6 @@ class FinanceDiary(models.Model):
     income = models.IntegerField()  # 수입 금액
     expenditure = models.IntegerField()  # 지출 금액
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)  # 수입/지출 항목
-    public = models.BooleanField(default=True)  # 공개 여부
     today = models.DateField()  # 작성된 날짜
     created_at = models.DateTimeField(auto_now_add=True)  # 생성된 시간
     updated_at = models.DateTimeField(auto_now=True)  # 수정된 시간
