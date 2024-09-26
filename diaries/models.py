@@ -17,13 +17,12 @@ class FinanceDiary(models.Model):
         ('EXTRACURRICULAR', '학원비'),  # 방과후 수업 활동 등
         ('ENTERTAINMENT', '문화/오락비'),  # 영화, 콘서트, 놀이공원 등
         ('GIFT', '선물비'),  # 부모님, 친구 선물 비용 등
+        ('ETC', '기타'),  # 기타 등등
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="diaries")  # 작성한 사용자
-    title = models.CharField(max_length=200)  # 용돈기입장 제목
     content = models.TextField()  # 용돈기입장 내용
-    income = models.IntegerField()  # 수입 금액
-    expenditure = models.IntegerField()  # 지출 금액
+    amount = models.PositiveIntegerField()  # 수입 금액
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)  # 수입/지출 항목
     today = models.DateField()  # 작성된 날짜
     created_at = models.DateTimeField(auto_now_add=True)  # 생성된 시간
