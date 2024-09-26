@@ -23,6 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config.DJANGO_SECRET_KEY
 OPENAI_API_KEY = config.OPENAI_API_KEY
+CLIENT_SECRET = config.CLIENT_SECRET
+REST_API_KEY = config.REST_API_KEY
+KAKAO_CALLBACK_URI = config.KAKAO_CALLBACK_URI
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -100,6 +103,8 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
 }
+
+AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
