@@ -8,7 +8,8 @@ import json
 class ChatbotView(APIView):
     def post(self, request): 
         user_input = request.data.get('message')
-        response = chat_with_bot(user_input)
+        user = request.user
+        response = chat_with_bot(user_input, user.id, user.username)
         
         # response에 json단어가 있으면
         if "json" in response:
@@ -23,7 +24,9 @@ class ChatbotView(APIView):
                     transportation_expense=plan_json['transportation_expense'],
                     savings=plan_json['savings'],
                     snack_expense=plan_json['snack_expense'],
-                    plan_details=plan_json['plan_details']
+                    plan_details=plan_json['plan_details'],
+                    allowance_plan=plan_json['allowance_plan'],
+                    user = request.user
                 )
                 allowance_plan.save()
                 
