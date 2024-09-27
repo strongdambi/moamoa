@@ -15,7 +15,8 @@ class FinanceDiary(models.Model):
 
 class Summary(models.Model):
     parents = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="summary")
-    monthly = models.TextField()
+    weekly = models.TextField()  # 아이
+    monthly = models.TextField()  # 부모님
 
 
 class Plan(models.Model):
@@ -28,3 +29,16 @@ class Plan(models.Model):
     plan_details = models.TextField()  # 간략
     allowance_plan = models.TextField()  # 상세
     user = models.ForeignKey(to = settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="plans")
+
+
+'''
+프롬프트로 용돈계획서 시나리오
+시나리오를 바탕으로 일관된 결과가 나오는지 체크
+일관된 결과를 우리 입맛에 맞출 수 있는지 체크
+결과를 가지고 모델 작성
+
+효율적인 방법
+한도 - 부모님 정함
+정해진 한도 내에서 계획을 작성하는데
+AI가 도와줌
+'''
