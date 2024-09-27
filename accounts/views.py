@@ -156,9 +156,14 @@ class ChildrenPRCreate(APIView):
         if not is_valid:
             return Response({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
+        # 요청 데이터에서 first_name을 가져옴
+        first_name = request.data.get("first_name")
+        if not first_name:
+            return Response({"error": "first_name 필드는 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         # 유효성 검사를 통과한 데이터로 새로운 사용자(자녀)를 생성 parents=parent_user 부모 사용자를 외래키로 설정
         user = User.objects.create_user(username=request.data.get("username"), password=request.data.get("password"),
-                                        email=request.data.get("email"), parents=parent_user)
+                                        email=request.data.get("email"), parents=parent_user, first_name=first_name)
 
         # 생성된 사용자의 정보를 시리얼라이즈
         serializer = UserSerializer(user)
@@ -193,12 +198,19 @@ class ChildrenPRView(APIView):
             child = User.objects.get(pk=pk, parents=request.user)
             serializer = UserSerializer(child, data=request.data, partial=True)
             if serializer.is_valid():
-                serializer.save() # 시리얼라이즈된 데이터가 유효할 경우 데이터 저장
+                # serializer.save() # 시리얼라이즈된 데이터가 유효할 경우 데이터 저장
+
+                if 'first_name' in request.data:
+                    # 요청 데이터에 first_name이 있는 경우, first_name 수정
+                    child.first_name = request.data['first_name']
 
                 # 요청 데이터에 비밀번호가 포함되어 있으면, 비밀번호를 업데이트
                 if 'password' in request.data:
                     child.set_password(request.data['password'])
-                    child.save()
+
+
+                # 자녀 정보 저장
+                child.save()
 
                 return Response(serializer.data) # 수정된 자녀 정보 반환
 
