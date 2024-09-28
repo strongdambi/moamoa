@@ -1,9 +1,8 @@
 import requests
 import hashlib
 
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from django.conf import settings
-from django.contrib.auth import login
 from django.db.utils import IntegrityError
 from django.contrib.auth import get_user_model
 
