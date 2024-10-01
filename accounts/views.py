@@ -97,7 +97,7 @@ class KakaoCallbackView(APIView):
             refresh_token = str(refresh)
 
             # 프론트엔드로 리다이렉트할 URL (프론트엔드 도메인)
-            frontend_url = settings.FRONTEND_URL  
+            frontend_url = settings.FRONTEND_URL + '/webs/profile/'  # 프로필 페이지로 리다이렉트
 
             # 리다이렉트 시, JWT 토큰을 쿠키에 설정 (HTTP-Only 쿠키로 저장)
             response = redirect(frontend_url)  # 프론트엔드 도메인으로 리다이렉트
