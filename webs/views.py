@@ -13,3 +13,7 @@ def children_view(request):
 # 부모 프로필
 def profile_view(request):
     return render(request, 'webs/profile.html')
+
+# 키즈 계정 회원 가입
+def create_view(request):
+    return render(request, 'webs/children_create.html')

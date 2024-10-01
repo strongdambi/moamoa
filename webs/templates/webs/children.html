@@ -1,101 +1,33 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  {% load static %}
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kids Login Screen</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'webs/css/style.css' %}">
-  <style>
-    header { background-color: #FFF3D6; text-align: center; padding-top: 10px; padding-bottom: 10px;}
+{% extends 'webs/base.html' %}
 
-    .logo { width: 180px; margin: 30px auto; display: block; }
-    .login-form { text-align: center; margin-top: 20px; }
-    .login-form input { width: 90%; height: 50px; font-size: 16px; margin-bottom: 15px; border-radius: 25px; border: 2px solid #6D9C48; padding: 10px; }
-    .login-button { background-color: #FFCD00; color: white;border: none; width: 90%; height: 50px; font-size: 18px; border-radius: 25px; }
-  </style>
+{% load static %}
 
-    <!-- JavaScript 모듈 로드 -->
-    <script type="module">
-    import { FooterFunc } from './module.js';
-    import { HeaderFunc } from './module.js';
+{% block title %}모아모아 - 키즈 로그인{% endblock %}
 
-    // 모듈로부터 불러온 함수 실행
-    document.addEventListener('DOMContentLoaded', function() {
-      const footerElement = document.querySelector('footer');
-      if (footerElement) {
-        footerElement.innerHTML = FooterFunc();  // 모듈에서 반환된 HTML을 footer에 삽입
-      }
-      const headerElement = document.querySelector('header');
-      if (headerElement) {
-        headerElement.innerHTML = HeaderFunc();  // 모듈에서 반환된 HTML을 footer에 삽입
-      }
-    });
-    // myFunction();
-  </script>
-
-</head>
-<body>
-  <header></header>
-  <div class="container">
-    <div class="login-form">
-      <h2>키즈 로그인</h2>
-      <input type="text" placeholder="키즈 아이디">
-      <input type="password" placeholder="키즈 비밀번호">
-      <button class="btn login-button">로그인</button>
+{% block content %}
+    <header></header>
+    <div class="container content">
+        <div class="login-form">
+            <h2>키즈 로그인</h2>
+            <input type="text" placeholder="키즈 아이디">
+            <input type="password" placeholder="키즈 비밀번호">
+            <button class="btn login-button">로그인</button>
+        </div>
     </div>
-  </div>
-  <footer></footer>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="text/javascript">
+    <footer class="d-flex justify-content-around align-items-center py-2"></footer>
 
-    document.querySelectorAll('.btn-children').forEach(function(button) {
-  button.addEventListener('click', function() {
-
-
-    document.addEventListener('click', function(event) {
-  if (event.target.classList.contains('add-account')) {
-
-
-    login-button
-//     {
-//            "username": "cdev19",
-//            "password": "q1w2e3r4!!@@"
-// }
-
-fetch('http://localhost:8000/api/v1/accounts/login/', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-
-}).then(response => response.json()).then(data => {
-  
-  // 부모님 이름
-  document.getElementsByClassName('partner_first_name')[0].textContent = data.parent.first_name
-
-  const container = document.getElementsByClassName('card-container')[0];
-  
-  if (!container) {
-    console.error('card-container 요소가 존재하지 않습니다.');
-    return;
-  }
-      
-  data.children.forEach((child, index) => {
-    const profileCard = document.createElement('div');
-    profileCard.classList.add('profile-card');
-    profileCard.innerHTML = `<img src="your-child${index + 1}-avatar-url" alt="Child ${index + 1}"><div class="profile-info"><h5>${child.first_name} (ID: ${child.username})</h5><p>이메일: ${child.email}</p><p>이번달 용돈 30,000원</p></div><div class="profile-edit">프로필 수정</div>`;
-    container.appendChild(profileCard);
-  })
-
-  // container.appendChild(profileCard);
-  // 마지막에 '키즈 계정 추가' 버튼 추가
-  const addAccountDiv = document.createElement('div');
-  addAccountDiv.classList.add('add-account');
-  addAccountDiv.textContent = '+키즈 계정 추가';
-  container.appendChild(addAccountDiv);
-  console.log(data)
-}).catch(error => console.error('Error:', error));
-  </script>
-
-</body>
-</html>
+    <script type="module">
+        import { FooterFunc } from './module.js';
+        import { HeaderFunc } from './module.js';
+        document.addEventListener('DOMContentLoaded', function() {
+            const footerElement = document.querySelector('footer');
+            if (footerElement) {
+                footerElement.innerHTML = FooterFunc();
+            }
+            const headerElement = document.querySelector('header');
+            if (headerElement) {
+                headerElement.innerHTML = HeaderFunc();
+            }
+        });
+    </script>
+{% endblock %}
