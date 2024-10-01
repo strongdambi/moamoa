@@ -8,3 +8,8 @@ def index(request):
 # 키즈 로그인 페이지
 def children_view(request):
     return render(request, 'webs/children.html')
+
+
+# 부모 프로필
+def profile_view(request):
+    return render(request, 'webs/profile.html')
