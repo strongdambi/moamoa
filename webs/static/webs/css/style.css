@@ -3,9 +3,23 @@ body {
     font-family: 'Arial', sans-serif;
 }
 
+/* 배너 */
+.navbar {
+    position: relative;
+    width: 100%;
+    background-color: #FFF3D6;
+    display: flex;
+    justify-content: space-around;
+    padding: 0px;
+}
+.navbar-brand img {
+    display: block;
+    margin: 0 auto;
+}
+
 /* 헤더 */
 header {
-    background-color: #FFF3D6;
+    background-color: #FFFFFE;
     text-align: center;
     padding-top: 10px;
     padding-bottom: 10px;
