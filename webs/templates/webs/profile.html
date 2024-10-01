@@ -1,45 +1,220 @@
 {% extends 'webs/base.html' %}
 
-{% block title %}Parent Dashboard{% endblock %}
+{% load static %}
+
+{% block title %}모아모아 - 부모 대시보드{% endblock %}
 
 {% block content %}
-    <header></header>
     <div class="container">
+        <!-- 부모님 환영 메시지 -->
         <div class="greeting">
             <p>안녕하세요.<br><span class="partner_first_name">홍길동</span> 님의 부모님!</p>
         </div>
+
+        <!-- 자녀 프로필 카드 컨테이너 -->
         <div class="card-container"></div>
+
+        <!-- 자녀 등록 폼 (기본적으로 숨김 처리) -->
         <div class="card-container card-children" style="display: none;">
             <div class="row g-5">
-                <div class="col-12">
-                    <label for="firstName" class="form-label">닉네임</label>
-                    <input type="text" class="form-control firstname" id="firstname" placeholder="닉네임" required="">
-                    <span class="text-danger text-danger-firstname"></span>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="firstName" class="form-label">닉네임</label>
+                        <input type="text" class="form-control firstname" id="firstname" placeholder="닉네임" required="">
+                        <span class="text-danger text-danger-firstname"></span>
+                    </div>
+                    <div class="col-12">
+                        <label for="username" class="form-label">아이디</label>
+                        <input type="text" class="form-control username" id="username" placeholder="아이디" required="">
+                        <span class="text-danger text-danger-username"></span>
+                    </div>
+                    <div class="col-12">
+                        <label for="email" class="form-label">이메일</label>
+                        <input type="email" class="form-control email" id="email" placeholder="you@example.com" value="">
+                        <span class="text-danger text-danger-email"></span>
+                    </div>
+                    <div class="col-12">
+                        <label for="password" class="form-label">패스워드</label>
+                        <input type="text" class="form-control password" id="password" placeholder="비밀번호">
+                        <span class="text-danger text-danger-password"></span>
+                    </div>
+                    <div class="col-12">
+                        <label for="password2" class="form-label">패스워드(확인)</label>
+                        <input type="text" class="form-control password2" id="password2" placeholder="비밀번호 확인">
+                        <span class="text-danger text-danger-password2"></span>
+                    </div>
+                    <button class="w-100 btn btn-primary btn-lg btn-children">등록</button>
                 </div>
-                <div class="col-12">
-                    <label for="username" class="form-label">아이디</label>
-                    <input type="text" class="form-control username" id="username" placeholder="아이디" required="">
-                    <span class="text-danger text-danger-username"></span>
-                </div>
-                <div class="col-12">
-                    <label for="email" class="form-label">이메일</label>
-                    <input type="email" class="form-control email" id="email" placeholder="you@example.com">
-                    <span class="text-danger text-danger-email"></span>
-                </div>
-                <div class="col-12">
-                    <label for="password" class="form-label">패스워드</label>
-                    <input type="text" class="form-control password" id="password" placeholder="you@example.com">
-                    <span class="text-danger text-danger-password"></span>
-                </div>
-                <div class="col-12">
-                    <label for="password2" class="form-label">패스워드(확인)</label>
-                    <input type="text" class="form-control password2" id="password2" placeholder="you@example.com">
-                    <span class="text-danger text-danger-password2"></span>
-                </div>
-                <button class="w-100 btn btn-primary btn-lg btn-children">등록</button>
             </div>
         </div>
-    </div>
 
-    <footer></footer>
+        <!-- + 키즈 계정 추가 -->
+        <div class="add-account">+키즈 계정 추가</div>
+    </div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .greeting {
+        text-align: center;
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
+    .card-container {
+        padding: 10px;
+    }
+    .profile-card {
+        background-color: #FFF;
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .profile-card img {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+    }
+    .profile-info {
+        margin-left: 15px;
+    }
+    .profile-info h5 {
+        margin: 0;
+    }
+    .profile-info p {
+        margin: 5px 0;
+        font-size: 14px;
+    }
+    .profile-edit {
+        margin-left: auto;
+        font-size: 12px;
+        color: #7F7F7F;
+        cursor: pointer;
+    }
+    .add-account {
+        color: #7F7F7F;
+        text-align: center;
+        margin-top: 20px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // API에서 부모 프로필 가져오기
+        fetch('http://localhost:8000/api/v1/accounts/', {
+            method: 'GET',
+            credentials: 'include',  // 쿠키를 포함하여 요청
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // 부모님 이름을 표시하는 부분
+            document.getElementsByClassName('partner_first_name')[0].textContent = data.parent.first_name;
+
+            // 자녀 프로필 카드를 추가하는 부분
+            const container = document.getElementsByClassName('card-container')[0];
+            data.children.forEach((child, index) => {
+                const profileCard = document.createElement('div');
+                profileCard.classList.add('profile-card');
+                profileCard.innerHTML = `
+                    <img src="{% static 'webs/images/child-avatar.png' %}" alt="Child ${index + 1}">
+                    <div class="profile-info">
+                        <h5>${child.first_name} (ID: ${child.username})</h5>
+                        <p>이메일: ${child.email}</p>
+                        <p>이번달 용돈 30,000원</p>
+                    </div>
+                    <div class="profile-edit">프로필 수정</div>
+                `;
+                container.appendChild(profileCard);
+            });
+
+            // 마지막에 '키즈 계정 추가' 버튼 추가
+            const addAccountDiv = document.createElement('div');
+            addAccountDiv.classList.add('add-account');
+            addAccountDiv.textContent = '+키즈 계정 추가';
+            container.appendChild(addAccountDiv);
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // 이벤트 위임을 사용하여 동적으로 추가된 요소에 이벤트 리스너 적용
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('add-account')) {
+            document.querySelector('.card-children').style.display = 'block';
+        }
+    });
+
+    document.querySelectorAll('.btn-children').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const firstname = document.querySelector('.firstname').value;
+            const username = document.querySelector('.username').value;
+            const email = document.querySelector('.email').value;
+            const password = document.querySelector('.password').value;
+            const password2 = document.querySelector('.password2').value;
+
+            // 자녀 계정 생성 API 호출
+            fetch('http://localhost:8000/api/v1/accounts/children/create/', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    "username": username,
+                    "first_name": firstname,
+                    "password": password,
+                    "password2": password2,
+                    "email": email
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errData => {
+                        throw errData;
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('계정이 성공적으로 생성되었습니다.');
+                location.href = 'http://localhost/web/profile.html';
+            })
+            .catch(error => {
+                displayErrors(error.error);
+                console.error('Error:', error);
+            });
+        });
+    });
+
+    function displayErrors(errors) {
+        // 에러 메시지 표시
+        resetErrorMessages();
+        errors.forEach(error => {
+            for (const key in error) {
+                if (error.hasOwnProperty(key)) {
+                    const message = error[key];
+                    const errorMessageElement = document.querySelector(`.text-danger-${key}`);
+                    if (errorMessageElement) {
+                        errorMessageElement.textContent = message;
+                        errorMessageElement.style.display = 'block';
+                    }
+                }
+            }
+        });
+    }
+
+    function resetErrorMessages() {
+        const errorMessages = document.querySelectorAll('.text-danger');
+        errorMessages.forEach(message => {
+            message.textContent = 'Brief description'; // 기본 메시지로 초기화
+            message.style.display = 'none'; // 에러 메시지를 숨김
+        });
+    }
+</script>
 {% endblock %}
