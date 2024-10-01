@@ -88,31 +88,15 @@
 
     <!-- Greeting -->
     <div class="greeting">
-      <p>안녕하세요.<br>다모아, 못모아 님의 부모님!</p>
+      <p id="parent-greeting">안녕하세요.<br>부모님 환영합니다!</p>
     </div>
 
     <!-- Profile Cards -->
-    <div class="card-container">
-      <div class="profile-card" style="background-color: #F9F4E2;">
-        <img src="your-child1-avatar-url" alt="Child 1">
-        <div class="profile-info">
-          <h5>다모아 만 6세</h5>
-          <p>이번달 용돈 30,000원</p>
-        </div>
-        <div class="profile-edit">프로필 수정</div>
-      </div>
-
-      <div class="profile-card" style="background-color: #E3F2E1;">
-        <img src="your-child2-avatar-url" alt="Child 2">
-        <div class="profile-info">
-          <h5>못모아 만 10세</h5>
-          <p>이번달 용돈 80,000원</p>
-        </div>
-        <div class="profile-edit">프로필 수정</div>
-      </div>
-
-      <div class="add-account">+키즈 계정 추가</div>
+    <div class="card-container" id="card-container">
+      <!-- 여기에 프로필 카드가 동적으로 추가 -->
     </div>
+
+    <div class="add-account">+키즈 계정 추가</div>
   </div>
 
   <!-- Bottom Navigation -->
@@ -133,6 +117,42 @@
       <img src="your-profile-icon-url" alt="Profile">
     </a>
   </div>
+
+  <!-- Fetch API를 사용하여 부모님의 프로필과 자녀 프로필 가져오기 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // API에서 부모 프로필 가져오기
+      fetch('http://localhost:8000/api/v1/accounts/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('access_token')  // JWT 토큰 추가
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        // 부모님 이름을 표시하는 부분
+        document.getElementById('parent-greeting').innerHTML = `안녕하세요.<br>${data.parent.first_name} 님!`;
+
+        // 자녀 프로필 카드를 추가하는 부분
+        const container = document.getElementById('card-container');
+        data.children.forEach((child, index) => {
+          const profileCard = document.createElement('div');
+          profileCard.classList.add('profile-card');
+          profileCard.innerHTML = `
+            <img src="your-child${index + 1}-avatar-url" alt="Child ${index + 1}">
+            <div class="profile-info">
+              <h5>${child.first_name} (만 ${child.age}세)</h5>
+              <p>이번달 용돈 ${child.allowance}원</p>
+            </div>
+            <div class="profile-edit">프로필 수정</div>
+          `;
+          container.appendChild(profileCard);
+        });
+      })
+      .catch(error => console.error('Error fetching profile data:', error));
+    });
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
