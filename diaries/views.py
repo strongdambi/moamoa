@@ -1,174 +1,250 @@
+import re
 import json
-import os
+
+from datetime import date
 from django.conf import settings
+from django.utils import timezone
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from openai import OpenAI
-from .models import FinanceDiary, User
-from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from accounts.models import User
-from .models import Plan  # Plan 모델 임포트
-from datetime import datetime
+from .models import FinanceDiary, MonthlySummary, User
+from .chatbot import chat_with_bot
+from .serializers import FinanceDiarySerializer
 
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
-#아이들 작성한 기입장 삭제
+# 아이들 작성한 기입장 삭제
 class ChatbotProcessDelete(APIView):
     def delete(self, request, pk):
-
         # pk 값과 child 필드를 기준으로 FinanceDiary 항목
-        diary_entry = get_object_or_404(FinanceDiary, pk=pk, child=request.user)
-
+        diary_entry = get_object_or_404(
+            FinanceDiary, pk=pk, child=request.user)
         # 현재 사용자가 diary_entry의 child와 동일한지 확인
         if diary_entry.child != request.user:
             return Response({"error": "이 항목을 삭제할 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-
         diary_entry.delete()
-
         return Response({"message": "성공적으로 삭제되었습니다."}, status=status.HTTP_204_NO_CONTENT)
 
 # 아이들만 작용하는 챗봇
 class ChatbotProcessView(APIView):
-
     def post(self, request):
-        msg = request.data.get("msg", None)
+        user_input = request.data.get('message')
+        user = request.user
+        parent_id = user.parents
 
-        # 사용자가 메시지를 입력하지 않았을 경우
-        if not msg:
-            return Response({"error": "채팅이 입력 되지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        # 용돈기입 관련 메시지가 아닌 경우
+        if not self.is_allowance_related(user_input):
+            return Response({
+                "message": "용돈기입장과 관련된 정보를 입력해 주세요. 예시: '친구랑 간식으로 3000원 썼어.'"
+            })
 
-        # 자녀만 접근 가능 설정
-        if request.user.parents_id is None:
-            return Response({"error": "이 기능은 어린이만 사용할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
+        # 다중 항목 입력 방지: 금액 패턴이 2개 이상이면 오류 반환
+        amount_count = len(re.findall(r'\d+(원|만원|천원|백원)', user_input))
+        if amount_count > 1:
+            return Response({
+                "message": "한 번에 하나씩만 말씀해 주세요! 예를 들어 '장난감 사는데 5000원 썼어요'처럼 말해 주시면 제가 더 쉽게 기록할 수 있어요!"
+            }, status=400)
 
-        conversation_history = [
-            {"role": "system", "content": "You're an assistant that tracks daily expenses and responds in JSON format. Also you can help users when they ask you to change or delete their previous request. {'title':'title','category':'category','transaction_type':'transaction_type','amount':'amount'"},
-            {"role": "user", "content": msg}  # POST 요청으로 받은 'msg' 값을 적용
-        ]
+        # OpenAI 프롬프트를 통해 채팅 응답을 받음
+        response = chat_with_bot(user_input, user.id)
 
+        # 1 또는 2 입력에 대한 처리
+        if user_input in ['1', '2']:
+            if user_input == '1' and "json" in response.lower():
+                try:
+                    # JSON 파싱
+                    json_part = response.split("```json")[-1].split("```")[0].replace("'", '"')
+
+                    # 단일 JSON 객체만 처리 (배열이 아닌 경우 오류 처리)
+                    plan_json = json.loads(json_part)
+                    if isinstance(plan_json, list):
+                        return Response({
+                            "message": "한 번에 여러 항목을 입력할 수 없습니다. 한 번에 하나씩만 입력해 주세요."
+                        }, status=400)
+
+                    # 정상적인 단일 항목 처리
+                    finance_diary = FinanceDiary(
+                        diary_detail=plan_json.get('diary_detail'),
+                        today=plan_json.get('today') or timezone.now().date(),
+                        category=plan_json.get('category'),  # OpenAI 응답에서 카테고리 가져오기
+                        transaction_type=plan_json.get('transaction_type'),
+                        amount=plan_json.get('amount'),
+                        child=user,  # child 필드를 명시적으로 추가
+                        parent=parent_id
+                    )
+                    finance_diary.save()
+
+                    # 저장된 계획서를 시리얼라이즈
+                    serializer = FinanceDiarySerializer(finance_diary)
+                    return Response({
+                        "message": "용돈기입장이 성공적으로 저장되었습니다.",
+                        "plan": serializer.data  # 단일 계획서만 직렬화
+                    })
+
+                except json.JSONDecodeError as e:
+                    return Response({
+                        "message": "JSON 파싱 오류가 발생했습니다.",
+                        "error": str(e)
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                except Exception as e:
+                    return Response({
+                        "message": "처리 중 오류가 발생했습니다.",
+                        "error": str(e)
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            elif user_input == '2':
+                return Response({
+                    "message": "입력한 내용을 다시 한 번 확인해 주시고, 용돈기입장을 다시 작성해 주세요!"
+                })
+        return Response({"response": response})
+
+    # 우리들의 소악마들을 위한 결계
+    def is_allowance_related(self, input_text):
+        # 예/아니오 선택이 있을 경우
+        if input_text in ['1', '2']:
+            return True
+        
+        # 금액 패턴 (숫자+원 또는 한글로 만원, 천원 등)
+        if re.search(r"\d+(원|만원|천원|백원)|[일이삼사오육칠팔구십]만원|[일이삼사오육칠팔구십]천원|[일이삼사오육칠팔구십]백원", input_text):
+            return True
+
+        return False  # 금액이나 예/아니오가 아니면 용돈기입장과 관련 없는 것으로 처리
+
+
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+# 생년월일을 이용한 나이 계산 함수
+def calculate_age(birth_date):
+    today = date.today()
+    return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+
+class MonthlySummaryView(APIView):
+    def get(self, request, child_id):
         try:
-            response = client.chat.completions.create( model="gpt-3.5-turbo", messages=conversation_history )
-            reply = response.choices[0].message.content
+            # 해당 child_id로 자녀 조회
+            try:
+                child = User.objects.get(id=child_id, parents__isnull=False)
+            except User.DoesNotExist:
+                return Response({"error": "해당 자녀를 찾을 수 없습니다."}, status=404)
+
+            # 자녀 이름과 나이 계산
+            child_name = child.first_name
+            child_age = calculate_age(child.birthday) if child.birthday else "Unknown"
+
+            # 자녀의 이번 달 용돈기입장 데이터 가져오기
+            now = timezone.now()
+            current_year = now.year
+            current_month = now.month
+
+            # 데이터 필터링: 이번 달의 수입/지출 데이터만 가져오기
+            diaries = FinanceDiary.objects.filter(child=child, today__year=current_year, today__month=current_month)
+
+            if not diaries.exists():
+                return Response({
+                    "username": child_name,
+                    "age": child_age,
+                    "message": f"{child_name}님의 이번 달 용돈기입장 기록이 없습니다."
+                }, status=200)
+
+            # 총 수입 계산 (transaction_type이 '수입'인 항목만)
+            total_income = diaries.filter(transaction_type='수입').aggregate(Sum('amount'))['amount__sum'] or 0
+
+            # 총 지출 계산 (transaction_type이 '지출'인 항목만)
+            total_expenditure = diaries.filter(transaction_type='지출').aggregate(Sum('amount'))['amount__sum'] or 0
+
+            # 카테고리별 지출 계산 (지출 항목만 대상으로)
+            category_expenditure = {}
+            for diary in diaries.filter(transaction_type='지출'):
+                category = diary.category
+                if category not in category_expenditure:
+                    category_expenditure[category] = 0
+                category_expenditure[category] += diary.amount
+
+            # OpenAI에게 메시지 보내서 자동으로 요약, 평가, 계산
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        f"You are a financial advisor for children. You are given pocket money records for {child_name}, a {child_age}-year-old child. "
+                        f"Each record has a `transaction_type` field, which indicates whether the transaction is an '수입' (income) or '지출' (expense). "
+                        f"Ensure that only records with `transaction_type` set to '지출' are considered in the expense calculation. "
+                        f"Respond entirely in Korean. "
+                        f"Here are the records categorized by transaction type and amount:\n"
+                        f"{[f'{diary.diary_detail} ({diary.transaction_type}): {diary.amount} KRW' for diary in diaries]}\n\n"
+                        f"Please provide the following information in JSON format, using the provided data:\n"
+                        f"1. 총_수입 (Total income): {total_income}\n"
+                        f"2. 총_지출 (Total expenditure): {total_expenditure}\n"
+                        f"3. 남은_금액 (Remaining amount): {total_income - total_expenditure}\n"
+                        f"4. 카테고리별_지출 (Expenditure by category): {category_expenditure}\n"
+                        f"5. 가장_많이_지출한_카테고리 (Category with the highest expenditure)\n"
+                        f"6. 지출_패턴_평가 (Evaluation of the spending pattern, within 100 characters)\n"
+                        f"7. 개선을_위한_조언 (Friendly advice for improvement, within 100 characters). "
+                    )
+                }
+            ]
 
             try:
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=messages,
+                    max_tokens=2444,
+                    temperature=0.7,
+                    top_p=1,
+                    frequency_penalty=0,
+                    presence_penalty=0
+                )
 
-                # OpenAI에서 받은 응답을 JSON으로 변환
-                clean_reply = json.loads(reply)  # 문자열 형태의 JSON을 Python 객체로 변환 (\n 들어가있음)
+                # OpenAI 응답 처리
+                chat_response = response.choices[0].message.content
 
-                # 어시스트에서 보내준 json 정보 추출
-                category = clean_reply.get('category')
-                transaction_type = clean_reply.get('transaction_type')
-                amount = clean_reply.get('amount')
-                today = clean_reply.get('date', None)
+                # 요약 정보를 JSON으로 저장
+                summary_content = {
+                    "username": child_name,
+                    "age": child_age,
+                    "summary": chat_response  # OpenAI로부터 받은 응답 전체를 저장
+                }
 
-                # 날짜가 제공되지 않았다면 오늘 날짜로 설정
-                if today is None:
-                    today = datetime.now().strftime("%Y-%m-%d")
+                # 데이터베이스에 저장
+                parent = child.parents
+                summary, created = MonthlySummary.objects.get_or_create(
+                    child=child,
+                    parent=parent,
+                    year=current_year,
+                    month=current_month,
+                    defaults={"content": summary_content}
+                )
+                if not created:
+                    summary.content = summary_content
+                    summary.save()
 
-                # 부모님의 ID를 가져옴
-                parent_id = request.user.parents_id
+                return Response(summary_content, status=200)
 
-                if parent_id is None:
-                    return Response({"error": "이 사용자의 부모 정보를 찾을 수 없습니다."},
-                                    status=status.HTTP_400_BAD_REQUEST)
-
-                # 부모님의 User 인스턴스를 가져옴
-                try:
-                    parent_user = User.objects.get(pk=parent_id)
-                except User.DoesNotExist:
-                    return Response({"error": "부모 사용자를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-
-                # FinanceDiary 모델에 맞게 추가
-                FinanceDiary.objects.create(child=request.user, parent=parent_user, title=msg, category=category,
-                                            transaction_type=transaction_type, amount=amount,
-                                            today=datetime.strptime(today, "%Y-%m-%d"))
-
-            except json.JSONDecodeError:
-                # OpenAI 응답을 파싱하지 못했을 때
-                return Response({"error": "OpenAI의 응답을 구문 분석하지 못했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-            # 성공적으로 처리된 경우 OpenAI의 응답을 반환
-            return Response({"result": reply}, status=status.HTTP_200_OK)
-
-        except Exception as e:
-
-            # 기타 예외 처리
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class PreviousMonthPlansView(APIView):
-    file_path = os.path.join(settings.BASE_DIR, 'output.txt')
-
-    def get(self, request):
-        try:
-            # 부모가 있는 자녀들을 필터링하여 가져옴
-            children_with_parents = User.objects.filter(parents__isnull=False)
-
-            # 자녀 ID, 이름, 부모 ID를 output.txt 파일에 기록
-            with open(self.file_path, 'w', encoding='utf-8') as file:
-                for child in children_with_parents:
-                    file.write(f"{child.id}|{child.first_name}|{child.parents.id}\n")
-
-            # 기록한 파일을 읽어 첫 번째 라인의 자녀 정보 가져오기
-            with open(self.file_path, 'r', encoding='utf-8') as file:
-                first_line = file.readline().strip()
-                parts = first_line.split('|')
-
-                # 자녀 이름과 ID 추출
-                username = parts[1]
-                child_id = parts[0]
-
-                messages = []
-                messages_system = {"role": "system","content": f"Create a fictional set of pocket money ledger data on this month, summarize it, evaluate it, and give advice on how to improve. Also, provide a score based on general standards. The tone should be kind and friendly, as if explaining to a child aged 5 to 13. Answer in Korean. Call user as {username}."}
-                messages_user = { "role": "user", "content": "해줘"}
-                messages.append(messages_system)
-                messages.append(messages_user)
-
-                try:
-
-                    response = client.chat.completions.create(
-                        model="gpt-4",
-                        messages=messages,
-                        max_tokens=2444,
-                        temperature=0.7,
-                        top_p=1,
-                        frequency_penalty=0,
-                        presence_penalty=0
-                    )
-
-                    chat_response = response.choices[0].message.content
-
-                    # 자녀와 부모 정보 가져오기
-                    child = User.objects.get(pk=child_id)
-                    parent = child.parents
-
-                    # 현재 연도와 월 가져오기
-                    now = timezone.now()
-                    year = now.year
-                    month = now.month
-
-                    # 자녀와 부모에 해당하는 이달의 계획서가 있는지 확인
-                    plan = Plan.objects.filter(child=child, parent=parent, year=year, month=month).first()
-
-                    if plan:
-                        # 계획서가 있으면 내용을 업데이트
-                        plan.content = chat_response
-                        plan.save()
-                        message = "계획서가 업데이트되었습니다."
-                    else:
-                        # 계획서가 없는 경우 새로 생성
-                        Plan.objects.create(child=child, parent=parent, year=year, month=month, content=chat_response)
-                        message = "계획서가 생성되었습니다."
-
-                    # 성공 메시지와 함께 응답 반환
-                    return Response({"message": message, "Response": chat_response}, status=200)
-
-                except Exception as e:
-                    # OpenAI API 호출 또는 처리 중 오류 발생 시
-                    return Response({"error": str(e)}, status=500)
+            except Exception as e:
+                return Response({"error": f"OpenAI API 호출 중 오류 발생: {str(e)}"}, status=500)
 
         except Exception as e:
-            # 전반적인 처리 중 발생하는 오류 처리
             return Response({"error": str(e)}, status=500)
+        
+# 아이 월별 옹돈기입장 리스트
+class MonthlyDiaryView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, child_pk, year, month):
+        user = request.user
+        if user.pk != child_pk:
+            return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        
+        # 해당 연월 용돈 기입장 내역 가져오기
+        queryset = user.diaries.filter(
+            today__year = year,
+            today__month = month
+        ).order_by('-today', '-id')
+        serializer = FinanceDiarySerializer(queryset, many=True)
+        return Response(
+            {
+            "diary": serializer.data
+            },
+        )
