@@ -4,16 +4,13 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 # 월말결산
-
-
-class Plan(models.Model):
-    child = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="plans")
-    parent = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="parent_plans")
+class MonthlySummary(models.Model):
+    child = models.ForeignKey(User, on_delete=models.CASCADE, related_name="plans")
+    parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="parent_plans")
     content = models.TextField()
     year = models.PositiveIntegerField()
     month = models.PositiveIntegerField()
+    encouragement = models.TextField(blank=True, null=True)  # 부모님의 조언을 저장할 필드 추가
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -23,8 +20,6 @@ class Plan(models.Model):
         return f"{self.child.username}의 {self.year}년 {self.month}월 계획서 - {self.content}"
 
 # 용돈기입장
-
-
 class FinanceDiary(models.Model):
     child = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="diaries")

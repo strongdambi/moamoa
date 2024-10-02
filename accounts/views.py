@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from diaries.models import MonthlySummary
 from .validators import validate_signup
 from .serializers import UserSerializer
 from .models import User
@@ -21,6 +22,8 @@ from .models import User
 User = get_user_model()
 
 # 부모 회원가입
+
+
 class KakaoCallbackView(APIView):
 
     # 카카오 OAuth를 통한 로그인 프로세스를 처리하는 뷰
@@ -95,6 +98,8 @@ class KakaoCallbackView(APIView):
             return Response({"error": "해당 사용자 이름을 가진 사용자가 이미 있습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
 # 아이들 로그인
+
+
 class LoginView(APIView):
 
     def post(self, request):
@@ -121,12 +126,15 @@ class LoginView(APIView):
 
         # 사용자를 위한 JWT 리프레시 토큰과 액세스 토큰을 발행
         refresh = RefreshToken.for_user(user)
-        res_data["tokens"] = {"access_token": str(refresh.access_token), "refresh_token": str(refresh)}
+        res_data["tokens"] = {"access_token": str(
+            refresh.access_token), "refresh_token": str(refresh)}
 
         # 인증 토큰과 사용자 정보를 포함한 응답을 반환
         return Response(res_data, status=status.HTTP_200_OK)
 
 # 아이들 회원가입
+
+
 class ChildrenPRCreate(APIView):
     # API 뷰에서 인증된 사용자만 접근을 허용
     permission_classes = [IsAuthenticated]
@@ -160,10 +168,21 @@ class ChildrenPRCreate(APIView):
         first_name = request.data.get("first_name")
         if not first_name:
             return Response({"error": "first_name 필드는 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 생년월일 필드 가져오기 (추가)
+        birthday = request.data.get("birthday")
+        if not birthday:
+            return Response({"error": "birthday 필드는 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 유효성 검사를 통과한 데이터로 새로운 사용자(자녀)를 생성 parents=parent_user 부모 사용자를 외래키로 설정
-        user = User.objects.create_user(username=request.data.get("username"), password=request.data.get("password"),
-                                        email=request.data.get("email"), parents=parent_user, first_name=first_name)
+        user = User.objects.create_user(
+            username=request.data.get("username"),
+            password=request.data.get("password"),
+            email=request.data.get("email"),
+            parents=parent_user,
+            first_name=first_name,
+            birthday=birthday
+            )
 
         # 생성된 사용자의 정보를 시리얼라이즈
         serializer = UserSerializer(user)
@@ -171,12 +190,15 @@ class ChildrenPRCreate(APIView):
 
         # 사용자를 위한 리프레시 토큰과 액세스 토큰 발행
         refresh = RefreshToken.for_user(user)
-        res_data["tokens"] = {"access_token": str(refresh.access_token), "refresh_token": str(refresh)}
+        res_data["tokens"] = {"access_token": str(
+            refresh.access_token), "refresh_token": str(refresh)}
 
         # 성공적으로 생성된 사용자 정보와 토큰을 포함하여 응답 반환
         return Response(res_data, status=status.HTTP_201_CREATED)
 
 # 아이들 조회, 수정, 삭제
+
+
 class ChildrenPRView(APIView):
 
     # API 뷰에서 인증된 사용자만 접근을 허용
@@ -185,11 +207,13 @@ class ChildrenPRView(APIView):
     # 특정 자녀의 정보를 조회
     def get(self, request, pk):
         try:
-            child = User.objects.get(pk=pk, parents=request.user) # 요청된 pk(자녀의 ID)와 부모 사용자를 기준으로 자녀 객체를 조회
-            serializer = UserSerializer(child) # 조회된 자녀 객체를 시리얼라이즈
-            return Response(serializer.data) # 시리얼라이즈된 데이터 응답 반환
+            # 요청된 pk(자녀의 ID)와 부모 사용자를 기준으로 자녀 객체를 조회
+            child = User.objects.get(pk=pk, parents=request.user)
+            serializer = UserSerializer(child)  # 조회된 자녀 객체를 시리얼라이즈
+            return Response(serializer.data)  # 시리얼라이즈된 데이터 응답 반환
         except User.DoesNotExist:
-            return Response({"error": "아이들을 찾을수가 없습니다."}, status=status.HTTP_404_NOT_FOUND) # 자녀 객체가 존재하지 않을 경우 오류 메시지를 반환
+            # 자녀 객체가 존재하지 않을 경우 오류 메시지를 반환
+            return Response({"error": "아이들을 찾을수가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
     # 자녀의 정보를 수정
     def put(self, request, pk):
@@ -208,13 +232,13 @@ class ChildrenPRView(APIView):
                 if 'password' in request.data:
                     child.set_password(request.data['password'])
 
-
                 # 자녀 정보 저장
                 child.save()
 
-                return Response(serializer.data) # 수정된 자녀 정보 반환
+                return Response(serializer.data)  # 수정된 자녀 정보 반환
 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) # 시리얼라이즈 데이터가 유효하지 않을 경우, 오류 메시지
+            # 시리얼라이즈 데이터가 유효하지 않을 경우, 오류 메시지
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
             return Response({"error": "아이들을 찾을수가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -227,10 +251,16 @@ class ChildrenPRView(APIView):
         except User.DoesNotExist:
             return Response({"error": "아이들을 찾을수가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
+
 # 부모 수정, 조회
 class AccountsView(APIView):
 
     permission_classes = [IsAuthenticated]
+
+    # 부모님의 조언 입력
+    def post(self, request):
+        pass
+
 
     # 프로필 조회:
     def get(self, request):
