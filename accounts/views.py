@@ -181,14 +181,16 @@ class ChildrenPRCreate(APIView):
         if not is_valid:
             return Response({"error": err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 요청 데이터에서 first_name을 가져옴
+        # 요청 데이터에서 first_name, birthday를 가져옴
         first_name = request.data.get("first_name")
-        if not first_name:
-            return Response({"error": "first_name 필드는 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
+        birthday = request.data.get("birthday")
+
+        if not first_name or not birthday:
+            return Response({"error": "first_name 및 birthday 필드는 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 유효성 검사를 통과한 데이터로 새로운 사용자(자녀)를 생성 parents=parent_user 부모 사용자를 외래키로 설정
         user = User.objects.create_user(username=request.data.get("username"), password=request.data.get("password"),
-                                        email=request.data.get("email"), parents=parent_user, first_name=first_name)
+                                        email=request.data.get("email"), parents=parent_user, first_name=first_name, birthday=birthday)
 
         # 생성된 사용자의 정보를 시리얼라이즈
         serializer = UserSerializer(user)

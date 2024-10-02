@@ -89,7 +89,10 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const password2 = document.getElementById('password2').value;
-
+            
+            // 생일 날짜 형식을 확인
+            console.log('생일:', birthday)
+            
             // Fetch API로 데이터를 전송
             fetch('http://localhost:8000/api/v1/accounts/children/create/', {
                 method: 'POST',

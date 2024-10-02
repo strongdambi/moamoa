@@ -8,7 +8,7 @@
     <div class="container">
         <!-- 부모님 환영 메시지 -->
         <div class="greeting">
-            <p>안녕하세요.<br><span class="partner_first_name">{{ first_name }}</span> 님의 부모님!</p>
+            <p>안녕하세요.<br><span class="partner_first_name">{{ child.first_name }}</span> 님의 부모님!</p>
         </div>
 
         <!-- 자녀 프로필 카드 컨테이너 -->
@@ -29,9 +29,9 @@
                         <span class="text-danger text-danger-username"></span>
                     </div>
                     <div class="col-12">
-                        <label for="email" class="form-label">이메일</label>
-                        <input type="email" class="form-control email" id="email" placeholder="you@example.com" value="">
-                        <span class="text-danger text-danger-email"></span>
+                        <label for="birthday" class="form-label">생일</label>
+                        <input type="date" class="form-control birthday" id="birthday" placeholder="you@example.com" value="">
+                        <span class="text-danger text-danger-birthday"></span>
                     </div>
                     <div class="col-12">
                         <label for="password" class="form-label">패스워드</label>
@@ -58,7 +58,7 @@
     .greeting {
         text-align: center;
         font-size: 18px;
-        margin-bottom: 20px;
+        margin: 20px;
     }
     .card-container {
         padding: 10px;
@@ -72,10 +72,17 @@
         align-items: center;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
+    .profile-image {
+        display: flex;
+        flex-direction: column; 
+        align-items: center; 
+        margin-bottom: 15px; 
+    }
     .profile-card img {
         width: 50px;
         height: 50px;
         border-radius: 10px;
+        margin: 10px;
     }
     .profile-info {
         margin-left: 15px;
@@ -87,11 +94,14 @@
         margin: 5px 0;
         font-size: 14px;
     }
-    .profile-edit {
-        margin-left: auto;
-        font-size: 12px;
-        color: #7F7F7F;
-        cursor: pointer;
+    .edit-button, .delete-button {
+    margin-left: auto;
+    font-size: 12px;
+    color: #7F7F7F;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
     }
     .add-account {
         color: #7F7F7F;
@@ -117,7 +127,17 @@
         .then(response => response.json())
         .then(data => {
             // 부모님 이름을 표시하는 부분
-            document.getElementsByClassName('partner_first_name')[0].textContent = data.parent.first_name;
+            // document.getElementsByClassName('partner_first_name')[0].textContent = data.parent.first_name;
+            
+            // 부모님 환영 메시지를 추가하는 부분
+            const greetingContainer = document.querySelector('.greeting p');
+            let childNames = data.children.map(child => `<span class="partner_first_name">${child.first_name}</span>`);
+
+            // 자녀 이름을 쉼표로 구분하여 연결하고 마지막에 부모님 메시지 추가
+            let greetingMessage = `안녕하세요.<br>${childNames.join(', ')} 님의 부모님!`;
+
+            // 환영 메시지에 모든 자녀 이름을 반영
+            greetingContainer.innerHTML = greetingMessage;
 
             // 자녀 프로필 카드를 추가하는 부분
             const container = document.getElementsByClassName('card-container')[0];
@@ -125,26 +145,57 @@
                 const profileCard = document.createElement('div');
                 profileCard.classList.add('profile-card');
                 profileCard.innerHTML = `
-                    <img src="{% static 'webs/images/child-avatar.png' %}" alt="Child ${index + 1}">
-                    <div class="profile-info">
-                        <h5>${child.first_name} (ID: ${child.username})</h5>
-                        <p>이메일: ${child.email}</p>
-                        <p>이번달 용돈 30,000원</p>
-                    </div>
-                    <div class="profile-edit">프로필 수정</div>
-                `;
+                <div class="profile-image">
+                    <img src="{% static 'webs/images/moamoa_icon.png' %}" alt="Child ${index + 1}">
+                    <button class="edit-button" data-child-id="${child.id}">프로필 수정</button>
+                </div>
+                <div class="profile-info">
+                    <h5>${child.first_name} (ID: ${child.username})</h5>
+                    <p>생일: ${child.birthday}</p>
+                    <p>이번달 용돈 30,000원</p>
+                </div>
+                <div class="profile-edit">
+                    <div class="delete-button" data-child-id="${child.id}">삭제</div>
+                </div>
+            `;
                 container.appendChild(profileCard);
             });
 
-            // 마지막에 '키즈 계정 추가' 버튼 추가
-            const addAccountDiv = document.createElement('div');
-            addAccountDiv.classList.add('add-account');
-            addAccountDiv.textContent = '+키즈 계정 추가';
-            container.appendChild(addAccountDiv);
+            // 삭제 버튼 클릭 이벤트 처리
+            document.querySelectorAll('.delete-button').forEach(button => {
+                button.addEventListener('click', function () {
+                    const childId = this.getAttribute('data-child-id');
+                    if (confirm('정말로 이 자녀 계정을 삭제하시겠습니까?')) {
+                        deleteChild(childId);
+                    }
+                });
+            });
         })
         .catch(error => console.error('Error:', error));
     });
-
+    function deleteChild(childId) {
+        fetch(`http://localhost:8000/api/v1/accounts/children/${childId}/`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.status === 204) {
+                alert('자녀 계정이 성공적으로 삭제되었습니다.');
+                window.location.reload(); // 페이지 새로고침으로 삭제된 자녀 목록 갱신
+            } else {
+                return response.json().then(data => {
+                    alert('삭제 중 오류가 발생했습니다: ' + data.error);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('삭제 중 오류가 발생했습니다.');
+        });
+    }
     // 이벤트 위임을 사용하여 동적으로 추가된 요소에 이벤트 리스너 적용
     document.addEventListener('click', function(event) {
         if (event.target.classList.contains('add-account')) {
@@ -156,7 +207,7 @@
         button.addEventListener('click', function() {
             const firstname = document.querySelector('.firstname').value;
             const username = document.querySelector('.username').value;
-            const email = document.querySelector('.email').value;
+            const birthday = document.querySelector('.birthday').value;
             const password = document.querySelector('.password').value;
             const password2 = document.querySelector('.password2').value;
 
@@ -170,7 +221,7 @@
                     "first_name": firstname,
                     "password": password,
                     "password2": password2,
-                    "email": email
+                    "birthday": birthday,
                 })
             })
             .then(response => {
