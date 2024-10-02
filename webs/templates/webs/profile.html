@@ -2,10 +2,10 @@
 
 {% load static %}
 
-{% block title %}모아모아 - 부모 대시보드{% endblock %}
+{% block title %}모아모아 - 부모 프로필{% endblock %}
 
 {% block content %}
-    <div class="container">
+    <class="container">
         <!-- 부모님 환영 메시지 -->
         <div class="greeting">
             <p>안녕하세요.<br><span class="partner_first_name">{{ child.first_name }}</span> 님의 부모님!</p>
@@ -14,47 +14,43 @@
         <!-- 자녀 프로필 카드 컨테이너 -->
         <div class="card-container"></div>
 
-        <!-- 자녀 등록 폼 (기본적으로 숨김 처리) -->
-        <div class="card-container card-children" style="display: none;">
-            <div class="row g-5">
-                <div class="row g-3">
-                    <div class="col-12">
-                        <label for="firstName" class="form-label">닉네임</label>
-                        <input type="text" class="form-control firstname" id="firstname" placeholder="닉네임" required="">
-                        <span class="text-danger text-danger-firstname"></span>
-                    </div>
-                    <div class="col-12">
-                        <label for="username" class="form-label">아이디</label>
-                        <input type="text" class="form-control username" id="username" placeholder="아이디" required="">
-                        <span class="text-danger text-danger-username"></span>
-                    </div>
-                    <div class="col-12">
-                        <label for="birthday" class="form-label">생일</label>
-                        <input type="date" class="form-control birthday" id="birthday" placeholder="you@example.com" value="">
-                        <span class="text-danger text-danger-birthday"></span>
-                    </div>
-                    <div class="col-12">
-                        <label for="password" class="form-label">패스워드</label>
-                        <input type="text" class="form-control password" id="password" placeholder="비밀번호">
-                        <span class="text-danger text-danger-password"></span>
-                    </div>
-                    <div class="col-12">
-                        <label for="password2" class="form-label">패스워드(확인)</label>
-                        <input type="text" class="form-control password2" id="password2" placeholder="비밀번호 확인">
-                        <span class="text-danger text-danger-password2"></span>
-                    </div>
-                    <button class="w-100 btn btn-primary btn-lg btn-children">등록</button>
-                </div>
-            </div>
-        </div>
-
         <!-- + 키즈 계정 추가 -->
         <div class="add-account">+키즈 계정 추가</div>
+
+        <!-- 자녀 정보 수정 폼 (숨김 처리) -->
+        <div class="edit-form-container" style="display: none;">
+            <h4>프로필 수정</h4>
+            <!-- <label>프로필사진</label> -->
+            <input type="text" id="edit-firstname" placeholder="이름"><br>
+            <input type="date" id="edit-birthday" placeholder="생일"><br>
+            <input type="password" id="edit-password" placeholder="새 비밀번호"><br>
+            <button id="save-button">저장</button>
+        </div>
     </div>
 {% endblock %}
 
 {% block extra_head %}
 <style>
+    .edit-form-container {
+        text-align: center;
+        margin-top: 20px;
+    }
+    .edit-form-container input {
+        width: 75%;
+        height: 45px;
+        font-size: 16px;
+        margin-bottom: 15px;
+        border-radius: 25px; 
+        border: 2px solid #6D9C48;
+        padding: 10px;
+    }
+    .edit-form-container button {
+        background-color: #FFCD00;
+        color: white;border: none;
+        width: 60%; height: 50px;
+        font-size: 18px;
+        border-radius: 25px;
+    }
     .greeting {
         text-align: center;
         font-size: 18px;
@@ -126,17 +122,12 @@
         })
         .then(response => response.json())
         .then(data => {
-            // 부모님 이름을 표시하는 부분
-            // document.getElementsByClassName('partner_first_name')[0].textContent = data.parent.first_name;
-            
             // 부모님 환영 메시지를 추가하는 부분
             const greetingContainer = document.querySelector('.greeting p');
             let childNames = data.children.map(child => `<span class="partner_first_name">${child.first_name}</span>`);
 
-            // 자녀 이름을 쉼표로 구분하여 연결하고 마지막에 부모님 메시지 추가
-            let greetingMessage = `안녕하세요.<br>${childNames.join(', ')} 님의 부모님!`;
+            let greetingMessage = `안녕하세요.<br>${childNames.join(', ')} 자녀의 부모님!`;
 
-            // 환영 메시지에 모든 자녀 이름을 반영
             greetingContainer.innerHTML = greetingMessage;
 
             // 자녀 프로필 카드를 추가하는 부분
@@ -152,13 +143,21 @@
                 <div class="profile-info">
                     <h5>${child.first_name} (ID: ${child.username})</h5>
                     <p>생일: ${child.birthday}</p>
-                    <p>이번달 용돈 30,000원</p>
+                    <p>이번달 용돈: </p>
                 </div>
                 <div class="profile-edit">
                     <div class="delete-button" data-child-id="${child.id}">삭제</div>
                 </div>
             `;
                 container.appendChild(profileCard);
+            });
+
+            // 프로필 수정 버튼 클릭 이벤트 처리
+            document.querySelectorAll('.edit-button').forEach(button => {
+                button.addEventListener('click', function () {
+                    const childId = this.getAttribute('data-child-id');
+                    editChildProfile(childId);
+                });
             });
 
             // 삭제 버튼 클릭 이벤트 처리
@@ -173,6 +172,72 @@
         })
         .catch(error => console.error('Error:', error));
     });
+
+    function editChildProfile(childId) {
+        // API에서 자녀의 현재 정보 가져오기
+        fetch(`http://localhost:8000/api/v1/accounts/children/${childId}/`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // 수정 폼에 자녀의 현재 정보 채워넣기
+            document.getElementById('edit-firstname').value = data.first_name;
+            document.getElementById('edit-birthday').value = data.birthday;
+            document.getElementById('edit-password').value = ''; // 비밀번호는 공란으로 시작
+
+            // 수정 폼 표시
+            document.querySelector('.edit-form-container').style.display = 'block';
+
+            // 저장 버튼 클릭 이벤트 처리
+            document.getElementById('save-button').addEventListener('click', function () {
+                const newFirstName = document.getElementById('edit-firstname').value;
+                const newBirthday = document.getElementById('edit-birthday').value;
+                const newPassword = document.getElementById('edit-password').value;
+
+                updateChildProfile(childId, newFirstName, newBirthday, newPassword);
+            });
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function updateChildProfile(childId, newFirstName, newBirthday, newPassword) {
+        const requestData = {
+            first_name: newFirstName,
+            birthday: newBirthday,
+        };
+
+        if (newPassword) {
+            requestData.password = newPassword;  // 비밀번호가 입력된 경우에만 전송
+        }
+
+        fetch(`http://localhost:8000/api/v1/accounts/children/${childId}/`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('프로필이 성공적으로 수정되었습니다.');
+                window.location.reload();  // 수정 후 페이지 새로고침
+            } else {
+                return response.json().then(data => {
+                    alert('프로필 수정 중 오류가 발생했습니다: ' + data.error);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('프로필 수정 중 오류가 발생했습니다.');
+        });
+    }
+
     function deleteChild(childId) {
         fetch(`http://localhost:8000/api/v1/accounts/children/${childId}/`, {
             method: 'DELETE',
@@ -194,77 +259,6 @@
         .catch(error => {
             console.error('Error:', error);
             alert('삭제 중 오류가 발생했습니다.');
-        });
-    }
-    // 이벤트 위임을 사용하여 동적으로 추가된 요소에 이벤트 리스너 적용
-    document.addEventListener('click', function(event) {
-        if (event.target.classList.contains('add-account')) {
-            document.querySelector('.card-children').style.display = 'block';
-        }
-    });
-
-    document.querySelectorAll('.btn-children').forEach(function(button) {
-        button.addEventListener('click', function() {
-            const firstname = document.querySelector('.firstname').value;
-            const username = document.querySelector('.username').value;
-            const birthday = document.querySelector('.birthday').value;
-            const password = document.querySelector('.password').value;
-            const password2 = document.querySelector('.password2').value;
-
-            // 자녀 계정 생성 API 호출
-            fetch('http://localhost:8000/api/v1/accounts/children/create/', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    "username": username,
-                    "first_name": firstname,
-                    "password": password,
-                    "password2": password2,
-                    "birthday": birthday,
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errData => {
-                        throw errData;
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                alert('계정이 성공적으로 생성되었습니다.');
-                location.href = 'http://localhost/web/profile.html';
-            })
-            .catch(error => {
-                displayErrors(error.error);
-                console.error('Error:', error);
-            });
-        });
-    });
-
-    function displayErrors(errors) {
-        // 에러 메시지 표시
-        resetErrorMessages();
-        errors.forEach(error => {
-            for (const key in error) {
-                if (error.hasOwnProperty(key)) {
-                    const message = error[key];
-                    const errorMessageElement = document.querySelector(`.text-danger-${key}`);
-                    if (errorMessageElement) {
-                        errorMessageElement.textContent = message;
-                        errorMessageElement.style.display = 'block';
-                    }
-                }
-            }
-        });
-    }
-
-    function resetErrorMessages() {
-        const errorMessages = document.querySelectorAll('.text-danger');
-        errorMessages.forEach(message => {
-            message.textContent = 'Brief description'; // 기본 메시지로 초기화
-            message.style.display = 'none'; // 에러 메시지를 숨김
         });
     }
 </script>

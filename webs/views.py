@@ -2,18 +2,21 @@ from django.shortcuts import render
 
 
 # index
-def index(request):
+def Index(request):
     return render(request, 'webs/index.html')
 
 # 키즈 로그인 페이지
-def children_view(request):
+def Children_view(request):
     return render(request, 'webs/children.html')
 
 
 # 부모 프로필
-def profile_view(request):
+def Profile_view(request):
     return render(request, 'webs/profile.html')
 
 # 키즈 계정 회원 가입
-def create_view(request):
+def Create_view(request):
+    return render(request, 'webs/children_create.html')
+
+def ChildrenProfile_view(request):
     return render(request, 'webs/children_create.html')
