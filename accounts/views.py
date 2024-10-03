@@ -230,11 +230,6 @@ class ChildrenPRView(APIView):
                 if 'first_name' in request.data:
                     # 요청 데이터에 first_name이 있는 경우, first_name 수정
                     child.first_name = request.data['first_name']
-                
-                if 'birthday' in request.data:
-                    #요청 데이터에 생일이 있는 경우, 생일 업데이트
-                    child.birthday = request.data['birthday']
-
 
                 # 요청 데이터에 비밀번호가 포함되어 있으면, 비밀번호를 업데이트
                 if 'password' in request.data:

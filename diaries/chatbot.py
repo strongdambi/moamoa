@@ -2,130 +2,127 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
-from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory, RedisChatMessageHistory
 from langchain_core.output_parsers import StrOutputParser
-from config import OPENAI_API_KEY
+from django.conf import settings
+from langchain_core.messages import AIMessage
 from langchain_core.runnables.utils import ConfigurableFieldSpec
+from django.utils import timezone
+import pytz
+from datetime import timedelta
 
 
-# logging.basicConfig(level=logging.DEBUG)
+import traceback
+import redis
 
-# memory = ConversationBufferMemory(memory_key="chat_history")
-llm = ChatOpenAI(model="gpt-4o", api_key= OPENAI_API_KEY)
+REDIS_URL = 'redis://localhost:6379/0'
+
+
+llm = ChatOpenAI(model="gpt-4o-mini", api_key=settings.OPENAI_API_KEY)
+
 
 chat_prompt = ChatPromptTemplate.from_messages([
-    ("system", """당신은 만 5세~12세 사이의 아이들을 위한 용돈 계획 작성을 돕는 친근하고 이해하기 쉬운 AI 어시스턴트입니다. 아이의 나이에 맞춰 대화 수준을 조절하세요. 다음 단계를 따라 아이와 상호작용하세요:
+    ("system", """
+        Step 1
+        - You are an AI assistant that helps children aged 5 to 13 record their pocket money entries.
 
-1. 인사와 소개: 아이에게 친근하게 인사하고, 용돈 계획 만들기가 얼마나 재미있고 중요한지 설명해주세요.
+        Step 2
+        - When the child provides the details of their pocket money report, create a report based on the input and show it to them.
+        - Today's date in Korea is {recent_day}.
 
-2. 총 용돈 금액 파악: 
-   - 이번 달 총 용돈이 얼마인지 물어보세요. 
-   - 아이가 금액을 모른다면, 부모님께 여쭤보라고 제안하세요.
+        Step 3
+        - Use the following categories to classify the pocket money entry. Choose the most appropriate category key based on the input:
+            - 용돈
+            - 기타/수입
+            - 음식
+            - 음료/간식
+            - 문구/완구
+            - 교통
+            - 문화/여가
+            - 선물
+            - 기부
+            - 기타/지출
 
-3. 지출 카테고리 설명: 
-   - 식비, 교통비, 저축, 간식비 등의 카테고리를 아이가 이해할 수 있게 설명해주세요.
-   - 각 카테고리의 중요성을 간단히 설명하세요.
+        Step 4
+        - Please ask the child to confirm if the report is correct: "1. Yes" or "2. No, I want to rewrite it."
 
-4. 카테고리별 지출 계획:
-   - 각 카테고리에 얼마를 쓰고 싶은지 물어보세요.
-   - 아이의 대답을 들은 후, 그 지출이 필요한지 또는 단순한 욕구인지 부드럽게 물어보세요.
-   - 필요하다면 조언을 해주되, 아이의 결정을 존중하세요.
+        Step 5
+        - If the child selects "1", convert their input into the following JSON format:
 
-5. 저축의 중요성 강조:
-   - 저축의 개념과 중요성을 아이의 수준에 맞게 설명해주세요.
-   - 총 용돈의 일부를 저축하도록 격려하세요.
-
-6. 계획 완성 및 검토:
-   - 모든 카테고리에 대한 계획이 완성되면, 전체 계획을 간단히 요약해주세요.
-   - 아이에게 이 계획에 대해 어떻게 생각하는지 물어보고, 필요하다면 조정하세요.
-
-7. JSON 형식의 계획서 작성:
-   - 대화가 끝나면 다음 형식으로 용돈 계획서를 작성하세요:
-   ```json
-   {{
-            "total_amount": 50000,
-            "food_expense": 10000,
-            "transportation_expense": 20000,
-            "savings": 20000,
-            "snack_expense": 0,
-            "plan_details": "이번 달 용돈 계획에 대한 상세 설명을 자세하게 기록..."
-    }}
-   ```
-
-8. 계획 설명 및 격려:
-   - JSON 형식의 계획서를 제시한 후, 아이에게 이해하기 쉽게 설명해주세요.
-   - 아이의 노력을 칭찬하고, 이 계획을 잘 지킬 수 있다고 격려해주세요.
-
-9. 후속 질문 처리:
-   - 아이가 추가 질문을 하면 친절하게 답변해주세요.
-   - 필요하다면 부모님과 함께 계획을 검토해보라고 제안하세요.
-
-모든 대화에서 긍정적이고 격려하는 톤을 유지하며, 아이의 금융 교육에 도움이 되는 방식으로 상호작용하세요."""),
+        ```json
+        {{
+            'diary_detail': 'Briefly describe how much the child spent and where they spent it',
+            'today': 'The date provided by the child or today’s date if no date was given',
+            'category': 'The category key that best matches the child’s entry',
+            'transaction_type': 'transaction_type',
+            'amount': 0
+        }}
+        ```
+        
+        Step 6
+        - Always conduct conversations in Korean, but keep the JSON keys in English.
+    """),
     MessagesPlaceholder(variable_name="chat_history"),
     ("human", "{input}"),
 ])
-# prompt = ChatPromptTemplate.from_messages(
-#     [
-#         (
-#             "system",
-#             "당신은 {ability}에 능숙한 챗봇입니다. 주어진 질문에 대한 답변을 제공해주세요.",
-#         ),
-#         # 대화기록용 key 인 chat_history 는 가급적 변경 없이 사용하세요!
-#         MessagesPlaceholder(variable_name="history"),
-#         ("human", "{input}"),  # 사용자 입력을 변수로 사용
-#     ]
-# )
 
-parser = StrOutputParser()
-
-runnable = chat_prompt | llm
-
-store = {}
+runnable = chat_prompt | llm | StrOutputParser()
 
 
-def get_session_history(user_id : str, conversation_id : str) -> BaseChatMessageHistory:
-    if (user_id, conversation_id) not in store:
-        store[(user_id, conversation_id)] = ChatMessageHistory()
-    return store[(user_id, conversation_id)]
+class CustomRedisChatMessageHistory(RedisChatMessageHistory):
+    def add_message(self, message):
+        # 한국 시간 생성
+        korea_tz = pytz.timezone(settings.TIME_ZONE)
+        # 현재 시간을 한국 시간에 맞춰 변환
+        korea_time = timezone.now().astimezone(korea_tz)
+        # 타임 스탬프 추가
+        message.additional_kwargs['time_stamp'] = korea_time.isoformat()
+        return super().add_message(message)
 
-with_message_history = (
-    RunnableWithMessageHistory(
-        runnable,
-        get_session_history,
-        input_messages_key = "input",
-        history_messages_key="chat_history",
-        history_factory_config=[
-            ConfigurableFieldSpec(
-                id = "user_id",
-                annotation = str,
-                name = "User ID",
-                description="사용자의 고유 식별자입니다.",
-                default="",
-                is_shared=True,
-            ),
-            ConfigurableFieldSpec(
-                id = "conversation_id",
-                annotation=str,
-                name="Conversation ID",
-                description="대화의 고유 식별자입니다.",
-                default="",
-                is_shared="True",
-            ),
-        ]
-    )
+# redis 저장 기간
+three_months = 90 * 24 * 60 * 60
+# Redis 방식 저장
+def get_message_history(session_id: str) -> RedisChatMessageHistory:
+    # 세션 id를 기반으로 RedisChatMessageHistory 객체를 반환
+    return CustomRedisChatMessageHistory(session_id, url=REDIS_URL, ttl=three_months)
+
+
+with_message_history = RunnableWithMessageHistory(
+    runnable,
+    get_message_history,
+    input_messages_key="input",
+    history_messages_key="chat_history",
 )
 
+def convert_relative_dates(user_input):
+    today = timezone.now().date()
+    
+    if "오늘" in user_input:
+        return today
+    elif "어제" in user_input:
+        return today - timedelta(days=1)
+    elif "그저께" in user_input:
+        return today - timedelta(days=2)
+    else:
+        return None
 
 # Views.py와 함수 연결
-def chat_with_bot(user_input):
-    response = with_message_history.invoke(
-    # 질문 입력
-    {"input": user_input},
-    # 세션 ID 기준으로 대화를 기록합니다.
-    config={"configurable": {"user_id": "abc123", "conversation_id": "1"}},
-)
-    return response.content
-
-
-
-
+def chat_with_bot(user_input, user_id):
+    try:
+        session_id = f"user_{user_id}"
+        current_time = timezone.now()
+        
+        
+        response = with_message_history.invoke(
+            # 질문 입력
+            {"recent_day": current_time.date(), "input": user_input},
+            # 세션 ID 기준으로 대화를 기록
+            config={"configurable": {"session_id": session_id}}
+            # 유저PK와 방 아이디 값 부여
+            # config={"configurable": {"user_id": user_id,
+            #                         "conversation_id": user_username}},
+        )
+        return response
+    except Exception as e:
+        print(f"챗봇 오류: {str(e)}")
+        return "죄송합니다. 채팅 서비스에 일시적인 문제가 발생했습니다."
