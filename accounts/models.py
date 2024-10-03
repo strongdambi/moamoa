@@ -6,4 +6,4 @@ class User(AbstractUser):
                                 help_text='부모님 기본 0 | 아이들은 부모님 번호')
     birthday = models.DateField(null=True, blank=True, help_text='생년월일')
     images = models.TextField(blank=True, null=True, help_text='프로필 이미지')
-    encouragement = models.TextField(blank=True, null=True)  # 부모님의 격려를 저장하는 필드
+    encouragement = models.TextField(blank=True, null=True, help_text='부모님이 자녀에게 남기는 격려 메시지')

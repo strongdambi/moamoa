@@ -36,7 +36,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
             - 교통
             - 문화/여가
             - 선물
-            - 기부
+            - 저축
             - 기타/지출
 
         Step 4
