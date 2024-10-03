@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from accounts.models import User
 
 
 # index
@@ -18,5 +19,10 @@ def Profile_view(request):
 def Create_view(request):
     return render(request, 'webs/children_create.html')
 
-def ChildrenProfile_view(request):
-    return render(request, 'webs/children_create.html')
+# 키즈 프로필
+def ChildrenProfile_view(request, pk):
+    # 키즈 정보 가져오기
+    child = get_object_or_404(User, pk=pk, parents=request.user)
+    
+    # 템플릿으로 child 객체 전달
+    return render(request, 'webs/children_profile.html', {'child': child})
