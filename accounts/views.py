@@ -14,7 +14,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from diaries.models import MonthlySummary
 from .validators import validate_signup
 from .serializers import UserSerializer
 from .models import User
@@ -257,11 +256,6 @@ class AccountsView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    # 부모님의 조언 입력
-    def post(self, request):
-        pass
-
-
     # 프로필 조회:
     def get(self, request):
 
@@ -310,3 +304,46 @@ class LogoutView(APIView):
         refresh_token.blacklist()
         return Response({"success": "로그아웃 되었습니다."},
                         status=status.HTTP_200_OK)
+
+
+# 부모님의 격려
+class ParentEncouragementView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    # 자식이 부모님의 격려를 조회하는 GET 메서드
+    def get(self, request):
+        try:
+            child = request.user
+
+            # 자식의 부모 정보 확인 (ForeignKey를 사용할 경우 None 체크)
+            if child.parents is None:
+                return Response({"error": "부모님의 정보를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+            # 부모의 정보를 가져옴
+            parent = child.parents
+
+            # 부모님의 격려 메시지 가져오기
+            encouragement = parent.encouragement if hasattr(parent, 'encouragement') else ""
+            return Response({"encouragement": encouragement}, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            # 요청을 보낸 사용자가 존재하지 않으면 오류 메시지 반환
+            return Response({"error": "사용자를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+
+    # 부모님의 격려 작성(부모 상세페이지 상단)
+    def post(self, request):
+        try:
+            parent = request.user
+            if parent.parents_id is not None:
+                return Response({"error": "접근 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+
+            # 요청으로 받은 새로운 격려 메시지 저장 (만약 'encouragement' 필드가 없으면 빈 문자열)
+            new_encouragement = request.data.get('encouragement', "")
+            parent.encouragement = new_encouragement
+            parent.save()
+
+            return Response({"message": "부모님의 격려가 업데이트되었습니다."}, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({"error": "사용자를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)

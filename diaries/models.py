@@ -10,7 +10,6 @@ class MonthlySummary(models.Model):
     content = models.TextField()
     year = models.PositiveIntegerField()
     month = models.PositiveIntegerField()
-    encouragement = models.TextField(blank=True, null=True)  # 부모님의 조언을 저장할 필드 추가
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
