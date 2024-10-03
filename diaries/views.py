@@ -1,12 +1,15 @@
 import re
 import json
 
+from django.db.models import Sum
 from datetime import date
 from django.conf import settings
 from django.utils import timezone
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from openai import OpenAI
+from .models import FinanceDiary, User, MonthlySummary
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -15,6 +18,12 @@ from accounts.models import User
 from .models import FinanceDiary, MonthlySummary, User
 from .chatbot import chat_with_bot
 from .serializers import FinanceDiarySerializer
+
+from .chatbot import chat_with_bot, get_message_history
+from .serializers import FinanceDiarySerializer
+from langchain_core.messages.human import HumanMessage
+from langchain_core.messages.ai import AIMessage
+from rest_framework.permissions import IsAuthenticated
 
 
 # 아이들 작성한 기입장 삭제
@@ -29,6 +38,63 @@ class ChatbotProcessDelete(APIView):
         diary_entry.delete()
         return Response({"message": "성공적으로 삭제되었습니다."}, status=status.HTTP_204_NO_CONTENT)
 
+
+# 아이 월별 옹돈기입장 리스트
+class MonthlyDiaryView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, child_pk, year, month):
+        user = request.user
+        if user.pk != child_pk:
+            return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        
+        # 해당 연월 용돈 기입장 내역 가져오기
+        queryset = user.diaries.filter(
+            today__year = year,
+            today__month = month
+        ).order_by('-today', '-id')
+        serializer = FinanceDiarySerializer(queryset, many=True)
+        return Response(
+            {
+            "diary": serializer.data
+            },
+        )
+    
+
+
+# 채팅 버튼 눌렀을때 화면에 보여주는 대화 목록
+class ChatMessageHistory(APIView):
+    def get(self, request, child_pk):
+        user = request.user
+        if user.id != child_pk:
+            return Response("대화내역을 볼 권한이 없습니다.", status=status.HTTP_403_FORBIDDEN)
+        
+        session_id=f"user_{user.id}"
+        chat_histories = get_message_history(session_id).messages
+        message_history = []
+        for chat_history in chat_histories:
+            # 기본 설정된 message 키값 세팅
+            message = {
+                "timestamp": chat_history.additional_kwargs.get('time_stamp'), # redis에 저장되어있는 timestamp
+                "content": chat_history.content  # 채팅 내역
+            }
+            # 사람이 입력한 대화 내용
+            if isinstance(chat_history, HumanMessage):
+                message['type'] = "USER"
+                message['username'] = user.first_name
+                message_history.append(message)
+            # ai가 입력한 대화 내용
+            elif isinstance(chat_history, AIMessage):
+                # json 데이터 형식의 대화는 제외
+                if 'json' not in chat_history.content:
+                    message['type'] = "AI"
+                    message['ai_name'] = '모아모아'
+                    message_history.append(message)
+                    
+
+        return Response({"response": message_history})
+        
+                
+    
 # 아이들만 작용하는 챗봇
 class ChatbotProcessView(APIView):
     def post(self, request):
@@ -102,7 +168,8 @@ class ChatbotProcessView(APIView):
                 })
         return Response({"response": response})
 
-    # 우리들의 소악마들을 위한 결계
+
+# 우리들의 소악마들을 위한 결계
     def is_allowance_related(self, input_text):
         # 예/아니오 선택이 있을 경우
         if input_text in ['1', '2']:
@@ -121,6 +188,7 @@ client = OpenAI(api_key=settings.OPENAI_API_KEY)
 def calculate_age(birth_date):
     today = date.today()
     return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+
 
 class MonthlySummaryView(APIView):
     def get(self, request, child_id):
@@ -228,23 +296,3 @@ class MonthlySummaryView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=500)
-        
-# 아이 월별 옹돈기입장 리스트
-class MonthlyDiaryView(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request, child_pk, year, month):
-        user = request.user
-        if user.pk != child_pk:
-            return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-        
-        # 해당 연월 용돈 기입장 내역 가져오기
-        queryset = user.diaries.filter(
-            today__year = year,
-            today__month = month
-        ).order_by('-today', '-id')
-        serializer = FinanceDiarySerializer(queryset, many=True)
-        return Response(
-            {
-            "diary": serializer.data
-            },
-        )

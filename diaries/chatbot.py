@@ -5,8 +5,10 @@ from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory, RedisChatMessageHistory
 from langchain_core.output_parsers import StrOutputParser
 from django.conf import settings
+from langchain_core.messages import AIMessage
 from langchain_core.runnables.utils import ConfigurableFieldSpec
 from django.utils import timezone
+import pytz
 from datetime import timedelta
 import traceback
 import redis
@@ -62,10 +64,24 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
 runnable = chat_prompt | llm | StrOutputParser()
 
+
+class CustomRedisChatMessageHistory(RedisChatMessageHistory):
+    def add_message(self, message):
+        # 한국 시간 생성
+        korea_tz = pytz.timezone(settings.TIME_ZONE)
+        # 현재 시간을 한국 시간에 맞춰 변환
+        korea_time = timezone.now().astimezone(korea_tz)
+        # 타임 스탬프 추가
+        message.additional_kwargs['time_stamp'] = korea_time.isoformat()
+        return super().add_message(message)
+
+# redis 저장 기간
+three_months = 90 * 24 * 60 * 60
 # Redis 방식 저장
 def get_message_history(session_id: str) -> RedisChatMessageHistory:
     # 세션 id를 기반으로 RedisChatMessageHistory 객체를 반환
-    return RedisChatMessageHistory(session_id, url=REDIS_URL)
+    return CustomRedisChatMessageHistory(session_id, url=REDIS_URL, ttl=three_months)
+
 
 with_message_history = RunnableWithMessageHistory(
     runnable,
@@ -91,12 +107,17 @@ def chat_with_bot(user_input, user_id):
     try:
         session_id = f"user_{user_id}"
         current_time = timezone.now()
-
         response = with_message_history.invoke(
+            # 질문 입력
             {"recent_day": current_time.date(), "input": user_input},
-            config={"configurable": {"session_id": session_id}},
+            # 세션 ID 기준으로 대화를 기록
+            config={"configurable": {"session_id": session_id}}
+            # 유저PK와 방 아이디 값 부여
+            # config={"configurable": {"user_id": user_id,
+            #                         "conversation_id": user_username}},
         )
         return response
     except Exception as e:
         print(f"챗봇 오류: {str(e)}")
+
         return "죄송합니다. 채팅 서비스에 일시적인 문제가 발생했습니다."
