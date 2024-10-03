@@ -10,17 +10,17 @@ class MonthlySummary(models.Model):
     content = models.TextField()
     year = models.PositiveIntegerField()
     month = models.PositiveIntegerField()
-    encouragement = models.TextField(blank=True, null=True)  # 부모님의 조언을 저장할 필드 추가
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('child', 'parent', 'year', 'month')
 
     def __str__(self):
-        return f"{self.child.username}의 {self.year}년 {self.month}월 계획서 - {self.content}"
+        return f"{self.child.username}의 {self.year}년 {self.month}월 결산 - {self.content}"
 
 # 용돈기입장
 class FinanceDiary(models.Model):
+
     child = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="diaries")
     parent = models.ForeignKey(

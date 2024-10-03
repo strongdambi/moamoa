@@ -1,22 +1,29 @@
 import re
 import json
+
 from django.db.models import Sum
 from datetime import date
 from django.conf import settings
+from django.utils import timezone
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from openai import OpenAI
 from .models import FinanceDiary, User, MonthlySummary
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from accounts.models import User
+from .models import FinanceDiary, MonthlySummary, User
+from .chatbot import chat_with_bot
+from .serializers import FinanceDiarySerializer
+
 from .chatbot import chat_with_bot, get_message_history
 from .serializers import FinanceDiarySerializer
 from langchain_core.messages.human import HumanMessage
 from langchain_core.messages.ai import AIMessage
 from rest_framework.permissions import IsAuthenticated
-
 
 
 # 아이들 작성한 기입장 삭제
@@ -262,11 +269,17 @@ class MonthlySummaryView(APIView):
                 # OpenAI 응답 처리
                 chat_response = response.choices[0].message.content
 
+                # JSON 문자열 추출 및 파싱
+                json_str = chat_response.strip().strip('`').strip()
+                if json_str.startswith('json'):
+                    json_str = json_str[4:].strip()
+                summary_data = json.loads(json_str)
+
                 # 요약 정보를 JSON으로 저장
                 summary_content = {
                     "username": child_name,
                     "age": child_age,
-                    "summary": chat_response  # OpenAI로부터 받은 응답 전체를 저장
+                    "summary": summary_data  # 파싱된 JSON 데이터 저장
                 }
 
                 # 데이터베이스에 저장
@@ -283,11 +296,12 @@ class MonthlySummaryView(APIView):
                     summary.save()
 
                 return Response(summary_content, status=200)
+            
+            except json.JSONDecodeError:
+                return Response({"error": "OpenAI 응답을 JSON으로 파싱할 수 없습니다."}, status=500)
 
             except Exception as e:
                 return Response({"error": f"OpenAI API 호출 중 오류 발생: {str(e)}"}, status=500)
 
         except Exception as e:
             return Response({"error": str(e)}, status=500)
-        
-
