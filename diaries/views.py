@@ -95,7 +95,6 @@ class ChatMessageHistory(APIView):
                     message['type'] = "AI"
                     message['ai_name'] = '모아모아'
                     message_history.append(message)
-                    
 
         return Response({"response": message_history})
         
