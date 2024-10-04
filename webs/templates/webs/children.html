@@ -48,18 +48,16 @@
                         "password": password
                     })
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(errorData => { throw errorData });
-                    }
-                    return response.json();
-                })
+                
+                .then(response => response.json())
                 .then(data => {
-                    alert('로그인 성공!');
-                    window.location.href = '/webs/children_profile/<int:pk>'; // 로그인 성공 시 children_profile로 리다이렉트
+                    if (data.id) {
+                        window.location.href = `/webs/children_profile/${data.id}/`;
+                    } else {
+                        alert('로그인 실패: 아이디 또는 비밀번호를 확인하세요.');
+                    }
                 })
                 .catch(error => {
-                    alert('로그인 실패: 아이디 또는 비밀번호를 확인하세요.');
                     console.error('Error:', error);
                 });
             });
