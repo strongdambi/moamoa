@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from accounts.models import User
 
 
+
 # index
 def Index(request):
     return render(request, 'webs/index.html')
@@ -26,3 +27,11 @@ def ChildrenProfile_view(request, pk):
     
     # 템플릿으로 child 객체 전달
     return render(request, 'webs/children_profile.html', {'child': child})
+
+# AI 채팅
+def Chatbot_view(request, child_pk):
+    context = {
+        'user_id': child_pk,
+
+    }
+    return render(request, 'webs/chatbot.html', context)
