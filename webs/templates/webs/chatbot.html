@@ -1,0 +1,202 @@
+{% extends 'webs/base.html' %}
+
+{% load static %}
+
+{% block title %}모아모아-챗봇{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="chat-history" id="chat-history">
+  </div>
+
+  <!-- Chat Input Container -->
+  <div class="chat-input-container">
+      <input type="hidden" id="childPk" value="{{ child_pk }}">
+      <input type="hidden" id="userId" value="{{ user_id }}">
+      <input type="text" id="chat-input" placeholder="입력">
+      <button id="send-button">입력</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  body {
+    background-color: #F9F4E2;
+    font-family: 'Arial', sans-serif;
+  }
+
+  .chat-container {
+    padding: 20px;
+    height: calc(100vh - 180px);
+    overflow-y: auto;
+  }
+
+  .chat-bubble {
+    border-radius: 20px;
+    padding: 15px;
+    margin-bottom: 10px;
+    display: inline-block;
+    font-size: 16px;
+    max-width: 80%;
+  }
+
+  .chat-left {
+    background-color: #FFF3D6;
+    float: left;
+    clear: both;
+  }
+
+  .chat-right {
+    background-color: #DFF2D8;
+    float: right;
+    clear: both;
+  }
+
+  .chat-input-container {
+    position: fixed;
+    bottom: 70px;
+    left: 0;
+    width: 100%;
+    background-color: #F9F4E2;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #ddd;
+  }
+
+  #message {
+    flex-grow: 1;
+    border: 2px solid #6D9C48;
+    border-radius: 25px;
+    padding: 10px;
+    margin-right: 10px;
+  }
+
+  #sendButton {
+    background-color: #FFCD00;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-size: 16px;
+  }
+
+  .timestamp {
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+  }
+</style>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+  
+  const chatHistory = document.getElementById('chat-history');
+  const chatInput = document.getElementById('chat-input');
+  const sendButton = document.getElementById('send-button');
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function getChildPkFromUrl() {
+  const pathSegments = window.location.pathname.split('/');
+  return pathSegments[pathSegments.length - 2];
+}
+
+// 채팅 기록 불러오기
+function loadChatHistory() {
+  
+  const childPk = getChildPkFromUrl();
+  fetch(`/api/v1/diary/chat/messages/${childPk}/`, {
+      method: 'GET',
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}` // 액세스 토큰 추가
+      },
+  })
+  .then(response => {
+      if (!response.ok) {111
+          throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+  })
+  .then(data => {
+      console.log(data);
+      chatHistory.innerHTML = '';
+
+      if (data && Array.isArray(data.response)) {
+          data.response.forEach(message => {
+              const messageElement = document.createElement('div');
+              messageElement.classList.add('chat-bubble');
+              messageElement.classList.add(message.type === 'USER' ? 'chat-right' : 'chat-left');
+              messageElement.textContent = `${message.type === 'USER' ? message.username : message.ai_name}: ${message.content}`;
+              chatHistory.appendChild(messageElement);
+          });
+          chatHistory.scrollTop = chatHistory.scrollHeight;
+      } else {
+          console.error('Expected an array in `data.response` but got:', data.response);
+      }
+  })
+  .catch(error => {
+      console.error('Fetch error:', error);
+  });
+}
+
+// 메시지 전송
+function sendMessage() {
+  const message = chatInput.value.trim();
+  if (message) {
+      const childPk = getChildPkFromUrl();
+      fetch('/api/v1/diary/chat/', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken'),
+              'Authorization': `Bearer ${localStorage.getItem('accessToken')}` // 액세스 토큰 추가
+          },
+          body: JSON.stringify({ message: message, child_pk: childPk })
+      })
+      .then(response => response.json())
+      .then(data => {
+          chatInput.value = '';
+          loadChatHistory();
+      })
+      .catch(error => console.error('Error:', error));
+  }
+}
+
+// 이벤트 리스너 설정
+document.addEventListener('DOMContentLoaded', function() {
+  const sendButton = document.getElementById('send-button');
+  const chatInput = document.getElementById('chat-input');
+
+  sendButton.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+          sendMessage();
+      }
+  });
+
+  // 초기 로드
+  loadChatHistory();
+
+  // 주기적으로 채팅 기록 새로고침 (옵션)
+  setInterval(loadChatHistory, 5000);  // 5초마다 새로고침
+});
+</script>
+{% endblock %}

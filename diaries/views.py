@@ -1,29 +1,34 @@
 import re
 import json
-
+# 장고 라이브러리
 from django.db.models import Sum
-from datetime import date
 from django.conf import settings
 from django.utils import timezone
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404
-from openai import OpenAI
-from .models import FinanceDiary, User, MonthlySummary
 from django.utils import timezone
+# drf 라이브러리
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
+# 캡슐 라이브러리
 from accounts.models import User
-from .models import FinanceDiary, MonthlySummary, User
-from .chatbot import chat_with_bot
+from .models import FinanceDiary, User, MonthlySummary
+from .chat_history import get_message_history
+from .utils import chat_with_bot, is_allowance_related, calculate_age
+# 직렬화 라이브러리
 from .serializers import FinanceDiarySerializer
-
-from .chatbot import chat_with_bot, get_message_history
-from .serializers import FinanceDiarySerializer
+# langchain 관련 라이브러리
 from langchain_core.messages.human import HumanMessage
 from langchain_core.messages.ai import AIMessage
-from rest_framework.permissions import IsAuthenticated
+# openai 관련 라이브러리
+from openai import OpenAI
+# 비동기 관련 라이브러리
+from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer
 
 
 # 아이들 작성한 기입장 삭제
@@ -63,6 +68,7 @@ class MonthlyDiaryView(APIView):
 
 # 채팅 버튼 눌렀을때 화면에 보여주는 대화 목록
 class ChatMessageHistory(APIView):
+    # @database_sync_to_async
     def get(self, request, child_pk):
         user = request.user
         if user.id != child_pk:
@@ -89,7 +95,6 @@ class ChatMessageHistory(APIView):
                     message['type'] = "AI"
                     message['ai_name'] = '모아모아'
                     message_history.append(message)
-                    
 
         return Response({"response": message_history})
         
@@ -103,7 +108,7 @@ class ChatbotProcessView(APIView):
         parent_id = user.parents
 
         # 용돈기입 관련 메시지가 아닌 경우
-        if not self.is_allowance_related(user_input):
+        if not is_allowance_related(user_input):
             return Response({
                 "message": "용돈기입장과 관련된 정보를 입력해 주세요. 예시: '친구랑 간식으로 3000원 썼어.'"
             })
@@ -169,25 +174,7 @@ class ChatbotProcessView(APIView):
         return Response({"response": response})
 
 
-# 우리들의 소악마들을 위한 결계
-    def is_allowance_related(self, input_text):
-        # 예/아니오 선택이 있을 경우
-        if input_text in ['1', '2']:
-            return True
-        
-        # 금액 패턴 (숫자+원 또는 한글로 만원, 천원 등)
-        if re.search(r"\d+(원|만원|천원|백원)|[일이삼사오육칠팔구십]만원|[일이삼사오육칠팔구십]천원|[일이삼사오육칠팔구십]백원", input_text):
-            return True
-
-        return False  # 금액이나 예/아니오가 아니면 용돈기입장과 관련 없는 것으로 처리
-
-
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
-
-# 생년월일을 이용한 나이 계산 함수
-def calculate_age(birth_date):
-    today = date.today()
-    return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
 
 
 class MonthlySummaryView(APIView):
