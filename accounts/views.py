@@ -205,58 +205,61 @@ class ChildrenPRCreate(APIView):
         return Response(res_data, status=status.HTTP_201_CREATED)
 
 # 아이들 조회, 수정, 삭제
-class ChildrenPRView(APIView):
 
-    # API 뷰에서 인증된 사용자만 접근을 허용
+
+class ChildrenPRView(APIView):
     permission_classes = [IsAuthenticated]
 
-    # 특정 자녀의 정보를 조회
+    # 특정 자녀의 정보를 조회 (자식의 토큰으로도 조회 가능)
     def get(self, request, pk):
         try:
-            child = User.objects.get(pk=pk, parents=request.user) # 요청된 pk(자녀의 ID)와 부모 사용자를 기준으로 자녀 객체를 조회
-            serializer = UserSerializer(child) # 조회된 자녀 객체를 시리얼라이즈
-            return Response(serializer.data) # 시리얼라이즈된 데이터 응답 반환
+            # 부모인 경우, 해당 자녀를 조회
+            if request.user.parents_id is None:
+                child = User.objects.get(pk=pk, parents=request.user)
+            else:
+                # 자식의 토큰으로 자신의 정보를 조회할 수 있게 처리
+                if request.user.pk != pk:
+                    return Response({"error": "자신의 정보만 조회할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
+                child = request.user
+
+            serializer = UserSerializer(child)  # 자녀 객체를 시리얼라이즈
+            return Response(serializer.data)  # 자녀 정보 및 격려 메시지 반환
+
         except User.DoesNotExist:
-            return Response({"error": "아이들을 찾을수가 없습니다."}, status=status.HTTP_404_NOT_FOUND) # 자녀 객체가 존재하지 않을 경우 오류 메시지를 반환
+            return Response({"error": "아이를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
-    # 자녀의 정보를 수정
+
+
+    # 자녀의 정보를 수정 (부모님의 격려 메시지 포함)
     def put(self, request, pk):
-
         try:
             child = User.objects.get(pk=pk, parents=request.user)
             serializer = UserSerializer(child, data=request.data, partial=True)
             if serializer.is_valid():
-                # serializer.save() # 시리얼라이즈된 데이터가 유효할 경우 데이터 저장
 
-                if 'first_name' in request.data:
-                    # 요청 데이터에 first_name이 있는 경우, first_name 수정
-                    child.first_name = request.data['first_name']
-
-                # 요청 데이터에 비밀번호가 포함되어 있으면, 비밀번호를 업데이트
-                if 'password' in request.data:
-                    child.set_password(request.data['password'])
-                    
-                if 'birthday' in request.data:
-                    child.birthday = request.data['birthday']
-
+                # 격려 메시지가 포함되어 있으면 자녀의 encouragement 필드를 업데이트
+                if 'encouragement' in request.data:
+                    child.encouragement = request.data['encouragement']
 
                 # 자녀 정보 저장
                 child.save()
 
                 return Response(serializer.data) # 수정된 자녀 정보 반환
 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) # 시리얼라이즈 데이터가 유효하지 않을 경우, 오류 메시지
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         except User.DoesNotExist:
-            return Response({"error": "아이들을 찾을수가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "아이들을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
 
     # 특정 자녀의 정보 삭제
     def delete(self, request, pk):
         try:
             child = User.objects.get(pk=pk, parents=request.user)
             child.delete()
-            return Response({"success": "자식이 성공적으로 삭제되었습니다."}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"success": "자녀가 성공적으로 삭제되었습니다."}, status=status.HTTP_204_NO_CONTENT)
         except User.DoesNotExist:
-            return Response({"error": "아이들을 찾을수가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "아이들을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
 # 부모 수정, 조회
 class AccountsView(APIView):
@@ -311,3 +314,5 @@ class LogoutView(APIView):
         refresh_token.blacklist()
         return Response({"success": "로그아웃 되었습니다."},
                         status=status.HTTP_200_OK)
+
+

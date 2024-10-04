@@ -16,10 +16,11 @@ class MonthlySummary(models.Model):
         unique_together = ('child', 'parent', 'year', 'month')
 
     def __str__(self):
-        return f"{self.child.username}의 {self.year}년 {self.month}월 계획서 - {self.content}"
+        return f"{self.child.username}의 {self.year}년 {self.month}월 결산 - {self.content}"
 
 # 용돈기입장
 class FinanceDiary(models.Model):
+
     child = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="diaries")
     parent = models.ForeignKey(
