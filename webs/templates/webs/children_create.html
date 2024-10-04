@@ -1,0 +1,129 @@
+{% extends 'webs/base.html' %}
+
+{% load static %}
+
+{% block title %}키즈 계정 추가{% endblock %}
+
+{% block content %}
+    <!-- Form Container -->
+    <div class="form-container">
+        <h4 class="text-center">키즈 계정 추가</h4>
+
+        <form id="add-account-form" method="post">
+          <input type="hidden" id="csrf_token" name="csrfmiddlewaretoken" value="{{ csrf_token }}"> <!-- CSRF 토큰 -->
+
+          <input type="text" id="first_name" placeholder="이름" required>
+          <input type="date" id="birthday" placeholder="생년월일" required>
+          <input type="text" id="username" placeholder="아이디(영문, 한글 가능)" required autocomplete="username">
+          <input type="password" id="password" placeholder="비밀번호" required autocomplete="new-password">
+          <input type="password" id="password2" placeholder="비밀번호 확인" required autocomplete="new-password">
+
+          <!-- Profile Upload -->
+          <div class="profile-upload">
+              <img src="{% static 'webs/images/moamoa_icon.png' %}" alt="Profile Picture">
+              <div class="profile-edit">프로필 수정</div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn submit-button">아이 계정 추가</button>
+        </form>
+    </div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+
+    .form-container {
+        margin-top: 20px;
+        text-align: center;
+    }
+    .form-container input {
+        width: 75%;
+        height: 45px;
+        font-size: 16px;
+        margin-bottom: 15px;
+        border-radius: 25px;
+        border: 2px solid #6D9C48;
+        padding: 10px;
+    }
+    .profile-upload {
+        text-align: center;
+        margin: 20px 0;
+    }
+    .profile-upload img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin-bottom: 10px;
+    }
+    .profile-edit {
+        font-size: 14px;
+        color: #7F7F7F;
+    }
+    .submit-button {
+        background-color: #FFCD00;
+        color: white;
+        border: none;
+        width: 60%;
+        height: 50px;
+        font-size: 18px;
+        border-radius: 25px;
+        margin: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+    // CSRF 토큰을 가져오는 함수
+    function getCSRFToken() {
+        return document.getElementById('csrf_token').value;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('add-account-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const first_name = document.getElementById('first_name').value;
+            const birthday = document.getElementById('birthday').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const password2 = document.getElementById('password2').value;
+            
+            // 생일 날짜 형식을 확인
+            console.log('생일:', birthday)
+            
+            // Fetch API로 데이터를 전송
+            fetch('http://localhost:8000/api/v1/accounts/children/create/', {
+                method: 'POST',
+                credentials: 'include', 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()  // CSRF 토큰 추가
+                },
+                body: JSON.stringify({
+                    first_name: first_name,
+                    birthday: birthday,
+                    username: username,
+                    password: password,
+                    password2: password2
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => { throw errorData });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('계정이 성공적으로 생성되었습니다.');
+                window.location.href = '/webs/profile/';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다.');
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'webs/base.html' %}
+
+{% load static %}
+
+{% block title %}모아모아 - 오늘의 용돈기입장{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <!-- Greeting -->
+    <div class="greeting">
+      <p>{{ child.first_name }} 반가워!</p>
+    </div>
+
+    <!-- Spending Log Table -->
+    <div class="log-table">
+      <h5 class="text-center">오늘의 용돈기입장</h5>
+      <table class="table table-borderless">
+        <thead>
+          <tr>
+            <th>내용</th>
+            <th>쓴 돈</th>
+            <th>받은 돈</th>
+            <th>남은 돈</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>아이스크림</td>
+            <td>2,000원</td>
+            <td>0원</td>
+            <td>22,000원</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Encouragement Message -->
+    <div class="encouragement">
+      <p>모아모아의 응원!</p>
+      <p>오늘도 용돈기입장에 기록했구나 정말 잘했어.<br>앞으로도 멋지게 용돈을 관리해보자. 화이팅!</p>
+    </div>
+
+    <!-- Badge -->
+    <div class="badge">
+      아이스크림 헌터
+    </div>
+  </div>
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+      <a href="#">
+        <img src="your-home-icon-url" alt="Home">
+      </a>
+      <a href="#">
+        <img src="your-calendar-icon-url" alt="Calendar">
+      </a>
+      <a href="#">
+        <img src="your-add-icon-url" alt="Add" style="width: 50px; height: 50px;">
+      </a>
+      <a href="#">
+        <img src="your-bell-icon-url" alt="Notifications">
+      </a>
+      <a href="#">
+        <img src="your-profile-icon-url" alt="Profile">
+      </a>
+    </div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // 현재 페이지의 URL에서 자녀의 pk를 추출
+    const childId = window.location.pathname.split('/').pop();  // URL에서 pk 값을 추출
+    const profileUrl = `/api/v1/accounts/children/${childId}/`;  // 자녀 프로필 정보를 가져올 API URL
+
+    // Fetch API를 사용하여 자녀 프로필 정보를 가져오기
+    fetch(profileUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('access_token')  // JWT 토큰 필요 시
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('프로필을 불러오는 중 오류가 발생했습니다.');
+      }
+      return response.json();
+    })
+    .then(data => {
+      // 자녀의 이름을 화면에 표시합니다.
+      const greetingText = document.getElementById('greeting-text');
+      greetingText.textContent = `${data.first_name} 반가워!`;
+
+      // 추가적으로 자녀의 데이터를 다른 곳에도 삽입할 수 있습니다.
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('프로필을 불러오는 중 오류가 발생했습니다.');
+    });
+  });
+</script>
+{% endblock %}
