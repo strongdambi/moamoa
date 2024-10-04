@@ -6,15 +6,20 @@
 
 {% block content %}
 <div class="container">
-  <!-- Greeting -->
-  <div class="greeting">
-    <p id="child-greeting">아이의 이름을 불러옵니다...</p>
+  <!-- 아이 환영 메시지 -->
+  <div class="text-center mt-3">
+    <h2 id="child-greeting">아이의 이름을 불러옵니다...</h2>
   </div>
 
-  <!-- Spending Log Table -->
-  <div class="log-table">
-    <h5 class="text-center">오늘의 용돈기입장</h5>
-    <table class="table table-borderless">
+  <!-- 용돈기입장 섹션 -->
+  <div class="spending-log mt-4 p-3" style="background-color: #FFF4DB; border-radius: 10px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">용돈기입장</h5>
+      <select class="form-select w-auto" style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">
+        <option>24년 8월</option>
+      </select>
+    </div>
+    <table class="table text-center">
       <thead>
         <tr>
           <th>내용</th>
@@ -24,41 +29,73 @@
         </tr>
       </thead>
       <tbody id="diary-table-body">
-        <!-- 용돈기입장 항목들이 여기에 추가됩니다 -->
+        <!-- 데이터가 여기에 추가됩니다 -->
       </tbody>
     </table>
+    <div class="text-center">
+      <a href="#" class="text-muted">더보기</a>
+    </div>
   </div>
 
-  <!-- Encouragement Message -->
-  <div class="encouragement">
-    <p>모아모아의 응원!</p>
-    <p>오늘도 용돈기입장에 기록했구나 정말 잘했어.<br>앞으로도 멋지게 용돈을 관리해보자. 화이팅!</p>
-  </div>
-
-  <!-- Badge -->
-  <div class="badge">
-    아이스크림 헌터
+  <!-- 응원 메시지 -->
+  <div class="encouragement mt-4 p-3" style="background-color: #FFFCD6; border-radius: 10px;">
+    <h5>부모님이 보내신 응원의 메시지</h5>
+    <p>비어있음</p>
   </div>
 </div>
 
-<!-- Bottom Navigation -->
-<div class="bottom-nav">
-  <a href="#">
-    <img src="your-home-icon-url" alt="Home">
-  </a>
-  <a href="#">
-    <img src="your-calendar-icon-url" alt="Calendar">
-  </a>
-  <a href="#">
-    <img src="your-add-icon-url" alt="Add" style="width: 50px; height: 50px;">
-  </a>
-  <a href="#">
-    <img src="your-bell-icon-url" alt="Notifications">
-  </a>
-  <a href="#">
-    <img src="your-profile-icon-url" alt="Profile">
+<!-- 하단 네비게이션 -->
+<div class="bottom-nav text-center">
+  <a href="webs/chatbot/" class="nav-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" class="bi bi-plus-lg" viewBox="0 0 16 16">
+      <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v6.5H15a.5.5 0 0 1 0 1H8.5v6.5a.5.5 0 0 1-1 0V9H1a.5.5 0 0 1 0-1h6.5V1.5a.5.5 0 0 1 .5-.5z"/>
+    </svg>
   </a>
 </div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  #child-greeting{
+    margin: 30px;
+  }
+  .encouragement, .spending-log {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 하단 내비게이션 */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    background-color: #FFF4DB;
+    height: 50px;
+    border-top: 5px solid #FFCD00;
+  }
+
+  .nav-btn {
+    background-color: #FFCD00;
+    border-radius: 50%;
+    padding: 10px;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -40px; /* 버튼이 살짝 떠 있도록 설정 */
+  }
+
+  /* #app 높이 설정 */
+  #app {
+    position: relative;
+    min-height: 100vh;
+    padding-bottom: 60px; /* 내비게이션 공간 확보 */
+  }
+
+</style>
 {% endblock %}
 
 {% block extra_script %}
