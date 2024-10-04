@@ -40,7 +40,7 @@ class ChatbotProcessDelete(APIView):
         return Response({"message": "성공적으로 삭제되었습니다."}, status=status.HTTP_204_NO_CONTENT)
 
 
-# 아이 월별 옹돈기입장 리스트
+# 아이 월별 용돈기입장 리스트
 class MonthlyDiaryView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request, child_pk, year, month):
