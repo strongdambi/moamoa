@@ -4,19 +4,15 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
 # 장고 라이브러리
 from django.conf import settings
-from django.utils import timezone
 # 시간 관련 라이브러리
 from datetime import timedelta, date
+from .chat_history import get_current_korea_date
 # 정규표현식
 import re
-
 # 캡슐 라이브러리
 from .prompts import chat_prompt
-from .chat_history import get_message_history, korea_time
-
-
-
-
+from .chat_history import get_message_history
+# 한국 시간 가져오기
 
 llm = ChatOpenAI(model="gpt-4o-mini", api_key=settings.OPENAI_API_KEY)
 
@@ -31,8 +27,7 @@ with_message_history = RunnableWithMessageHistory(
 
 # 사용자 입력값을 토대로 날짜 계산
 def convert_relative_dates(user_input):
-    today = timezone.now().date()
-    
+    today = get_current_korea_date()
     if "오늘" in user_input:
         return today
     elif "어제" in user_input:
@@ -47,17 +42,11 @@ def convert_relative_dates(user_input):
 def chat_with_bot(user_input, user_id):
     try:
         session_id = f"user_{user_id}"
-        current_time = timezone.now()
-        
-        
+        current_date = get_current_korea_date()
+        input_with_date = f"오늘의 날짜는 {current_date}입니다. {user_input}"
         response = with_message_history.invoke(
-            # 질문 입력
-            {"recent_day": current_time.date(), "input": user_input},
-            # 세션 ID 기준으로 대화를 기록
+            {"recent_day": current_date, "input": input_with_date},
             config={"configurable": {"session_id": session_id}}
-            # 유저PK와 방 아이디 값 부여
-            # config={"configurable": {"user_id": user_id,
-            #                         "conversation_id": user_username}},
         )
         return response
     except Exception as e:
@@ -81,5 +70,3 @@ def is_allowance_related(input_text):
 def calculate_age(birth_date):
     today = date.today()
     return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
-
-

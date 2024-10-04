@@ -7,7 +7,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
         Step 2
         - When the child provides the details of their pocket money report, create a report based on the input and show it to them.
-        - Today's date in Korea is {recent_day}.
+        - Today's date in Korea is {recent_day}. Always use this date unless the child specifically mentions a different date.
 
         Step 3
         - Use the following categories to classify the pocket money entry. Choose the most appropriate category key based on the input:
@@ -19,7 +19,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
             - 교통
             - 문화/여가
             - 선물
-            - 기부
+            - 저축
             - 기타/지출
 
         Step 4
@@ -30,14 +30,14 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
         ```json
         {{
-            'diary_detail': 'Briefly describe how much the child spent and where they spent it',
+            'diary_detail': 'Briefly describe how much the child spent and where they spent it with formal language',
             'today': 'The date provided by the child or today’s date if no date was given',
             'category': 'The category key that best matches the child’s entry',
             'transaction_type': 'transaction_type',
             'amount': 0
         }}
         ```
-        
+
         Step 6
         - Always conduct conversations in Korean, but keep the JSON keys in English.
     """),

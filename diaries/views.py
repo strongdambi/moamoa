@@ -173,41 +173,6 @@ class ChatbotProcessView(APIView):
                     "message": "입력한 내용을 다시 한 번 확인해 주시고, 용돈기입장을 다시 작성해 주세요!"
                 })
         return Response({"response": response})
-    # 비동기식
-    # async def connect(self):
-    #     self.user = self.scope["user"]
-    #     self.child_pk = self.scope['url_route']['kwargs']['child_pk']
-    #     self.room_group_name = f'chat_{self.child_pk}'
-
-    #     await self.channel_layer.group_add(
-    #         self.room_group_name,
-    #         self.channel_name
-    #     )
-
-    #     await self.accept() 
-
-    # async def disconnect(self, close_code):
-    #     await self.channel_layer.group_discard(
-    #         self.room_group_name,
-    #         self.channel_name
-    #     )
-
-    # async def receive(self, text_data):
-    #     text_data_json = json.loads(text_data)
-    #     message = text_data_json['message']
-
-    #     response = await self.chat_with_bot_async(message)
-
-    #     await self.send(text_data=json.dumps({
-    #         'message': response
-    #     }))
-
-    # @database_sync_to_async
-    # def chat_with_bot_async(self, message):
-    #     # Your existing chat_with_bot logic here
-    #     return chat_with_bot(message, self.user.id)
-    
-    
 
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)

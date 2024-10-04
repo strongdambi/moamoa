@@ -2,12 +2,23 @@ from langchain_community.chat_message_histories import RedisChatMessageHistory
 import pytz
 from django.utils import timezone
 from moamoa.config import TIME_ZONE, REDIS_URL
+from django.conf import settings
 
-korea_tz = pytz.timezone(TIME_ZONE)
-korea_time = timezone.now().astimezone(korea_tz)
+# 한국 시간대 설정
+KOREA_TZ = pytz.timezone(settings.TIME_ZONE)
+
+# 현재 한국 시간을 가져오는 함수
+def get_current_korea_time():
+    return timezone.now().astimezone(KOREA_TZ)
+
+# 현재 한국 날짜를 가져오는 함수
+def get_current_korea_date():
+    return get_current_korea_time().date()
 
 class CustomRedisChatMessageHistory(RedisChatMessageHistory):
     def add_message(self, message):
+        # 현재 한국 시간 가져오기
+        korea_time = get_current_korea_time()
         # 타임 스탬프 추가
         message.additional_kwargs['time_stamp'] = korea_time.isoformat()
         return super().add_message(message)
