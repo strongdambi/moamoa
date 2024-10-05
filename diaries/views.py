@@ -45,21 +45,26 @@ class MonthlyDiaryView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request, child_pk, year, month):
         user = request.user
-        if user.pk != child_pk:
+        try:
+            child = User.objects.get(pk=child_pk, parents=user)
+        except User.DoesNotExist:
             return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-        
-        # 해당 연월 용돈 기입장 내역 가져오기
-        queryset = user.diaries.filter(
+        # if user.pk != child_pk:
+        #     return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        queryset =child.diaries.filter(
             today__year = year,
             today__month = month
         ).order_by('-today', '-id')
+        # queryset = user.diaries.filter(
+        #     today__year = year,
+        #     today__month = month
+        # ).order_by('-today', '-id')
         serializer = FinanceDiarySerializer(queryset, many=True)
         return Response(
             {
             "diary": serializer.data
             },
         )
-    
 
 
 # 채팅 버튼 눌렀을때 화면에 보여주는 대화 목록
