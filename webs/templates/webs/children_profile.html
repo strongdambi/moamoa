@@ -94,7 +94,12 @@
     min-height: 100vh;
     padding-bottom: 60px; /* 내비게이션 공간 확보 */
   }
-
+  .expense {
+    color: red !important;  /* 지출일 경우 빨간색 */
+  }
+  .income {
+    color: blue !important; /* 수입일 경우 파란색 */
+  }
 </style>
 {% endblock %}
 
@@ -137,13 +142,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const diaryTableBody = document.getElementById('diary-table-body');
         diaryTableBody.innerHTML = ''; 
         
-        data.diary.forEach((entry) => {
+        data.diary.forEach(entry => {
+            // 거래 유형에 따른 기호 추가
+            const sign = entry.transaction_type === '지출' ? '-' : '+';
+            const formattedAmount = `${sign} ${parseInt(entry.amount).toLocaleString()}원`;  // 금액을 정수로 변환하고 3자리마다 콤마 추가
+            const amountClass = entry.transaction_type === '지출' ? 'expense' : 'income';  // 지출일 경우 'expense' 클래스를, 수입일 경우 'income' 클래스를 사용
+
             const row = `
             <tr>
                 <td>${entry.today}</td>  <!-- 날짜 필드 -->
                 <td>${entry.diary_detail}</td>  <!-- 내용 필드 -->
-                <td>${entry.amount}원</td>  <!-- 금액 필드 -->
-                <td>${entry.remaining_amount}원</td>  <!-- 남은 돈 필드 -->
+                <td class="${amountClass}">${formattedAmount}</td>  <!-- 금액 필드 (클래스 적용) -->
+                <td>${parseInt(entry.remaining_amount).toLocaleString()}원</td>  <!-- 남은 돈 필드 -->
             </tr>`;
             diaryTableBody.insertAdjacentHTML('beforeend', row);
         });
