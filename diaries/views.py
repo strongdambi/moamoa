@@ -321,4 +321,29 @@ class MonthlySummaryView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
         
+    def post(self, request, child_id):
+        year = request.data.get('year')
+        month = request.data.get('month')
 
+        # 유효성 검사
+        if not year or not month:
+            return Response({"error": "연도와 월이 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 부모님(로그인한 사용자) 정보 추출
+        parent = request.user
+
+        # 자녀 정보를 데이터베이스에서 가져옴
+        try:
+            child = get_object_or_404(User, pk=child_id, parents=parent)
+        except User.DoesNotExist:
+            return Response({"error": "해당하는 자녀를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 해당 연도와 월에 맞는 계획서를 조회
+        summary = MonthlySummary.objects.filter(child=child, parent=parent, year=year, month=month).first()
+
+        if not summary:
+            return Response({"error": "해당 월의 계획서를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 조회된 계획서를 시리얼라이즈하고 응답으로 반환
+        serializer = MonthlySummarySerializer(summary)
+        return Response(serializer.data, status=status.HTTP_200_OK)
