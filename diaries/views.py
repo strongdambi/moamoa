@@ -5,6 +5,8 @@ from django.db.models import Sum
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.db.models import DateField
+from django.db.models.functions import TruncMonth
 # drf 라이브러리
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -66,6 +68,20 @@ class MonthlyDiaryView(APIView):
             },
         )
 
+# 키즈 프로필 콤보박스 월을 동적으로 표시하기 위함
+class AvailableMonthsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, child_pk):
+        # 특정 자녀의 용돈기입장 기록을 조회
+        finance_entries = FinanceDiary.objects.filter(child_id=child_pk).dates('today', 'month')
+
+        # 용돈기입장 기록이 있는 달만 추출
+        available_months = [entry.strftime("%Y-%m") for entry in finance_entries]
+
+        return Response({
+            "available_months": available_months
+        })
 
 # 채팅 버튼 눌렀을때 화면에 보여주는 대화 목록
 class ChatMessageHistory(APIView):
