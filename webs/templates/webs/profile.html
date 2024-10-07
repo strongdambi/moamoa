@@ -27,8 +27,9 @@
             <input type="text" id="edit-firstname" placeholder="이름"><br>
             <input type="date" id="edit-birthday" placeholder="생일"><br>
             <input type="password" id="edit-password" placeholder="새 비밀번호"><br>
-            <input type="file" id="edit-upload"><br>
-            <textarea type="text" id="edit-encouragement" placeholder="응원"></textarea><br>
+            <label for="edit-upload" class="custom-file-upload">프로필사진 파일 선택</label>
+            <input type="file" id="edit-upload" style="display: none;"><br>
+            <textarea type="text" id="edit-encouragement" placeholder="용돈기입장을 잘 작성하고 있는 아이에게 조언 또는 응원의 메시지를 보내보세요." class="custom-textarea"></textarea><br>
             <button id="save-button">저장</button>
         </div>
     </div>
@@ -36,7 +37,39 @@
 
 {% block extra_head %}
     <style>
+        .custom-file-upload {
+            width: 70%;
+            display: inline-block;
+            background-color: #6D9C48;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s ease;
+            margin-bottom: 15px;
+        }
 
+        .custom-file-upload:hover {
+            background-color: #e6b800;
+        }
+        .custom-textarea {
+            width: 70%;  
+            height: 120px;  
+            padding: 15px;  
+            border-radius: 10px;  
+            border: 2px solid #6D9C48;
+            margin-bottom: 15px;
+            font-size: 16px; 
+            resize: none; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-textarea:focus {
+            outline: none;  
+            border-color: #4F8035; 
+        }
         .profile-picture {
             width: 100px;
             height: 100px;
@@ -51,7 +84,7 @@
         }
 
         .edit-form-container input {
-            width: 75%;
+            width: 70%;
             height: 45px;
             font-size: 16px;
             margin-bottom: 15px;
