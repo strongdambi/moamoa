@@ -22,77 +22,87 @@
 
 {% block extra_head %}
 <style>
-  body {
-    background-color: #F9F4E2;
-    font-family: 'Arial', sans-serif;
-  }
 
-  .chat-container {
-    padding: 20px;
-    height: calc(100vh - 180px);
-    overflow-y: auto;
-  }
-
-  .chat-bubble {
-    border-radius: 20px;
-    padding: 15px;
-    margin-bottom: 10px;
-    display: inline-block;
-    font-size: 16px;
-    max-width: 80%;
-  }
-
-  .chat-left {
-    background-color: #FFF3D6;
-    float: left;
-    clear: both;
-  }
-
-  .chat-right {
-    background-color: #DFF2D8;
-    float: right;
-    clear: both;
-  }
-
-  .chat-input-container {
-    position: fixed;
-    bottom: 70px;
-    left: 0;
-    width: 100%;
-    background-color: #F9F4E2;
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    border-top: 1px solid #ddd;
-  }
-
-  #message {
-    flex-grow: 1;
-    border: 2px solid #6D9C48;
-    border-radius: 25px;
-    padding: 10px;
-    margin-right: 10px;
-  }
-
-  #sendButton {
-    background-color: #FFCD00;
-    color: white;
-    border: none;
-    border-radius: 25px;
-    padding: 10px 20px;
-    font-size: 16px;
-  }
-
-  .timestamp {
-    font-size: 12px;
-    color: #888;
-    margin-top: 5px;
-  }
-</style>
+    body {
+      background-color: #F9F4E2;
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+    }
+  
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+  
+    .chat-history {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding-bottom: 20px;
+      
+    }
+  
+    .chat-bubble {
+      border-radius: 20px;
+      padding: 15px;
+      margin-bottom: 10px;
+      display: inline-block;
+      font-size: 16px;
+      max-width: 80%;
+    }
+  
+    .chat-left {
+      background-color: #FFF3D6;
+      float: left;
+      clear: both;
+    }
+  
+    .chat-right {
+      background-color: #DFF2D8;
+      float: right;
+      clear: both;
+    }
+  
+    .chat-input-container {
+      background-color: #F9F4E2;
+      padding: 10px 0;
+      display: flex;
+      align-items: center;
+      border-top: 1px solid #ddd;
+    }
+  
+    #chat-input {
+      flex-grow: 1;
+      border: 2px solid #6D9C48;
+      border-radius: 25px;
+      padding: 10px;
+      margin-right: 10px;
+    }
+  
+    #send-button {
+      background-color: #FFCD00;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  
+    .timestamp {
+      font-size: 12px;
+      color: #888;
+      margin-top: 5px;
+    }
+  </style>
 {% endblock %}
 
 {% block extra_script %}
 <script>
+  
   
   const chatHistory = document.getElementById('chat-history');
   const chatInput = document.getElementById('chat-input');
@@ -123,6 +133,7 @@ function loadChatHistory() {
   const childPk = getChildPkFromUrl();
   fetch(`/api/v1/diary/chat/messages/${childPk}/`, {
       method: 'GET',
+      credentials: 'include',
       headers: {
           'Content-Type': 'application/json',
           'X-CSRFToken': getCookie('csrftoken'),
@@ -130,7 +141,7 @@ function loadChatHistory() {
       },
   })
   .then(response => {
-      if (!response.ok) {111
+      if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
       }
       return response.json();
@@ -163,6 +174,7 @@ function sendMessage() {
   if (message) {
       const childPk = getChildPkFromUrl();
       fetch('/api/v1/diary/chat/', {
+        credentials: 'include',
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -196,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
   loadChatHistory();
 
   // 주기적으로 채팅 기록 새로고침 (옵션)
-  setInterval(loadChatHistory, 5000);  // 5초마다 새로고침
+  setInterval(loadChatHistory, 3000);  // 5초마다 새로고침
 });
 </script>
 {% endblock %}

@@ -45,6 +45,7 @@ class ChatbotProcessDelete(APIView):
 # 아이 월별 용돈기입장 리스트(영훈)
 class MonthlyDiaryView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request, child_pk, year, month):
         user = request.user
         try:
@@ -52,15 +53,15 @@ class MonthlyDiaryView(APIView):
         except User.DoesNotExist:
             return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
-        queryset =child.diaries.filter(
-            today__year = year,
-            today__month = month
+        queryset = child.diaries.filter(
+            today__year=year,
+            today__month=month
         ).order_by('-today', '-id')
 
         serializer = FinanceDiarySerializer(queryset, many=True)
         return Response(
             {
-            "diary": serializer.data
+                "diary": serializer.data
             },
         )
 
@@ -71,14 +72,15 @@ class ChatMessageHistory(APIView):
         user = request.user
         if user.id != child_pk:
             return Response("대화내역을 볼 권한이 없습니다.", status=status.HTTP_403_FORBIDDEN)
-        
-        session_id=f"user_{user.id}"
+
+        session_id = f"user_{user.id}"
         chat_histories = get_message_history(session_id).messages
         message_history = []
         for chat_history in chat_histories:
             # 기본 설정된 message 키값 세팅
             message = {
-                "timestamp": chat_history.additional_kwargs.get('time_stamp'), # redis에 저장되어있는 timestamp
+                # redis에 저장되어있는 timestamp
+                "timestamp": chat_history.additional_kwargs.get('time_stamp'),
                 "content": chat_history.content  # 채팅 내역
             }
             # 사람이 입력한 대화 내용
@@ -97,15 +99,14 @@ class ChatMessageHistory(APIView):
         return Response({"response": message_history})
 
 
-
-
-
 # 아이들만 작용하는 챗봇
 class ChatbotProcessView(APIView):
     def post(self, request):
         user_input = request.data.get('message')
         user = request.user
         parent_id = user.parents
+        # 유저 총 금액
+        total = user.total
 
         # 용돈기입 관련 메시지가 아닌 경우
         if not is_allowance_related(user_input):
@@ -128,7 +129,8 @@ class ChatbotProcessView(APIView):
             if user_input == '1' and "json" in response.lower():
                 try:
                     # JSON 파싱
-                    json_part = response.split("```json")[-1].split("```")[0].replace("'", '"')
+                    json_part = response.split(
+                        "```json")[-1].split("```")[0].replace("'", '"')
 
                     # 단일 JSON 객체만 처리 (배열이 아닌 경우 오류 처리)
                     plan_json = json.loads(json_part)
@@ -136,18 +138,27 @@ class ChatbotProcessView(APIView):
                         return Response({
                             "message": "한 번에 여러 항목을 입력할 수 없습니다. 한 번에 하나씩만 입력해 주세요."
                         }, status=400)
+                    transaction_type = plan_json.get("transaction_type")
+                    # transaction type
+                    if transaction_type == "수입":
 
+                        total += plan_json.get('amount')
+                    elif transaction_type == '지출':
+                        total -= plan_json.get('amount')
                     # 정상적인 단일 항목 처리
                     finance_diary = FinanceDiary(
                         diary_detail=plan_json.get('diary_detail'),
                         today=plan_json.get('today') or timezone.now().date(),
-                        category=plan_json.get('category'),  # OpenAI 응답에서 카테고리 가져오기
-                        transaction_type=plan_json.get('transaction_type'),
+                        # OpenAI 응답에서 카테고리 가져오기
+                        category=plan_json.get('category'),
+                        transaction_type=transaction_type,
                         amount=plan_json.get('amount'),
                         child=user,  # child 필드를 명시적으로 추가
                         parent=parent_id
                     )
                     finance_diary.save()
+                    user.total = total
+                    user.save()
 
                     # 저장된 계획서를 시리얼라이즈
                     serializer = FinanceDiarySerializer(finance_diary)
@@ -171,7 +182,9 @@ class ChatbotProcessView(APIView):
                 return Response({
                     "message": "입력한 내용을 다시 한 번 확인해 주시고, 용돈기입장을 다시 작성해 주세요!"
                 })
-        return Response({"response": response})
+        formatted_response = response.replace('\n', '<br>')
+
+        return Response({"response": formatted_response})
 
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -188,7 +201,8 @@ class MonthlySummaryView(APIView):
 
             # 자녀 이름과 나이 계산
             child_name = child.first_name
-            child_age = calculate_age(child.birthday) if child.birthday else "Unknown"
+            child_age = calculate_age(
+                child.birthday) if child.birthday else "Unknown"
 
             # 자녀의 이번 달 용돈기입장 데이터 가져오기
             now = timezone.now()
@@ -196,7 +210,8 @@ class MonthlySummaryView(APIView):
             current_month = now.month
 
             # 데이터 필터링: 이번 달의 수입/지출 데이터만 가져오기
-            diaries = FinanceDiary.objects.filter(child=child, today__year=current_year, today__month=current_month)
+            diaries = FinanceDiary.objects.filter(
+                child=child, today__year=current_year, today__month=current_month)
 
             if not diaries.exists():
                 return Response({
@@ -206,10 +221,12 @@ class MonthlySummaryView(APIView):
                 }, status=200)
 
             # 총 수입 계산 (transaction_type이 '수입'인 항목만)
-            total_income = diaries.filter(transaction_type='수입').aggregate(Sum('amount'))['amount__sum'] or 0
+            total_income = diaries.filter(transaction_type='수입').aggregate(
+                Sum('amount'))['amount__sum'] or 0
 
             # 총 지출 계산 (transaction_type이 '지출'인 항목만)
-            total_expenditure = diaries.filter(transaction_type='지출').aggregate(Sum('amount'))['amount__sum'] or 0
+            total_expenditure = diaries.filter(transaction_type='지출').aggregate(
+                Sum('amount'))['amount__sum'] or 0
 
             # 카테고리별 지출 계산 (지출 항목만 대상으로)
             category_expenditure = {}
@@ -283,7 +300,7 @@ class MonthlySummaryView(APIView):
                     summary.save()
 
                 return Response(summary_content, status=200)
-            
+
             except json.JSONDecodeError:
                 return Response({"error": "OpenAI 응답을 JSON으로 파싱할 수 없습니다."}, status=500)
 
@@ -292,7 +309,7 @@ class MonthlySummaryView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=500)
-    
+
     def post(self, request, child_id):
         year = request.data.get('year')
         month = request.data.get('month')
@@ -311,7 +328,8 @@ class MonthlySummaryView(APIView):
             return Response({"error": "해당하는 자녀를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
         # 해당 연도와 월에 맞는 계획서를 조회
-        summary = MonthlySummary.objects.filter(child=child, parent=parent, year=year, month=month).first()
+        summary = MonthlySummary.objects.filter(
+            child=child, parent=parent, year=year, month=month).first()
 
         if not summary:
             return Response({"error": "해당 월의 계획서를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)

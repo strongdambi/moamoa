@@ -1,5 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+
 chat_prompt = ChatPromptTemplate.from_messages([
     ("system", """
         Step 1
@@ -21,6 +23,10 @@ chat_prompt = ChatPromptTemplate.from_messages([
             - 선물
             - 저축
             - 기타/지출
+    
+        - Use the following transaction_types to classify the pocket money entry. Choose the most appropriate transaction_type key based on the input:
+            - 수입
+            - 지출
 
         Step 4
         - Please ask the child to confirm if the report is correct: "1. Yes" or "2. No, I want to rewrite it."
@@ -31,15 +37,14 @@ chat_prompt = ChatPromptTemplate.from_messages([
         ```json
         {{
             'diary_detail': 'Briefly describe where the child spent their pocket money, without mentioning the amount.'
-            'today': 'The date provided by the child or today’s date if no date was given',
-            'category': 'The category key that best matches the child’s entry',
-            'transaction_type': 'transaction_type',
+            'today': 'The date provided by the child or today's date if no date was given',
+            'category': 'The category key that best matches the child's entry',
+            'transaction_type': 'The transaction_type key that best matches the child's entry',
             'amount': 0
         }}
         ```
-
         Step 6
-        - Always conduct conversations in Korean, but keep the JSON keys in English.
+        - Always conduct conversations in Korean.
     """),
     MessagesPlaceholder(variable_name="chat_history"),
     ("human", "{input}"),

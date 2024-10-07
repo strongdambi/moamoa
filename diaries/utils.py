@@ -45,11 +45,26 @@ def chat_with_bot(user_input, user_id):
     try:
         session_id = f"user_{user_id}"
         current_date = get_current_korea_date()
-        input_with_date = f"오늘의 날짜는 {current_date}입니다. {user_input}"
+        
+        # input_with_date = f"오늘의 날짜는 {current_date}입니다. {user_input}"
         response = with_message_history.invoke(
-            {"recent_day": current_date, "input": input_with_date},
+            {"recent_day": current_date, "input": user_input},
             config={"configurable": {"session_id": session_id}}
         )
+
+        # 수입/지출 관련 모든 영단어를 한글로 변환
+        if isinstance(response, str):
+            response = (
+                response.replace("income", "수입")
+                        .replace("earnings", "수입")
+                        .replace("revenue", "수입")
+                        .replace("profit", "수입")
+                        .replace("expense", "지출")
+                        .replace("expenditure", "지출")
+                        .replace("spending", "지출")
+                        .replace("cost", "지출")
+            )
+
         return response
     except Exception as e:
         print(f"챗봇 오류: {str(e)}")
