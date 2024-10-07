@@ -146,11 +146,10 @@ class ChatbotProcessView(APIView):
         # user = request.user
         # parent_id = user.parents
         # 유저 총 금액
-        total = user.total
-
 
         try:
             child = User.objects.get(pk=child_pk, parents=user)
+            total = child.total
         except User.DoesNotExist:
             return Response({"message": "다른 유저는 이 기능을 사용할 수 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
@@ -213,11 +212,11 @@ class ChatbotProcessView(APIView):
                     amount = plan_json.get('amount')
                     # 잔여 금액 업데이트 (수입이면 더하고, 지출이면 뺍니다)
                     if plan_json.get('transaction_type') == '수입':
-                        user.total += amount  # 잔여 금액 더하기
+                        child.total += amount  # 잔여 금액 더하기
                     else:
-                        user.total -= amount  # 잔여 금액 빼기
-                    user.total = total
-                    user.save()
+                        child.total -= amount  # 잔여 금액 빼기
+                    child.total = total
+                    child.save()
 
                     # 저장된 계획서를 시리얼라이즈
                     serializer = FinanceDiarySerializer(finance_diary)
@@ -245,7 +244,6 @@ class ChatbotProcessView(APIView):
         # formatted_response = response.replace('\n', '<br>')
 
         return Response({"response": response})
-
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
