@@ -64,18 +64,7 @@ def chat_with_bot(user_input, user_id):
             )
 
 
-        # 수입/지출 관련 모든 영단어를 한글로 변환
-        if isinstance(response, str):
-            response = (
-                response.replace("income", "수입")
-                        .replace("earnings", "수입")
-                        .replace("revenue", "수입")
-                        .replace("profit", "수입")
-                        .replace("expense", "지출")
-                        .replace("expenditure", "지출")
-                        .replace("spending", "지출")
-                        .replace("cost", "지출")
-            )
+
 
         return response
     except Exception as e:

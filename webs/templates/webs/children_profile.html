@@ -5,98 +5,255 @@
 {% block title %}모아모아 - 오늘의 용돈기입장{% endblock %}
 
 {% block content %}
-  <div class="container">
-    <!-- Greeting -->
-    <div class="greeting">
-      <p>{{ child.first_name }} 반가워!</p>
-    </div>
+<div class="container">
+  <!-- 아이 환영 메시지 -->
+  <div class="text-center mt-3">
+    <h2 id="child-greeting">아이의 이름을 불러옵니다...</h2>
+  </div>
 
-    <!-- Spending Log Table -->
-    <div class="log-table">
-      <h5 class="text-center">오늘의 용돈기입장</h5>
-      <table class="table table-borderless">
-        <thead>
-          <tr>
-            <th>내용</th>
-            <th>쓴 돈</th>
-            <th>받은 돈</th>
-            <th>남은 돈</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>아이스크림</td>
-            <td>2,000원</td>
-            <td>0원</td>
-            <td>22,000원</td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- 용돈기입장 섹션 -->
+  <div class="spending-log mt-4 p-3" style="background-color: #FFF4DB; border-radius: 10px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">용돈기입장</h5>
+      <!-- 년월 선택 입력 필드 -->
+      <select id="month-picker" class="form-select w-auto" style="background-color: rgb(255, 252, 241); border-color: #FFCD00;"></select>
     </div>
-
-    <!-- Encouragement Message -->
-    <div class="encouragement">
-      <p>모아모아의 응원!</p>
-      <p>오늘도 용돈기입장에 기록했구나 정말 잘했어.<br>앞으로도 멋지게 용돈을 관리해보자. 화이팅!</p>
-    </div>
-
-    <!-- Badge -->
-    <div class="badge">
-      아이스크림 헌터
+    <table class="table text-center">
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th>내용</th>
+          <th>금액</th>
+          <th>남은 돈</th>
+        </tr>
+      </thead>
+      <tbody id="diary-table-body">
+        <!-- 데이터가 여기에 추가됩니다 -->
+      </tbody>
+    </table>
+    <div class="text-center">
+      <a href="#" id="load-more-btn" class="text-muted">더보기</a>
     </div>
   </div>
-    <!-- Bottom Navigation -->
-    <div class="bottom-nav">
-      <a href="#">
-        <img src="your-home-icon-url" alt="Home">
-      </a>
-      <a href="#">
-        <img src="your-calendar-icon-url" alt="Calendar">
-      </a>
-      <a href="#">
-        <img src="your-add-icon-url" alt="Add" style="width: 50px; height: 50px;">
-      </a>
-      <a href="#">
-        <img src="your-bell-icon-url" alt="Notifications">
-      </a>
-      <a href="#">
-        <img src="your-profile-icon-url" alt="Profile">
-      </a>
-    </div>
+
+  <!-- 응원 메시지 -->
+  <div class="encouragement mt-4 p-3" style="background-color: #FFFCD6; border-radius: 10px;">
+    <h5>부모님이 보내신 응원의 메시지</h5>
+    <p>비어있음</p>
+  </div>
+</div>
+
+<!-- 하단 네비게이션 -->
+<div class="bottom-nav text-center">
+  <a href="#" id="chatbot-button" class="nav-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" class="bi bi-plus-lg" viewBox="0 0 16 16">
+      <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v6.5H15a.5.5 0 0 1 0 1H8.5v6.5a.5.5 0 0 1-1 0V9H1a.5.5 0 0 1 0-1h6.5V1.5a.5.5 0 0 1 .5-.5z"/>
+    </svg>
+  </a>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  #child-greeting {
+    margin: 30px;
+  }
+  .encouragement, .spending-log {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 하단 내비게이션 */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    background-color: #FFF4DB;
+    height: 50px;
+    border-top: 5px solid #FFCD00;
+  }
+
+  .nav-btn {
+    background-color: #FFCD00;
+    border-radius: 50%;
+    padding: 10px;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -40px; /* 버튼이 살짝 떠 있도록 설정 */
+  }
+
+
+  /* 테이블 배경색 설정 */
+  table {
+    background-color: #fcf5e7 !important; 
+    border-radius: 10px; 
+  }
+
+  th, td {
+    background-color: #fdf7e8 !important;
+    padding: 10px;
+    border: 1px solid #fdf7e8;
+  }
+
+  /* #app 높이 설정 */
+  #app {
+    position: relative;
+    min-height: 100vh;
+    padding-bottom: 60px; /* 내비게이션 공간 확보 */
+  }
+  .expense {
+    color: rgb(255, 124, 124) !important;  /* 지출일 경우 빨간색 */
+  }
+  .income {
+    color: rgb(48, 152, 255) !important; /* 수입일 경우 파란색 */
+  }
+</style>
 {% endblock %}
 
 {% block extra_script %}
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    // 현재 페이지의 URL에서 자녀의 pk를 추출
-    const childId = window.location.pathname.split('/').pop();  // URL에서 pk 값을 추출
-    const profileUrl = `/api/v1/accounts/children/${childId}/`;  // 자녀 프로필 정보를 가져올 API URL
+document.addEventListener('DOMContentLoaded', function () {
+    const childId = window.location.pathname.split("/")[3];  // URL에서 자녀 ID 추출
+    const monthPicker = document.getElementById('month-picker');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+    const defaultDate = `${year}-${month}`;
+    let allEntries = [];
+    let currentIndex = 0;
+    const itemsPerPage = 5;
+    let expanded = false;
 
-    // Fetch API를 사용하여 자녀 프로필 정보를 가져오기
-    fetch(profileUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + localStorage.getItem('access_token')  // JWT 토큰 필요 시
-      }
+    // 자녀 정보 가져오기 (이름 불러오기)
+    fetch(`http://localhost:8000/api/v1/accounts/children/${childId}/`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
     })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('프로필을 불러오는 중 오류가 발생했습니다.');
-      }
-      return response.json();
+    .then((response) => response.json())
+    .then((data) => {
+        const greeting = document.getElementById('child-greeting');
+        greeting.textContent = `${data.child.first_name} 반가워!`;  // 자녀 이름 표시
     })
+    .catch((error) => {
+        console.error('프로필을 불러올 수 없습니다.', error);
+    });
+
+    // 기록이 있는 월 가져오기
+    fetch(`http://localhost:8000/api/v1/diary/${childId}/available-months/`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
     .then(data => {
-      // 자녀의 이름을 화면에 표시합니다.
-      const greetingText = document.getElementById('greeting-text');
-      greetingText.textContent = `${data.first_name} 반가워!`;
+        const availableMonths = data.available_months;
+        if (availableMonths && availableMonths.length > 0) {
+            // 선택 가능한 옵션을 동적으로 추가
+            availableMonths.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                monthPicker.appendChild(option);
+            });
 
-      // 추가적으로 자녀의 데이터를 다른 곳에도 삽입할 수 있습니다.
+            // 최신 날짜로 month-picker 기본값 설정
+            const latestMonth = availableMonths[availableMonths.length - 1];
+            monthPicker.value = latestMonth;
+
+            // 최신 날짜로 용돈기입장 데이터 가져오기
+            const [selectedYear, selectedMonth] = latestMonth.split('-');
+            fetchDiary(selectedYear, selectedMonth);
+        }
     })
     .catch(error => {
-      console.error('Error:', error);
-      alert('프로필을 불러오는 중 오류가 발생했습니다.');
+        console.error('월별 데이터를 불러올 수 없습니다.', error);
     });
-  });
+
+    // 용돈기입장 데이터 가져오기 함수
+    function fetchDiary(year, month) {
+        fetch(`http://localhost:8000/api/v1/diary/${childId}/${year}/${month}/`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            allEntries = data.diary;  // 모든 항목을 저장
+            currentIndex = 0;
+            expanded = false;
+            loadMoreBtn.textContent = '더보기';  // 버튼 텍스트를 '더보기'로 설정
+            displayEntries();  // 항목을 화면에 표시
+        })
+        .catch((error) => {
+            console.error('용돈기입장을 불러올 수 없습니다.', error);
+        });
+    }
+
+    // 항목을 5개씩 표시하는 함수
+    function displayEntries() {
+        const diaryTableBody = document.getElementById('diary-table-body');
+        diaryTableBody.innerHTML = '';  // 테이블 초기화
+        const itemsToShow = expanded ? allEntries : allEntries.slice(0, itemsPerPage);  // 5개만 표시 또는 전체
+        itemsToShow.forEach(entry => {
+            const sign = entry.transaction_type === '지출' ? '-' : '+';
+            const formattedAmount = `${sign} ${parseInt(entry.amount).toLocaleString()}원`;
+            const amountClass = entry.transaction_type === '지출' ? 'expense' : 'income';
+
+            const row = `
+            <tr>
+                <td>${entry.today}</td>
+                <td>${entry.diary_detail}</td>
+                <td class="${amountClass}">${formattedAmount}</td>
+                <td>${parseInt(entry.remaining_amount).toLocaleString()}원</td>
+            </tr>`;
+            diaryTableBody.insertAdjacentHTML('beforeend', row);
+        });
+
+        // "더보기"/"닫기" 버튼 설정
+        if (allEntries.length > itemsPerPage) {
+            loadMoreBtn.style
+            loadMoreBtn.style.display = 'inline';  // 더보기 버튼을 표시
+        } else {
+            loadMoreBtn.style.display = 'none';  // 항목이 5개 이하일 경우 더보기 버튼 숨김
+        }
+    }
+
+    // month-picker 값 변경 시 데이터 다시 불러오기
+    monthPicker.addEventListener('change', function() {
+        const [selectedYear, selectedMonth] = monthPicker.value.split('-');
+        fetchDiary(selectedYear, selectedMonth);
+    });
+
+    // 더보기 버튼 클릭 시 항목을 확장 또는 축소
+    loadMoreBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        expanded = !expanded;
+        if (expanded) {
+            loadMoreBtn.textContent = '닫기';  // 버튼 텍스트를 "닫기"로 변경
+        } else {
+            loadMoreBtn.textContent = '더보기';  // 버튼 텍스트를 "더보기"로 변경
+        }
+        displayEntries();  // 항목 다시 표시
+    });
+
+        // 챗봇 버튼 클릭 이벤트 추가
+        document.getElementById('chatbot-button').addEventListener('click', function() {
+        const childPk = childId;  // 자녀의 PK 값을 가져옴
+        window.location.href = `/webs/chatbot/${childPk}/`;  // 해당 URL로 이동
+    });
+});
 </script>
 {% endblock %}

@@ -28,6 +28,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 User = get_user_model()
 
+
 # 부모 회원가입
 
 
@@ -90,7 +91,6 @@ class KakaoCallbackView(APIView):
             if created:
                 user.set_password(password_hash)
 
-            # 20241004 시작
             # 프로필 이미지 저장 (이미지 URL이 있으면 다운로드 후 저장)
             if profile_image_url:
                 response = requests.get(profile_image_url)
@@ -101,8 +101,7 @@ class KakaoCallbackView(APIView):
                     user.images.save(image_name, ContentFile(response.content))
 
             # 정보 저장
-                user.save()
-            # 20241004 끝
+            user.save()
 
             # 사용자를 로그인 시킵니다. settings.py 추가
             login(request, user)
@@ -128,7 +127,7 @@ class KakaoCallbackView(APIView):
                                 httponly=True, samesite='Lax', secure=True)
 
             return response
-            # 추가 끝
+
 
             # #이거 제거 해주세요.
             # refresh = RefreshToken.for_user(user)
@@ -139,6 +138,7 @@ class KakaoCallbackView(APIView):
         # 사용자 이름 충돌 시 오류를 반환합니다.
         except IntegrityError:
             return Response({"error": "해당 사용자 이름을 가진 사용자가 이미 있습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
 
 # 아이들 로그인
 
@@ -174,6 +174,7 @@ class LoginView(APIView):
 
         # 인증 토큰과 사용자 정보를 포함한 응답을 반환
         return Response(res_data, status=status.HTTP_200_OK)
+
 
 # 아이들 회원가입
 
@@ -216,7 +217,9 @@ class ChildrenPRCreate(APIView):
 
         # 유효성 검사를 통과한 데이터로 새로운 사용자(자녀)를 생성 parents=parent_user 부모 사용자를 외래키로 설정
         user = User.objects.create_user(username=request.data.get("username"), password=request.data.get("password"),
-                                        email=request.data.get("email"), parents=parent_user, first_name=first_name, birthday=birthday)
+
+                                        email=request.data.get("email"), parents=parent_user, first_name=first_name,
+                                        birthday=birthday)
 
         # 생성된 사용자의 정보를 시리얼라이즈
         serializer = UserSerializer(user)
@@ -230,11 +233,13 @@ class ChildrenPRCreate(APIView):
         # 성공적으로 생성된 사용자 정보와 토큰을 포함하여 응답 반환
         return Response(res_data, status=status.HTTP_201_CREATED)
 
+
 # 아이들 조회, 수정, 삭제
 
-
 class ChildrenPRView(APIView):
+    # API 뷰에서 인증된 사용자만 접근을 허용
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]  # 파일과 데이터를 함께 처리
 
     # 특정 자녀의 정보를 조회 (자식의 토큰으로도 조회 가능)
     def get(self, request, pk):
@@ -243,6 +248,7 @@ class ChildrenPRView(APIView):
             if request.user.parents_id is None:
                 # 요청된 pk(자녀의 ID)와 부모 사용자를 기준으로 자녀 객체를 조회
                 child = User.objects.get(pk=pk, parents=request.user)
+
             else:
                 # 자식의 토큰으로 자신의 정보를 조회할 수 있게 처리
                 if request.user.pk != pk:
@@ -255,11 +261,15 @@ class ChildrenPRView(APIView):
             # 부모와 자녀 정보를 함께 반환
             response_data = {"child": child_serializer.data,
                              "parent": parent_serializer.data}
+
             # serializer = UserSerializer(child)  조회된 자녀 객체를 시리얼라이즈
             return Response(response_data)  # 시리얼라이즈된 데이터 응답 반환
 
         except User.DoesNotExist:
-            return Response({"error": "아이를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+            return Response({"error": "아이들을 찾을수가 없습니다."},
+                            status=status.HTTP_404_NOT_FOUND)  # 자녀 객체가 존재하지 않을 경우 오류 메시지를 반환
+
 
     # 자녀의 정보를 수정
 
@@ -297,6 +307,7 @@ class ChildrenPRView(APIView):
 
             # 시리얼라이즈 데이터가 유효하지 않을 경우, 오류 메시지
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         except User.DoesNotExist:
             return Response({"error": "아이들을 찾을수가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -314,7 +325,6 @@ class ChildrenPRView(APIView):
 
 
 class AccountsView(APIView):
-
     permission_classes = [IsAuthenticated]
 
     # 프로필 조회:
@@ -350,6 +360,7 @@ class AccountsView(APIView):
         except User.DoesNotExist:
             # 사용자가 데이터베이스에 없으면 오류 메시지 반환
             return Response({"error": "부모님을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
 
 # 아이들 로그아웃
 

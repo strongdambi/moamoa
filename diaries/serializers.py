@@ -15,3 +15,4 @@ class MonthlySummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = MonthlySummary
         fields = '__all__'
+

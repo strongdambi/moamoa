@@ -40,9 +40,10 @@ chat_prompt = ChatPromptTemplate.from_messages([
             'today': 'The date provided by the child or today's date if no date was given',
             'category': 'The category key that best matches the child's entry',
             'transaction_type': 'The transaction_type key that best matches the child's entry',
-            'amount': 0
+            'amount': amount
         }}
         ```
+
         Step 6
         - Always conduct conversations in Korean.
     """),

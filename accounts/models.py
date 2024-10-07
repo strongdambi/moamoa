@@ -12,3 +12,4 @@ class User(AbstractUser):
     def save(self, *args, **kwargs):
         # 기본 이미지를 설정하고 저장 로직을 오버라이드 할 필요가 없음
         super().save(*args, **kwargs)
+
