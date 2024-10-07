@@ -90,19 +90,19 @@ class ChatMessageHistory(APIView):
 
     def get(self, request, child_pk):
         user = request.user
-        if user.id != child_pk:
-            return Response("대화내역을 볼 권한이 없습니다.", status=status.HTTP_403_FORBIDDEN)
-
-        session_id = f"user_{user.id}"
+        # if user.id != child_pk:
+        #     return Response("대화내역을 볼 권한이 없습니다.", status=status.HTTP_403_FORBIDDEN)
+        #
+        # session_id = f"user_{user.id}"
         
         # 부모와 자녀의 관계를 확인   (율님 작성)
-        # try:
-        #     child = User.objects.get(pk=child_pk, parents=user)  # 부모와 자녀 관계 확인
-        # except User.DoesNotExist:
-        #     return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            child = User.objects.get(pk=child_pk, parents=user)  # 부모와 자녀 관계 확인
+        except User.DoesNotExist:
+            return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
         # # 자녀와의 채팅 세션 처리 (child.id 사용)
-        # session_id = f"user_{child.id}"
+        session_id = f"user_{child.id}"
         chat_histories = get_message_history(session_id).messages
         message_history = []
 
@@ -111,7 +111,6 @@ class ChatMessageHistory(APIView):
             message = {
                 # redis에 저장되어있는 timestamp
                 "timestamp": chat_history.additional_kwargs.get('time_stamp'),
-
                 "content": chat_history.content  # 채팅 내역
             }
 
@@ -123,6 +122,7 @@ class ChatMessageHistory(APIView):
                 
             # ai가 입력한 대화 내용
             #     message['username'] = child.first_name  # 자녀 이름으로 표시 (율님 작성)
+                message['username'] = child.first_name
             # # AI가 입력한 대화 내용
             elif isinstance(chat_history, AIMessage):
                 if 'json' not in chat_history.content:  # json 데이터는 제외
@@ -131,6 +131,7 @@ class ChatMessageHistory(APIView):
                     message_history.append(message)
 
             # message_history.append(message) (율님 작성)
+            message_history.append(message)
 
         # 채팅 기록을 응답으로 반환
         return Response({"response": message_history})
@@ -138,25 +139,24 @@ class ChatMessageHistory(APIView):
 
 # 아이들만 작용하는 챗봇
 class ChatbotProcessView(APIView):
-    
+
+    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능
+
     def post(self, request):
         user_input = request.data.get('message')
-        user = request.user
-        parent_id = user.parents
+        # user_input = request.data.get('message')  # 메시지를 요청에서 추출
+        child_pk = request.data.get('child_pk')  # body에서 child_pk를 추출
+        user = request.user  # 현재 로그인한 사용자
+        # user = request.user
+        # parent_id = user.parents
         # 유저 총 금액
         total = user.total
 
-# 아이들만 작용하는 챗봇
-# class ChatbotProcessView(APIView): (율님 작성)
-#     def post(self, request, child_pk):
-#         user_input = request.data.get('message')
-#         user = request.user
 
-#         # 자녀와 부모의 관계 확인
-#         try:
-#             child = User.objects.get(pk=child_pk, parents=user)
-#         except User.DoesNotExist:
-#             return Response({"message": "다른 유저는 이 기능을 사용할 수 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            child = User.objects.get(pk=child_pk, parents=user)
+        except User.DoesNotExist:
+            return Response({"message": "다른 유저는 이 기능을 사용할 수 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
         # 용돈기입 관련 메시지가 아닌 경우
         if not is_allowance_related(user_input):
@@ -172,19 +172,23 @@ class ChatbotProcessView(APIView):
             }, status=400)
 
         # OpenAI 프롬프트를 통해 채팅 응답을 받음
-        response = chat_with_bot(user_input, user.id)
+        print(user_input, user.id)
 
+        response = chat_with_bot(user_input, child_pk)
+        print(response)
 
         # 1 또는 2 입력에 대한 처리
         if user_input in ['1', '2']:
             if user_input == '1' and "json" in response.lower():
                 try:
                     # JSON 파싱
-                    json_part = response.split(
-                        "```json")[-1].split("```")[0].replace("'", '"')
+                    json_part = response.split("```json")[-1].split("```")[0].replace("'", '"')
 
                     # 단일 JSON 객체만 처리 (배열이 아닌 경우 오류 처리)
                     plan_json = json.loads(json_part)
+
+                    print(plan_json)
+
                     if isinstance(plan_json, list):
                         return Response({
                             "message": "한 번에 여러 항목을 입력할 수 없습니다. 한 번에 하나씩만 입력해 주세요."
@@ -204,10 +208,10 @@ class ChatbotProcessView(APIView):
                         category=plan_json.get('category'),
                         transaction_type=transaction_type,
                         amount=plan_json.get('amount'),
-                        child=user,  # child 필드를 명시적으로 추가 (자녀로 변경)
-                        # child = child  (율님 작성)
-                        # parent = user (율님 작성)
-                        parent=parent_id
+                        # child=user,  # child 필드를 명시적으로 추가 (자녀로 변경)
+                        child = child, # (율님 작성)
+                        parent = user #(율님 작성)
+                        # parent=parent_id
                     )
                     finance_diary.save()
                     amount = plan_json.get('amount')

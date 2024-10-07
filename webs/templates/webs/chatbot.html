@@ -7,8 +7,7 @@
 
 {% block content %}
 <div class="container">
-  <div class="chat-history" id="chat-history">
-  </div>
+  <div class="chat-history" id="chat-history"></div>
 
   <!-- Chat Input Container -->
   <div class="chat-input-container">
@@ -16,7 +15,6 @@
       <input type="hidden" id="userId" value="{{ user_id }}">
       <input type="text" id="chat-input" placeholder="입력">
       <button id="send-button">입력</button>
-    </form>
   </div>
 </div>
 {% endblock %}
@@ -108,20 +106,20 @@
   const chatHistory = document.getElementById('chat-history');
   const chatInput = document.getElementById('chat-input');
   const sendButton = document.getElementById('send-button');
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
+{#  function getCookie(name) {#}
+{#    let cookieValue = null;#}
+{#    if (document.cookie && document.cookie !== '') {#}
+{#        const cookies = document.cookie.split(';');#}
+{#        for (let i = 0; i < cookies.length; i++) {#}
+{#            const cookie = cookies[i].trim();#}
+{#            if (cookie.substring(0, name.length + 1) === (name + '=')) {#}
+{#                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));#}
+{#                break;#}
+{#            }#}
+{#        }#}
+{#    }#}
+{#    return cookieValue;#}
+{#}#}
 
 function getChildPkFromUrl() {
   const pathSegments = window.location.pathname.split('/');
@@ -132,13 +130,14 @@ function getChildPkFromUrl() {
 function loadChatHistory() {
   
   const childPk = getChildPkFromUrl();
+
+  console.log(childPk)
+    {#console.log(localStorage.getItem('accessToken'))#}
   fetch(`/api/v1/diary/chat/messages/${childPk}/`, {
       method: 'GET',
       credentials: 'include',
       headers: {
           'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken'),
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}` // 액세스 토큰 추가
       },
   })
   .then(response => {
@@ -174,18 +173,18 @@ function sendMessage() {
   const message = chatInput.value.trim();
   if (message) {
       const childPk = getChildPkFromUrl();
+      console.log("a" + childPk)
       fetch('/api/v1/diary/chat/', {
         credentials: 'include',
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
-              'X-CSRFToken': getCookie('csrftoken'),
-              'Authorization': `Bearer ${localStorage.getItem('accessToken')}` // 액세스 토큰 추가
           },
           body: JSON.stringify({ message: message, child_pk: childPk })
       })
       .then(response => response.json())
       .then(data => {
+          console.log(data)
           chatInput.value = '';
           loadChatHistory();
       })
@@ -213,4 +212,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
-
