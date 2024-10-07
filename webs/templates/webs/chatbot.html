@@ -1,21 +1,18 @@
 {% extends 'webs/base.html' %}
-<<<<<<< HEAD
 
 {% load static %}
 
 {% block title %}모아모아-챗봇{% endblock %}
 
 {% block content %}
-<div class="container">
-  <div class="chat-history" id="chat-history"></div>
-
-  <!-- Chat Input Container -->
-  <div class="chat-input-container">
-      <input type="hidden" id="childPk" value="{{ child_pk }}">
-      <input type="hidden" id="userId" value="{{ user_id }}">
-      <input type="text" id="chat-input" placeholder="입력">
-      <button id="send-button">입력</button>
-  </div>
+<div class="container-fluid d-flex flex-column h-100 p-0">
+  <div class="chat-history flex-grow-1 overflow-auto" id="chat-history"></div>
+  <div class="chat-input-container py-3 px-4 d-flex align-items-center shadow-sm" id="chat-input-container">
+    <input type="hidden" id="childPk" value="{{ child_pk }}">
+    <input type="hidden" id="userId" value="{{ user_id }}">
+    <input type="text" id="chat-input" placeholder="입력">
+    <button id="send-button">입력</button>
+</div>
 </div>
 {% endblock %}
 
@@ -96,6 +93,11 @@
       color: #888;
       margin-top: 5px;
     }
+
+    .chat-history {
+      overflow-y: auto;
+  }
+
   </style>
 {% endblock %}
 
@@ -106,20 +108,6 @@
   const chatHistory = document.getElementById('chat-history');
   const chatInput = document.getElementById('chat-input');
   const sendButton = document.getElementById('send-button');
-{#  function getCookie(name) {#}
-{#    let cookieValue = null;#}
-{#    if (document.cookie && document.cookie !== '') {#}
-{#        const cookies = document.cookie.split(';');#}
-{#        for (let i = 0; i < cookies.length; i++) {#}
-{#            const cookie = cookies[i].trim();#}
-{#            if (cookie.substring(0, name.length + 1) === (name + '=')) {#}
-{#                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));#}
-{#                break;#}
-{#            }#}
-{#        }#}
-{#    }#}
-{#    return cookieValue;#}
-{#}#}
 
 function getChildPkFromUrl() {
   const pathSegments = window.location.pathname.split('/');
@@ -210,5 +198,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // 주기적으로 채팅 기록 새로고침 (옵션)
   setInterval(loadChatHistory, 3000);  // 5초마다 새로고침
 });
+
+function ChatHistoryHeight() {
+    const chatInputContainer = document.getElementById('chat-input-container');
+    const chatHistory = document.getElementById('chat-history');
+    const chatInputHeight = chatInputContainer.offsetHeight;
+    chatHistory.style.height = `calc(90vh - ${chatInputHeight}px)`;
+  }
+  window.addEventListener('load', ChatHistoryHeight);
+  window.addEventListener('resize', ChatHistoryHeight);
 </script>
 {% endblock %}
