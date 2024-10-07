@@ -117,21 +117,17 @@ class ChatMessageHistory(APIView):
             # 사람이 입력한 대화 내용
             if isinstance(chat_history, HumanMessage):
                 message['type'] = "USER"
-                message['username'] = user.first_name
-                message_history.append(message)
-                
-            # ai가 입력한 대화 내용
-            #     message['username'] = child.first_name  # 자녀 이름으로 표시 (율님 작성)
                 message['username'] = child.first_name
+                message_history.append(message)
             # # AI가 입력한 대화 내용
             elif isinstance(chat_history, AIMessage):
                 if 'json' not in chat_history.content:  # json 데이터는 제외
                     message['type'] = "AI"
                     message['ai_name'] = '모아모아'
                     message_history.append(message)
+                    
 
             # message_history.append(message) (율님 작성)
-            message_history.append(message)
 
         # 채팅 기록을 응답으로 반환
         return Response({"response": message_history})
