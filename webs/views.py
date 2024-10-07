@@ -33,3 +33,7 @@ def Chatbot_view(request, child_pk):
         'user_id': child_pk,
     }
     return render(request, 'webs/chatbot.html', context)
+
+# 부모 프로필
+def ProfileDetail_view(request, pk):
+    return render(request, 'webs/profile_detail.html')

@@ -19,7 +19,7 @@ from .models import FinanceDiary, User, MonthlySummary
 from .chat_history import get_message_history
 from .utils import chat_with_bot, is_allowance_related, calculate_age
 # 직렬화 라이브러리
-from .serializers import FinanceDiarySerializer
+from .serializers import FinanceDiarySerializer, MonthlySummarySerializer
 # langchain 관련 라이브러리
 from langchain_core.messages.human import HumanMessage
 from langchain_core.messages.ai import AIMessage
