@@ -17,7 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.models import User
 from .models import FinanceDiary, User, MonthlySummary
 from .chat_history import get_message_history
-from .utils import chat_with_bot, calculate_age, is_allowance_related
+from .utils import chat_with_bot, calculate_age, is_allowance_related 
 # 직렬화 라이브러리
 from .serializers import FinanceDiarySerializer, MonthlySummarySerializer
 # langchain 관련 라이브러리
@@ -64,6 +64,7 @@ class MonthlyDiaryView(APIView):
             },
         )
 
+
 # 채팅 버튼 눌렀을때 화면에 보여주는 대화 목록
 class ChatMessageHistory(APIView):
     # @database_sync_to_async
@@ -86,6 +87,7 @@ class ChatMessageHistory(APIView):
                 message['type'] = "USER"
                 message['username'] = user.first_name
                 message_history.append(message)
+                
             # ai가 입력한 대화 내용
             elif isinstance(chat_history, AIMessage):
                 # json 데이터 형식의 대화는 제외
@@ -95,13 +97,11 @@ class ChatMessageHistory(APIView):
                     message_history.append(message)
 
         return Response({"response": message_history})
-
-
-
-
+    
 
 # 아이들만 작용하는 챗봇
 class ChatbotProcessView(APIView):
+    
     def post(self, request):
         user_input = request.data.get('message')
         user = request.user
@@ -122,6 +122,8 @@ class ChatbotProcessView(APIView):
 
         # OpenAI 프롬프트를 통해 채팅 응답을 받음
         response = chat_with_bot(user_input, user.id)
+        print(">>>>>>>>>")
+        print(response)
 
         # 1 또는 2 입력에 대한 처리
         if user_input in ['1', '2']:
@@ -138,6 +140,7 @@ class ChatbotProcessView(APIView):
                         }, status=400)
 
                     # 정상적인 단일 항목 처리
+                    amount = plan_json.get('amount')
                     finance_diary = FinanceDiary(
                         diary_detail=plan_json.get('diary_detail'),
                         today=plan_json.get('today') or timezone.now().date(),
@@ -148,6 +151,13 @@ class ChatbotProcessView(APIView):
                         parent=parent_id
                     )
                     finance_diary.save()
+
+                    # 잔여 금액 업데이트 (수입이면 더하고, 지출이면 뺍니다)
+                    if plan_json.get('transaction_type') == '수입':
+                        user.total += amount  # 잔여 금액 더하기
+                    else:
+                        user.total -= amount  # 잔여 금액 빼기
+                    user.save()
 
                     # 저장된 계획서를 시리얼라이즈
                     serializer = FinanceDiarySerializer(finance_diary)
@@ -171,6 +181,7 @@ class ChatbotProcessView(APIView):
                 return Response({
                     "message": "입력한 내용을 다시 한 번 확인해 주시고, 용돈기입장을 다시 작성해 주세요!"
                 })
+        
         return Response({"response": response})
 
 

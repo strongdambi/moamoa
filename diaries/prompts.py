@@ -21,6 +21,10 @@ chat_prompt = ChatPromptTemplate.from_messages([
             - 선물
             - 저축
             - 기타/지출
+     
+        - No matter what use the following transaction type to classify the pocket money entry. Choose the most appropriate transaction type key based on the input:
+            - 수입
+            - 지출
 
         Step 4
         - Please ask the child to confirm if the report is correct: "1. Yes" or "2. No, I want to rewrite it."

@@ -29,6 +29,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 User = get_user_model()
 
 # 부모 회원가입
+
+
 class KakaoCallbackView(APIView):
     # 카카오 OAuth를 통한 로그인 프로세스를 처리하는 뷰
     def get(self, request, *args, **kwargs):
@@ -61,6 +63,8 @@ class KakaoCallbackView(APIView):
                                        headers={"Authorization": f"Bearer {access_token}"})
         profile_data = profile_request.json()
 
+        print(profile_data)
+
         # 사용자 계정 정보를 추출
         kakao_account = profile_data.get("kakao_account")
         if not kakao_account or not kakao_account.get("email"):
@@ -85,8 +89,8 @@ class KakaoCallbackView(APIView):
             # 새로운 사용자가 생성되었다면 비밀번호를 설정 저장
             if created:
                 user.set_password(password_hash)
-                # 프로필 이미지가 있다면 여기에서 처리
 
+            # 20241004 시작
             # 프로필 이미지 저장 (이미지 URL이 있으면 다운로드 후 저장)
             if profile_image_url:
                 response = requests.get(profile_image_url)
@@ -97,12 +101,13 @@ class KakaoCallbackView(APIView):
                     user.images.save(image_name, ContentFile(response.content))
 
             # 정보 저장
-            user.save()
+                user.save()
+            # 20241004 끝
 
             # 사용자를 로그인 시킵니다. settings.py 추가
             login(request, user)
 
-            #추가 시작
+            # 추가 시작
             # JWT 토큰을 발급합니다.
             refresh = RefreshToken.for_user(user)
 
@@ -117,11 +122,13 @@ class KakaoCallbackView(APIView):
 
             # 쿠키에 토큰 설정 (HTTPOnly=True로 보안을 강화)
             # response.set_cookie('access_token', access_token, httponly=True, samesite='Lax', secure=True)
-            response.set_cookie('access_token', access_token, httponly=True, samesite='Lax', secure=False)
-            response.set_cookie('refresh_token', refresh_token, httponly=True, samesite='Lax', secure=True)
+            response.set_cookie('access_token', access_token,
+                                httponly=True, samesite='Lax', secure=False)
+            response.set_cookie('refresh_token', refresh_token,
+                                httponly=True, samesite='Lax', secure=True)
 
             return response
-            #추가 끝
+            # 추가 끝
 
             # #이거 제거 해주세요.
             # refresh = RefreshToken.for_user(user)
@@ -134,6 +141,8 @@ class KakaoCallbackView(APIView):
             return Response({"error": "해당 사용자 이름을 가진 사용자가 이미 있습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
 # 아이들 로그인
+
+
 class LoginView(APIView):
 
     def post(self, request):
@@ -160,12 +169,15 @@ class LoginView(APIView):
 
         # 사용자를 위한 JWT 리프레시 토큰과 액세스 토큰을 발행
         refresh = RefreshToken.for_user(user)
-        res_data["tokens"] = {"access_token": str(refresh.access_token), "refresh_token": str(refresh)}
+        res_data["tokens"] = {"access_token": str(
+            refresh.access_token), "refresh_token": str(refresh)}
 
         # 인증 토큰과 사용자 정보를 포함한 응답을 반환
         return Response(res_data, status=status.HTTP_200_OK)
 
 # 아이들 회원가입
+
+
 class ChildrenPRCreate(APIView):
     # API 뷰에서 인증된 사용자만 접근을 허용
     permission_classes = [IsAuthenticated]
@@ -212,7 +224,8 @@ class ChildrenPRCreate(APIView):
 
         # 사용자를 위한 리프레시 토큰과 액세스 토큰 발행
         refresh = RefreshToken.for_user(user)
-        res_data["tokens"] = {"access_token": str(refresh.access_token), "refresh_token": str(refresh)}
+        res_data["tokens"] = {"access_token": str(
+            refresh.access_token), "refresh_token": str(refresh)}
 
         # 성공적으로 생성된 사용자 정보와 토큰을 포함하여 응답 반환
         return Response(res_data, status=status.HTTP_201_CREATED)
@@ -228,7 +241,8 @@ class ChildrenPRView(APIView):
         try:
             # 부모인 경우, 해당 자녀를 조회
             if request.user.parents_id is None:
-                child = User.objects.get(pk=pk, parents=request.user)  # 요청된 pk(자녀의 ID)와 부모 사용자를 기준으로 자녀 객체를 조회
+                # 요청된 pk(자녀의 ID)와 부모 사용자를 기준으로 자녀 객체를 조회
+                child = User.objects.get(pk=pk, parents=request.user)
             else:
                 # 자식의 토큰으로 자신의 정보를 조회할 수 있게 처리
                 if request.user.pk != pk:
@@ -239,16 +253,16 @@ class ChildrenPRView(APIView):
             parent_serializer = UserSerializer(parent)  # 부모 객체를 시리얼라이즈
 
             # 부모와 자녀 정보를 함께 반환
-            response_data = {"child": child_serializer.data, "parent": parent_serializer.data}
+            response_data = {"child": child_serializer.data,
+                             "parent": parent_serializer.data}
             # serializer = UserSerializer(child)  조회된 자녀 객체를 시리얼라이즈
             return Response(response_data)  # 시리얼라이즈된 데이터 응답 반환
 
         except User.DoesNotExist:
             return Response({"error": "아이를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
-
-
     # 자녀의 정보를 수정
+
     def put(self, request, pk):
         try:
             child = User.objects.get(pk=pk, parents=request.user)
@@ -281,12 +295,13 @@ class ChildrenPRView(APIView):
 
                 return Response(serializer.data)  # 수정된 자녀 정보 반환
 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # 시리얼라이즈 데이터가 유효하지 않을 경우, 오류 메시지
+            # 시리얼라이즈 데이터가 유효하지 않을 경우, 오류 메시지
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
             return Response({"error": "아이들을 찾을수가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
-
     # 특정 자녀의 정보 삭제
+
     def delete(self, request, pk):
         try:
             child = User.objects.get(pk=pk, parents=request.user)
@@ -296,6 +311,8 @@ class ChildrenPRView(APIView):
             return Response({"error": "아이들을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
 # 부모 수정, 조회
+
+
 class AccountsView(APIView):
 
     permission_classes = [IsAuthenticated]
@@ -335,6 +352,8 @@ class AccountsView(APIView):
             return Response({"error": "부모님을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
 # 아이들 로그아웃
+
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -348,5 +367,3 @@ class LogoutView(APIView):
         refresh_token.blacklist()
         return Response({"success": "로그아웃 되었습니다."},
                         status=status.HTTP_200_OK)
-
-
