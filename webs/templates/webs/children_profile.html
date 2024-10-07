@@ -45,7 +45,7 @@
 
 <!-- 하단 네비게이션 -->
 <div class="bottom-nav text-center">
-  <a href="chatbot/${childId}/" class="nav-btn">
+  <a href="#" id="chatbot-button" class="nav-btn">
     <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" class="bi bi-plus-lg" viewBox="0 0 16 16">
       <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v6.5H15a.5.5 0 0 1 0 1H8.5v6.5a.5.5 0 0 1-1 0V9H1a.5.5 0 0 1 0-1h6.5V1.5a.5.5 0 0 1 .5-.5z"/>
     </svg>
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
     .then((response) => response.json())
     .then((data) => {
         const greeting = document.getElementById('child-greeting');
-        greeting.textContent = `${data.first_name} 반가워!`;  // 자녀 이름 표시
+        greeting.textContent = `${data.child.first_name} 반가워!`;  // 자녀 이름 표시
     })
     .catch((error) => {
         console.error('프로필을 불러올 수 없습니다.', error);
@@ -247,6 +247,12 @@ document.addEventListener('DOMContentLoaded', function () {
             loadMoreBtn.textContent = '더보기';  // 버튼 텍스트를 "더보기"로 변경
         }
         displayEntries();  // 항목 다시 표시
+    });
+
+        // 챗봇 버튼 클릭 이벤트 추가
+        document.getElementById('chatbot-button').addEventListener('click', function() {
+        const childPk = childId;  // 자녀의 PK 값을 가져옴
+        window.location.href = `/webs/chatbot/${childPk}/`;  // 해당 URL로 이동
     });
 });
 </script>
