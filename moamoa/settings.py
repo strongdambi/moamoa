@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 from . import config
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -36,6 +37,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,14 +45,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Third party
-    'corsheaders', #추가
+
+    'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
+    'channels',
     # Local app
     'accounts',
     'diaries',
-    'webs'
-
+    'webs',
 ]
 
 MIDDLEWARE = [
@@ -58,6 +61,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # 추가
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -66,6 +71,7 @@ MIDDLEWARE = [
 
 AUTH_USER_MODEL = "accounts.User"
 ROOT_URLCONF = 'moamoa.urls'
+
 
 #추가 시작
 # https://blog.stackademic.com/django-react-secure-authentication-using-http-only-cookie-ac718f0a2797
@@ -80,7 +86,7 @@ CSRF_TRUSTED_ORIGINS = ['http://localhost'] # 프론트엔드 도메인을 CSRF 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'webs' / 'templates'],  # 템플릿 경로 추가
+        'DIRS': [BASE_DIR / 'webs' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -95,6 +101,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'moamoa.wsgi.application'
 
+# ASGI 생성
+ASGI_APPLICATION = 'moamoa.asgi.application'
+
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -103,6 +112,15 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
+}
+# 비동기 channel layers  redis로 지정
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [(os.environ.get('REDIS_HOST', 'localhost'), 6379)],
+        },
+    },
 }
 
 
@@ -162,6 +180,12 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'webs/static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_DIRS = [BASE_DIR / 'webs/static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

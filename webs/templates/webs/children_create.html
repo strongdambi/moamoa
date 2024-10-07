@@ -8,24 +8,25 @@
     <!-- Form Container -->
     <div class="form-container">
         <h4 class="text-center">키즈 계정 추가</h4>
-
         <form id="add-account-form" method="post">
-          <input type="hidden" id="csrf_token" name="csrfmiddlewaretoken" value="{{ csrf_token }}"> <!-- CSRF 토큰 -->
 
-          <input type="text" id="first_name" placeholder="이름" required>
-          <input type="date" id="birthday" placeholder="생년월일" required>
-          <input type="text" id="username" placeholder="아이디(영문, 한글 가능)" required autocomplete="username">
-          <input type="password" id="password" placeholder="비밀번호" required autocomplete="new-password">
-          <input type="password" id="password2" placeholder="비밀번호 확인" required autocomplete="new-password">
+            <input type="hidden" id="csrf_token" name="csrfmiddlewaretoken" value="{{ csrf_token }}"> <!-- CSRF 토큰 -->
 
-          <!-- Profile Upload -->
-          <div class="profile-upload">
-              <img src="{% static 'webs/images/moamoa_icon.png' %}" alt="Profile Picture">
-              <div class="profile-edit">프로필 수정</div>
-          </div>
+            <input type="text" id="first_name" placeholder="이름" required>
+            <input type="date" id="birthday" placeholder="생년월일" required>
+            <input type="text" id="username" placeholder="아이디(영문, 한글 가능)" required autocomplete="username">
+            <input type="password" id="password" placeholder="비밀번호" required autocomplete="new-password">
+            <input type="password" id="password2" placeholder="비밀번호 확인" required autocomplete="new-password">
 
-          <!-- Submit Button -->
-          <button type="submit" class="btn submit-button">아이 계정 추가</button>
+            <!-- Profile Upload -->
+            <div class="profile-upload">
+                <img id="profile-picture" src="{% static 'webs/images/default_profile.png' %}" alt="Profile Picture"><br>
+                <label for="edit-upload" class="custom-file-upload1">프로필사진 수정</label>
+                <input type="file" id="edit-upload" style="display: none;">
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn submit-button">아이 계정 추가</button>
         </form>
     </div>
 {% endblock %}
@@ -51,11 +52,13 @@
         margin: 20px 0;
     }
     .profile-upload img {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
+        width: 150px;
+        height: 150px;
         margin-bottom: 10px;
-    }
+        object-fit: cover;
+        border-radius: 0;
+        }
+
     .profile-edit {
         font-size: 14px;
         color: #7F7F7F;
@@ -70,6 +73,7 @@
         border-radius: 25px;
         margin: 10px;
     }
+
 </style>
 {% endblock %}
 
@@ -81,6 +85,21 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        const fileInput = document.getElementById('edit-upload');
+        const profilePicture = document.getElementById('profile-picture');
+
+        // 파일 선택 시 미리보기 이미지 변경
+        fileInput.addEventListener('change', function() {
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePicture.src = e.target.result;  // 미리보기 이미지 변경
+                }
+                reader.readAsDataURL(file);  // 파일을 Data URL로 변환하여 미리보기로 설정
+            }
+        });
+
         document.getElementById('add-account-form').addEventListener('submit', function (e) {
             e.preventDefault();
 
@@ -89,25 +108,27 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const password2 = document.getElementById('password2').value;
-            
-            // 생일 날짜 형식을 확인
-            console.log('생일:', birthday)
-            
+            const profileImage = fileInput.files[0];  // 선택한 파일
+
+            // FormData 객체 생성
+            const formData = new FormData();
+            formData.append('first_name', first_name);
+            formData.append('birthday', birthday);
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('password2', password2);
+            if (profileImage) {
+                formData.append('profile_image', profileImage);  // 프로필 이미지 추가
+            }
+
             // Fetch API로 데이터를 전송
             fetch('http://localhost:8000/api/v1/accounts/children/create/', {
                 method: 'POST',
                 credentials: 'include', 
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRFToken': getCSRFToken()  // CSRF 토큰 추가
                 },
-                body: JSON.stringify({
-                    first_name: first_name,
-                    birthday: birthday,
-                    username: username,
-                    password: password,
-                    password2: password2
-                })
+                body: formData  // FormData 객체를 body에 추가
             })
             .then(response => {
                 if (!response.ok) {
