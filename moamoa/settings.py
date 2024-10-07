@@ -55,6 +55,10 @@ INSTALLED_APPS = [
     'webs',
 ]
 
+# 비동기 처리를 위한 asgi 설정
+ASGI_APPLICATION = 'moamoa.asgi.application'
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -173,6 +177,9 @@ STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [BASE_DIR / 'webs/static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

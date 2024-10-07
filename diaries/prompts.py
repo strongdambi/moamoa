@@ -30,7 +30,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
         ```json
         {{
-            'diary_detail': 'Briefly describe how much the child spent and where they spent it with formal language',
+            'diary_detail': 'Briefly describe where the child spent their pocket money, without mentioning the amount.'
             'today': 'The date provided by the child or today’s date if no date was given',
             'category': 'The category key that best matches the child’s entry',
             'transaction_type': 'transaction_type',

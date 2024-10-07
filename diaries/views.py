@@ -13,22 +13,20 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view
 # 캡슐 라이브러리
 from accounts.models import User
 from .models import FinanceDiary, User, MonthlySummary
 from .chat_history import get_message_history
-from .utils import chat_with_bot, is_allowance_related, calculate_age
+from .utils import chat_with_bot, calculate_age, is_allowance_related
 # 직렬화 라이브러리
-from .serializers import FinanceDiarySerializer
+from .serializers import FinanceDiarySerializer, MonthlySummarySerializer
 # langchain 관련 라이브러리
 from langchain_core.messages.human import HumanMessage
 from langchain_core.messages.ai import AIMessage
 # openai 관련 라이브러리
 from openai import OpenAI
 # 비동기 관련 라이브러리
-from channels.db import database_sync_to_async
-from channels.generic.websocket import AsyncWebsocketConsumer
+from asgiref.sync import sync_to_async
 
 
 # 아이들 작성한 기입장 삭제
@@ -44,27 +42,27 @@ class ChatbotProcessDelete(APIView):
         return Response({"message": "성공적으로 삭제되었습니다."}, status=status.HTTP_204_NO_CONTENT)
 
 
-# 아이 월별 옹돈기입장 리스트
+# 아이 월별 용돈기입장 리스트(영훈)
 class MonthlyDiaryView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request, child_pk, year, month):
         user = request.user
-        if user.pk != child_pk:
+        try:
+            child = User.objects.get(pk=child_pk, parents=user)
+        except User.DoesNotExist:
             return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-        
-        # 해당 연월 용돈 기입장 내역 가져오기
-        queryset = user.diaries.filter(
+
+        queryset =child.diaries.filter(
             today__year = year,
             today__month = month
         ).order_by('-today', '-id')
+
         serializer = FinanceDiarySerializer(queryset, many=True)
         return Response(
             {
             "diary": serializer.data
             },
         )
-    
-
 
 # 채팅 버튼 눌렀을때 화면에 보여주는 대화 목록
 class ChatMessageHistory(APIView):
@@ -97,9 +95,11 @@ class ChatMessageHistory(APIView):
                     message_history.append(message)
 
         return Response({"response": message_history})
-        
-                
-    
+
+
+
+
+
 # 아이들만 작용하는 챗봇
 class ChatbotProcessView(APIView):
     def post(self, request):
@@ -292,3 +292,30 @@ class MonthlySummaryView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+    
+    def post(self, request, child_id):
+        year = request.data.get('year')
+        month = request.data.get('month')
+
+        # 유효성 검사
+        if not year or not month:
+            return Response({"error": "연도와 월이 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 부모님(로그인한 사용자) 정보 추출
+        parent = request.user
+
+        # 자녀 정보를 데이터베이스에서 가져옴
+        try:
+            child = get_object_or_404(User, pk=child_id, parents=parent)
+        except User.DoesNotExist:
+            return Response({"error": "해당하는 자녀를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 해당 연도와 월에 맞는 계획서를 조회
+        summary = MonthlySummary.objects.filter(child=child, parent=parent, year=year, month=month).first()
+
+        if not summary:
+            return Response({"error": "해당 월의 계획서를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 조회된 계획서를 시리얼라이즈하고 응답으로 반환
+        serializer = MonthlySummarySerializer(summary)
+        return Response(serializer.data, status=status.HTTP_200_OK)

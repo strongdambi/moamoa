@@ -21,6 +21,10 @@ from .models import User
 from django.shortcuts import redirect
 from django.conf import settings
 
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+
+from rest_framework.parsers import MultiPartParser, FormParser
 
 User = get_user_model()
 
@@ -83,8 +87,17 @@ class KakaoCallbackView(APIView):
                 user.set_password(password_hash)
                 # 프로필 이미지가 있다면 여기에서 처리
 
-                # 정보 저장
-                user.save()
+            # 프로필 이미지 저장 (이미지 URL이 있으면 다운로드 후 저장)
+            if profile_image_url:
+                response = requests.get(profile_image_url)
+
+                if response.status_code == 200:
+                    # 이미지 파일을 저장 (파일명은 kakao_id로 설정)
+                    image_name = f"{kakao_id}_profile_image.jpg"
+                    user.images.save(image_name, ContentFile(response.content))
+
+            # 정보 저장
+            user.save()
 
             # 사용자를 로그인 시킵니다. settings.py 추가
             login(request, user)
@@ -215,27 +228,49 @@ class ChildrenPRView(APIView):
         try:
             # 부모인 경우, 해당 자녀를 조회
             if request.user.parents_id is None:
-                child = User.objects.get(pk=pk, parents=request.user)
+                child = User.objects.get(pk=pk, parents=request.user)  # 요청된 pk(자녀의 ID)와 부모 사용자를 기준으로 자녀 객체를 조회
             else:
                 # 자식의 토큰으로 자신의 정보를 조회할 수 있게 처리
                 if request.user.pk != pk:
                     return Response({"error": "자신의 정보만 조회할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
-                child = request.user
 
-            serializer = UserSerializer(child)  # 자녀 객체를 시리얼라이즈
-            return Response(serializer.data)  # 자녀 정보 및 격려 메시지 반환
+            parent = request.user  # 자녀의 부모 정보도 가져오기
+            child_serializer = UserSerializer(child)  # 자녀 객체를 시리얼라이즈
+            parent_serializer = UserSerializer(parent)  # 부모 객체를 시리얼라이즈
+
+            # 부모와 자녀 정보를 함께 반환
+            response_data = {"child": child_serializer.data, "parent": parent_serializer.data}
+            # serializer = UserSerializer(child)  조회된 자녀 객체를 시리얼라이즈
+            return Response(response_data)  # 시리얼라이즈된 데이터 응답 반환
 
         except User.DoesNotExist:
             return Response({"error": "아이를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
 
 
-    # 자녀의 정보를 수정 (부모님의 격려 메시지 포함)
+    # 자녀의 정보를 수정
     def put(self, request, pk):
         try:
             child = User.objects.get(pk=pk, parents=request.user)
             serializer = UserSerializer(child, data=request.data, partial=True)
             if serializer.is_valid():
+
+                # 파일 업로드 처리
+                profile_image = request.FILES.get('profile_image')
+                if profile_image:
+                    child.images.save(profile_image.name, profile_image)
+
+                # serializer.save()  # 자녀 정보 저장
+                if 'first_name' in request.data:
+                    # 요청 데이터에 first_name이 있는 경우, first_name 수정
+                    child.first_name = request.data['first_name']
+
+                # 요청 데이터에 비밀번호가 포함되어 있으면, 비밀번호를 업데이트
+                if 'password' in request.data:
+                    child.set_password(request.data['password'])
+
+                if 'birthday' in request.data:
+                    child.birthday = request.data['birthday']
 
                 # 격려 메시지가 포함되어 있으면 자녀의 encouragement 필드를 업데이트
                 if 'encouragement' in request.data:
@@ -244,12 +279,11 @@ class ChildrenPRView(APIView):
                 # 자녀 정보 저장
                 child.save()
 
-                return Response(serializer.data) # 수정된 자녀 정보 반환
+                return Response(serializer.data)  # 수정된 자녀 정보 반환
 
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  # 시리얼라이즈 데이터가 유효하지 않을 경우, 오류 메시지
         except User.DoesNotExist:
-            return Response({"error": "아이들을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "아이들을 찾을수가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
 
     # 특정 자녀의 정보 삭제
