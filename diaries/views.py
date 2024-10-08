@@ -63,7 +63,7 @@ class MonthlyDiaryView(APIView):
         queryset = child.diaries.filter(
             today__year=year,
             today__month=month
-        ).order_by('-today', '-id')
+        ).order_by('-created_at', '-id')
 
 
         serializer = FinanceDiarySerializer(queryset, many=True)
@@ -137,8 +137,6 @@ class ChatMessageHistory(APIView):
         # 채팅 기록을 응답으로 반환
         return Response({"response": message_history})
 
-
-# 아이들만 작용하는 챗봇
 class ChatbotProcessView(APIView):
     
     permission_classes = [IsAuthenticated]   # 인증된 사용자만 접근 가능
@@ -156,7 +154,6 @@ class ChatbotProcessView(APIView):
 
         # 용돈기입 관련 메시지가 아닌 경우
         if not is_allowance_related(user_input):
-            # 예외처리 코드 추가적으로 입력해야됨
             response_message = "용돈기입장과 관련된 정보를 입력해 주세요. 예시: '친구랑 간식으로 3000원 썼어.'"
             return Response({"message": response_message})
 
@@ -187,7 +184,6 @@ class ChatbotProcessView(APIView):
 
                     # 오늘 날짜 확인 및 문자열 -> 날짜 변환
                     today_str = plan_json.get('today')
-                    # print(today_str)
                     if today_str:
                         today_date = datetime.strptime(today_str, '%Y-%m-%d').date()  # 문자열을 날짜로 변환
                     else:
@@ -197,38 +193,26 @@ class ChatbotProcessView(APIView):
                     transaction_type = plan_json.get("transaction_type")
                     amount = plan_json.get('amount')
 
+                    # 잔액 계산 후 저장 전에 잔액 업데이트
+                    if transaction_type == "수입":
+                        child.total += amount
+                    elif transaction_type == "지출":
+                        child.total -= amount
+
                     # 정상적인 단일 항목 처리
                     finance_diary = FinanceDiary(
                         diary_detail=plan_json.get('diary_detail'),
                         today=today_date,
                         category=plan_json.get('category'),
                         transaction_type=transaction_type,
-                        amount=plan_json.get('amount'),
-                        remaining=total,
+                        amount=amount,
+                        remaining=child.total,  # 추가 전에 잔액 설정
                         child=child,
                         parent=user
                     )
                     finance_diary.save()
 
-                    # 잔액 재계산: 과거 기록일 경우 이후 모든 기록을 업데이트
-                    diaries = FinanceDiary.objects.filter(
-                        child=child,
-                        parent=user,
-                        today__lte=today_date  # 새로 입력한 날짜 이전 및 당일 기록을 필터링
-                    ).order_by('today')
-
-                    current_balance = 0
-                    for diary in diaries:
-                        if diary.transaction_type == "수입":
-                            current_balance += diary.amount
-                        elif diary.transaction_type == '지출':
-                            current_balance -= diary.amount
-                        
-                        diary.remaining = current_balance  # 재계산한 잔액으로 업데이트
-                        diary.save()
-
-                    # child의 total 업데이트
-                    child.total = current_balance
+                    # child의 total 값을 저장
                     child.save()
 
                     # 저장된 계획서를 시리얼라이즈
@@ -256,7 +240,6 @@ class ChatbotProcessView(APIView):
                 })
 
         return Response({"response": response})
-    
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
