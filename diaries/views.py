@@ -1,5 +1,6 @@
 import re
 import json
+import redis
 # 장고 라이브러리
 from django.db.models import Sum
 from django.conf import settings
@@ -109,6 +110,7 @@ class ChatMessageHistory(APIView):
         
         # 채팅 기록을 변환하여 저장
         for chat_history in chat_histories:
+            print(chat_histories)
             message = {
                 # redis에 저장되어있는 timestamp
                 "timestamp": chat_history.additional_kwargs.get('time_stamp'),
@@ -141,12 +143,9 @@ class ChatbotProcessView(APIView):
 
     def post(self, request):
         user_input = request.data.get('message')
-        # user_input = request.data.get('message')  # 메시지를 요청에서 추출
         child_pk = request.data.get('child_pk')  # body에서 child_pk를 추출
         user = request.user  # 현재 로그인한 사용자
-        # user = request.user
-        # parent_id = user.parents
-        # 유저 총 금액
+
 
         try:
             child = User.objects.get(pk=child_pk, parents=user)
@@ -156,13 +155,10 @@ class ChatbotProcessView(APIView):
 
         # 용돈기입 관련 메시지가 아닌 경우
         if not is_allowance_related(user_input):
-            return Response({
-                "message": "용돈기입장과 관련된 정보를 입력해 주세요. 예시: '친구랑 간식으로 3000원 썼어.'"
-            })
+            # 예외처리 코드 추가적으로 입력해야됨
+            response_message = "용돈기입장과 관련된 정보를 입력해 주세요. 예시: '친구랑 간식으로 3000원 썼어.'"
+            return Response({})
         
-            
-        
-
         # 다중 항목 입력 방지: 금액 패턴이 2개 이상이면 오류 반환
         amount_count = len(re.findall(r'\d+(원|만원|천원|백원)', user_input))
         if amount_count > 1:
@@ -171,10 +167,8 @@ class ChatbotProcessView(APIView):
             }, status=400)
 
         # OpenAI 프롬프트를 통해 채팅 응답을 받음
-        print(user_input, user.id)
 
         response = chat_with_bot(user_input, child_pk)
-        print(response)
 
         # 1 또는 2 입력에 대한 처리
         if user_input in ['1', '2']:
@@ -215,7 +209,6 @@ class ChatbotProcessView(APIView):
                         parent = user
                     )
                     finance_diary.save()
-                    amount = plan_json.get('amount')
 
                     # 잔여 금액 업데이트 (수입이면 더하고, 지출이면 뺍니다)
                     if plan_json.get('transaction_type') == '수입':

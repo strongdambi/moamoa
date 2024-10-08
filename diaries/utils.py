@@ -62,10 +62,6 @@ def chat_with_bot(user_input, user_id):
                         .replace("spending", "지출")
                         .replace("cost", "지출")
             )
-
-
-
-
         return response
     except Exception as e:
         print(f"챗봇 오류: {str(e)}")
