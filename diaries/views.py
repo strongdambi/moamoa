@@ -221,7 +221,7 @@ class ChatbotProcessView(APIView):
                     if plan_json.get('transaction_type') == '수입':
                         child.total += amount  # 잔여 금액 더하기
                     else:
-                    child.total = total
+                        child.total = total
                     child.save()
 
                     # 저장된 계획서를 시리얼라이즈

@@ -120,7 +120,7 @@ function getChildPkFromUrl() {
 function loadChatHistory() {
   
   const childPk = getChildPkFromUrl();
-
+  console.log(childPk)
   fetch(`/api/v1/diary/chat/messages/${childPk}/`, {
       method: 'GET',
       credentials: 'include',
