@@ -195,32 +195,28 @@ class ChatbotProcessView(APIView):
                     
                         
                         
-                    # transaction type
+                    # transaction type에 따라서 total, remaining 값
                     transaction_type = plan_json.get("transaction_type")
                     if transaction_type == "수입":
                         total += plan_json.get('amount')
+                        
                     elif transaction_type == '지출':
                         total -= plan_json.get('amount')
                     # 정상적인 단일 항목 처리
                     finance_diary = FinanceDiary(
                         diary_detail=plan_json.get('diary_detail'),
                         today=plan_json.get('today') or timezone.now().date(),
-                        # OpenAI 응답에서 카테고리 가져오기
                         category=plan_json.get('category'),
                         transaction_type=transaction_type,
                         amount=plan_json.get('amount'),
-                        # child=user,  # child 필드를 명시적으로 추가 (자녀로 변경)
-                        child = child, # (율님 작성)
-                        parent = user #(율님 작성)
-                        # parent=parent_id
+                        remaining = total,
+                        child = child,
+                        parent = user
                     )
                     finance_diary.save()
                     amount = plan_json.get('amount')
-                    # 잔여 금액 업데이트 (수입이면 더하고, 지출이면 뺍니다)
-                    if plan_json.get('transaction_type') == '수입':
-                        child.total += amount  # 잔여 금액 더하기
-                    else:
-                        child.total -= amount  # 잔여 금액 빼기
+
+                    
                     child.total = total
                     child.save()
 

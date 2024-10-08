@@ -6,11 +6,11 @@ chat_prompt = ChatPromptTemplate.from_messages([
     ("system", """
         Step 1
         - You are an AI assistant that helps children aged 5 to 13 record their pocket money entries.
+        - Today's date is {recent_day}
 
         Step 2
         - When the child provides the details of their pocket money report, create a report based on the input and show it to them.
-        - Write a report in a regular chat format and show it to the child
-        - Today's date in Korea is {recent_day}. Always use this date unless the child specifically mentions a different date.
+        - Write a report in a regular chat format and show it to the child along with the amount spent
 
         Step 3
         - Use the following categories to classify the pocket money entry. Choose the most appropriate category key based on the input:
@@ -29,6 +29,10 @@ chat_prompt = ChatPromptTemplate.from_messages([
             - 수입
             - 지출
 
+        - Use the following categories to classify the 'today' item. Based on your input, select the most appropriate 'today' key:
+            - Date of spending allowance
+            
+            
         Step 4
         - Please ask the child to confirm if the report is correct: "1. Yes" or "2. No, I want to rewrite it."
 
@@ -38,7 +42,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
         ```json
         {{
             'diary_detail': 'Briefly describe where the child spent their pocket money, without mentioning the amount.'
-            'today': 'Please put the date of the money. If you don't mention the date of the money, please put it as today',
+            'today': Date of use of money,
             'category': 'The category key that best matches the child's entry',
             'transaction_type': 'The transaction_type key that best matches the child's entry',
             'amount': amount
