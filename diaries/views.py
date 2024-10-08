@@ -210,11 +210,6 @@ class ChatbotProcessView(APIView):
                     )
                     finance_diary.save()
 
-                    # 잔여 금액 업데이트 (수입이면 더하고, 지출이면 뺍니다)
-                    if plan_json.get('transaction_type') == '수입':
-                        child.total += plan_json.get('amount')  # 잔여 금액 더하기
-                    else:
-                        child.total -= plan_json.get('amount')  # 잔여 금액 빼기
                     child.total = total
                     child.save()
 
@@ -230,6 +225,7 @@ class ChatbotProcessView(APIView):
                         "message": "JSON 파싱 오류가 발생했습니다.",
                         "error": str(e)
                     }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
                 except Exception as e:
                     return Response({
                         "message": "처리 중 오류가 발생했습니다.",
