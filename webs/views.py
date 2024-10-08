@@ -21,17 +21,19 @@ def Create_view(request):
     return render(request, 'webs/children_create.html')
 
 # 키즈 프로필
-def ChildrenProfile_view(request, pk):
+def ChildrenProfile_view(request, child_pk):
     # 키즈 정보 가져오기
-    child = get_object_or_404(User, pk=pk, parents=request.user)
-    
+    child = get_object_or_404(User, pk=child_pk, parents=request.user)
     # 템플릿으로 child 객체 전달
     return render(request, 'webs/children_profile.html', {'child': child})
 
 # AI 채팅
 def Chatbot_view(request, child_pk):
     context = {
-        'user_id': child_pk,
 
+        'child_pk': child_pk,
     }
     return render(request, 'webs/chatbot.html', context)
+# 부모 프로필
+def ProfileDetail_view(request, pk):
+    return render(request, 'webs/profile_detail.html')

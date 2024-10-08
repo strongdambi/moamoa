@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -20,7 +21,6 @@ class MonthlySummary(models.Model):
 
 # 용돈기입장
 class FinanceDiary(models.Model):
-
     child = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="diaries")
     parent = models.ForeignKey(
@@ -29,9 +29,12 @@ class FinanceDiary(models.Model):
     category = models.CharField(max_length=100)
     transaction_type = models.CharField(max_length=7)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    remaining = models.IntegerField(default = 0)
     today = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
 
     def __str__(self):
         return f"{self.child.username} - {self.title} ({self.transaction_type})"
+
