@@ -33,8 +33,7 @@ class FinanceDiary(models.Model):
     today = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
 
     def __str__(self):
-        return f"{self.child.username} - {self.title} ({self.transaction_type})"
+        return f"{self.child.username} - {self.diary_detail} ({self.transaction_type})"
 

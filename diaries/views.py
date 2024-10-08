@@ -65,7 +65,6 @@ class MonthlyDiaryView(APIView):
             today__month=month
         ).order_by('-created_at', '-id')
 
-
         serializer = FinanceDiarySerializer(queryset, many=True)
         return Response(
             {
@@ -73,6 +72,7 @@ class MonthlyDiaryView(APIView):
                 "remaining_amount": queryset.last().remaining if queryset.exists() else 0,  # 가장 최근의 남은 금액 반환
             },
         )
+
 
 # 키즈 프로필 콤보박스 월을 동적으로 표시하기 위함
 class AvailableMonthsView(APIView):
@@ -89,6 +89,7 @@ class AvailableMonthsView(APIView):
             "available_months": available_months
         })
 
+
 # 채팅 메시지 기록을 가져오는 뷰
 class ChatMessageHistory(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능
@@ -99,7 +100,7 @@ class ChatMessageHistory(APIView):
         #     return Response("대화내역을 볼 권한이 없습니다.", status=status.HTTP_403_FORBIDDEN)
         #
         # session_id = f"user_{user.id}"
-        
+
         # 부모와 자녀의 관계를 확인   (율님 작성)
         try:
             child = User.objects.get(pk=child_pk, parents=user)  # 부모와 자녀 관계 확인
@@ -110,10 +111,9 @@ class ChatMessageHistory(APIView):
         session_id = f"user_{child.id}"
         chat_histories = get_message_history(session_id).messages
         message_history = []
-        
+
         # 채팅 기록을 변환하여 저장
         for chat_history in chat_histories:
-            # print(chat_histories)
             message = {
                 # redis에 저장되어있는 timestamp
                 "timestamp": chat_history.additional_kwargs.get('time_stamp'),
@@ -130,16 +130,14 @@ class ChatMessageHistory(APIView):
                 message['ai_name'] = '모아모아'
                 message_history.append(message)
 
-                    
-        # formatted_response = message_history.replace('\n', '<br>')    
-            # message_history.append(message) (율님 작성)
+        # formatted_response = message_history.replace('\n', '<br>')
+        # message_history.append(message) (율님 작성)
 
         # 채팅 기록을 응답으로 반환
         return Response({"response": message_history})
 
 class ChatbotProcessView(APIView):
-    
-    permission_classes = [IsAuthenticated]   # 인증된 사용자만 접근 가능
+    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능
 
     def post(self, request):
         user_input = request.data.get('message')
@@ -241,28 +239,49 @@ class ChatbotProcessView(APIView):
 
         return Response({"response": response})
 
+
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 class MonthlySummaryView(APIView):
-    def get(self, request, child_id):
-        try:
-            # 해당 child_id로 자녀 조회
-            try:
-                child = User.objects.get(id=child_id, parents__isnull=False)
-            except User.DoesNotExist:
-                return Response({"error": "해당 자녀를 찾을 수 없습니다."}, status=404)
 
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, child_id):
+        year = request.data.get('year')
+        month = request.data.get('month')
+
+        # 유효성 검사
+        if not year or not month:
+            return Response({"error": "연도와 월이 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 부모님(로그인한 사용자) 정보 추출
+        parent = request.user
+
+        # 자녀 정보를 데이터베이스에서 가져옴
+        try:
+            child = get_object_or_404(User, pk=child_id, parents=parent)
+        except User.DoesNotExist:
+            return Response({"error": "해당하는 자녀를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 해당 연도와 월에 맞는 계획서를 조회
+        summary = MonthlySummary.objects.filter(
+            child=child, parent=parent, year=year, month=month).first()
+
+        if summary:
+            # 계획서가 존재하는 경우, 기존 계획서를 반환
+            serializer = MonthlySummarySerializer(summary)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            # 계획서가 존재하지 않는 경우, 새로운 계획서를 생성
             # 자녀 이름과 나이 계산
             child_name = child.first_name
-            child_age = calculate_age(
-                child.birthday) if child.birthday else "Unknown"
+            child_age = calculate_age(child.birthday) if child.birthday else "Unknown"
 
             # 자녀의 이번 달 용돈기입장 데이터 가져오기
-            now = timezone.now()
-            current_year = now.year
-            current_month = now.month
+            current_year = year
+            current_month = month
 
-            # 데이터 필터링: 이번 달의 수입/지출 데이터만 가져오기
+            # 데이터 필터링: 해당 월의 수입/지출 데이터만 가져오기
             diaries = FinanceDiary.objects.filter(
                 child=child, today__year=current_year, today__month=current_month)
 
@@ -270,7 +289,7 @@ class MonthlySummaryView(APIView):
                 return Response({
                     "username": child_name,
                     "age": child_age,
-                    "message": f"{child_name}님의 이번 달 용돈기입장 기록이 없습니다."
+                    "message": f"{child_name}님의 {current_year}년 {current_month}월 용돈기입장 기록이 없습니다."
                 }, status=200)
 
             # 총 수입 계산 (transaction_type이 '수입'인 항목만)
@@ -295,8 +314,8 @@ class MonthlySummaryView(APIView):
                     "role": "system",
                     "content": (
                         f"You are a financial advisor for children. You are given pocket money records for {child_name}, a {child_age}-year-old child. "
-                        f"Each record has a `transaction_type` field, which indicates whether the transaction is an '수입' (income) or '지출' (expense). "
-                        f"Ensure that only records with `transaction_type` set to '지출' are considered in the expense calculation. "
+                        f"Each record has a transaction_type field, which indicates whether the transaction is an '수입' (income) or '지출' (expense). "
+                        f"Ensure that only records with transaction_type set to '지출' are considered in the expense calculation. "
                         f"Respond entirely in Korean. "
                         f"Here are the records categorized by transaction type and amount:\n"
                         f"{[f'{diary.diary_detail} ({diary.transaction_type}): {diary.amount} KRW' for diary in diaries]}\n\n"
@@ -340,7 +359,6 @@ class MonthlySummaryView(APIView):
                 }
 
                 # 데이터베이스에 저장
-                parent = child.parents
                 summary, created = MonthlySummary.objects.get_or_create(
                     child=child,
                     parent=parent,
@@ -359,37 +377,3 @@ class MonthlySummaryView(APIView):
 
             except Exception as e:
                 return Response({"error": f"OpenAI API 호출 중 오류 발생: {str(e)}"}, status=500)
-
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
-
-    def post(self, request, child_id):
-        year = request.data.get('year')
-        month = request.data.get('month')
-
-
-        # 유효성 검사
-        if not year or not month:
-            return Response({"error": "연도와 월이 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 부모님(로그인한 사용자) 정보 추출
-        parent = request.user
-
-        # 자녀 정보를 데이터베이스에서 가져옴
-        try:
-            child = get_object_or_404(User, pk=child_id, parents=parent)
-        except User.DoesNotExist:
-            return Response({"error": "해당하는 자녀를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-
-        # 해당 연도와 월에 맞는 계획서를 조회
-        summary = MonthlySummary.objects.filter(
-            child=child, parent=parent, year=year, month=month).first()
-
-
-        if not summary:
-            return Response({"error": "해당 월의 계획서를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-
-        # 조회된 계획서를 시리얼라이즈하고 응답으로 반환
-        serializer = MonthlySummarySerializer(summary)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
