@@ -5,6 +5,7 @@
 {% block title %}모아모아 - 부모 프로필{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'webs/css/profile.css' %}">
 
     <div class="container">
 
@@ -34,141 +35,6 @@
             <button id="save-button">저장</button>
         </div>
     </div>
-{% endblock %}
-
-{% block extra_head %}
-    <style>
-        .custom-file-upload {
-            width: 70%;
-            display: inline-block;
-            background-color: #6D9C48;
-            color: white;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 50px;
-            cursor: pointer;
-            text-align: center;
-            transition: background-color 0.3s ease;
-            margin-bottom: 15px;
-        }
-
-        .custom-file-upload:hover {
-            background-color: #e6b800;
-        }
-        .custom-textarea {
-            width: 70%;  
-            height: 120px;  
-            padding: 15px;  
-            border-radius: 10px;  
-            border: 2px solid #6D9C48;
-            margin-bottom: 15px;
-            font-size: 16px; 
-            resize: none; 
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .custom-textarea:focus {
-            outline: none;  
-            border-color: #4F8035; 
-        }
-        .profile-picture {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 10px;
-        }
-
-        .edit-form-container {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .edit-form-container input {
-            width: 70%;
-            height: 45px;
-            font-size: 16px;
-            margin-bottom: 15px;
-            border-radius: 25px;
-            border: 2px solid #6D9C48;
-            padding: 10px;
-        }
-
-        .edit-form-container button {
-            background-color: #FFCD00;
-            color: white;
-            border: none;
-            width: 60%;
-            height: 50px;
-            font-size: 18px;
-            border-radius: 25px;
-        }
-
-        .greeting {
-            text-align: center;
-            font-size: 18px;
-            margin: 20px;
-        }
-
-        .card-container {
-            padding: 10px;
-        }
-
-        .profile-card {
-            background-color: #FFF;
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .profile-image {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .profile-card img {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            margin: 10px;
-        }
-
-        .profile-info {
-            margin-left: 15px;
-        }
-
-        .profile-info h5 {
-            margin: 0;
-        }
-
-        .profile-info p {
-            margin: 5px 0;
-            font-size: 14px;
-        }
-
-        .edit-button, .delete-button {
-            margin-left: auto;
-            font-size: 12px;
-            color: #7F7F7F;
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-        }
-
-        .add-account {
-            color: #7F7F7F;
-            text-align: center;
-            margin-top: 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-    </style>
 {% endblock %}
 
 {% block extra_script %}

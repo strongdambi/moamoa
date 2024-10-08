@@ -13,7 +13,7 @@
             <input type="hidden" id="csrf_token" name="csrfmiddlewaretoken" value="{{ csrf_token }}"> <!-- CSRF 토큰 -->
 
             <input type="text" id="first_name" placeholder="이름" required>
-            <input type="date" id="birthday" placeholder="생년월일" required>
+            <input type="date" id="birthday" placeholder="생년월일" required max="{{ today }}" onkeydown="return false;">
             <input type="text" id="username" placeholder="아이디(영문, 한글 가능)" required autocomplete="username">
             <input type="password" id="password" placeholder="비밀번호" required autocomplete="new-password">
             <input type="password" id="password2" placeholder="비밀번호 확인" required autocomplete="new-password">
@@ -85,6 +85,9 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        const today = new Date().toISOString().split('T')[0];  // 오늘 날짜를 "YYYY-MM-DD" 형식으로 가져옴
+        document.getElementById('birthday').setAttribute('max', today);  // 생년월일 입력의 최대값을 오늘 날짜로 설정
+
         const fileInput = document.getElementById('edit-upload');
         const profilePicture = document.getElementById('profile-picture');
 
@@ -109,6 +112,13 @@
             const password = document.getElementById('password').value;
             const password2 = document.getElementById('password2').value;
             const profileImage = fileInput.files[0];  // 선택한 파일
+
+             // 생년월일이 미래인지 확인
+            const today = new Date().toISOString().split('T')[0];
+            if (birthday > today) {
+                alert('미래의 날짜를 생년월일로 선택할 수 없습니다.');
+                return;  // 폼 전송 중단
+    }
 
             // FormData 객체 생성
             const formData = new FormData();

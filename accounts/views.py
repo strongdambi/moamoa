@@ -64,7 +64,7 @@ class KakaoCallbackView(APIView):
                                        headers={"Authorization": f"Bearer {access_token}"})
         profile_data = profile_request.json()
 
-        print(profile_data)
+        # print(profile_data)
 
         # 사용자 계정 정보를 추출
         kakao_account = profile_data.get("kakao_account")
