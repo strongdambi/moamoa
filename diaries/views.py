@@ -75,15 +75,19 @@ class MonthlyDiaryView(APIView):
 
 
 # 키즈 프로필 콤보박스 월을 동적으로 표시하기 위함
+
+
 class AvailableMonthsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, child_pk):
         # 특정 자녀의 용돈기입장 기록을 조회
-        finance_entries = FinanceDiary.objects.filter(child_id=child_pk).dates('today', 'month')
+        finance_entries = FinanceDiary.objects.filter(
+            child_id=child_pk).dates('today', 'month')
 
         # 용돈기입장 기록이 있는 달만 추출
-        available_months = [entry.strftime("%Y-%m") for entry in finance_entries]
+        available_months = [entry.strftime("%Y-%m")
+                            for entry in finance_entries]
 
         return Response({
             "available_months": available_months
@@ -91,17 +95,14 @@ class AvailableMonthsView(APIView):
 
 
 # 채팅 메시지 기록을 가져오는 뷰
+
+
 class ChatMessageHistory(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능
 
     def get(self, request, child_pk):
         user = request.user
-        # if user.id != child_pk:
-        #     return Response("대화내역을 볼 권한이 없습니다.", status=status.HTTP_403_FORBIDDEN)
-        #
-        # session_id = f"user_{user.id}"
-
-        # 부모와 자녀의 관계를 확인   (율님 작성)
+        
         try:
             child = User.objects.get(pk=child_pk, parents=user)  # 부모와 자녀 관계 확인
         except User.DoesNotExist:
@@ -123,6 +124,9 @@ class ChatMessageHistory(APIView):
             if isinstance(chat_history, HumanMessage):
                 message['type'] = "USER"
                 message['username'] = child.first_name
+                if child.images:
+                    message['user_profile_image'] = request.build_absolute_uri(
+                        child.images.url)
                 message_history.append(message)
             # # AI가 입력한 대화 내용
             elif isinstance(chat_history, AIMessage):
@@ -130,11 +134,8 @@ class ChatMessageHistory(APIView):
                 message['ai_name'] = '모아모아'
                 message_history.append(message)
 
-        # formatted_response = message_history.replace('\n', '<br>')
-        # message_history.append(message) (율님 작성)
-
-        # 채팅 기록을 응답으로 반환
         return Response({"response": message_history})
+
 
 class ChatbotProcessView(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능
@@ -152,8 +153,13 @@ class ChatbotProcessView(APIView):
 
         # 용돈기입 관련 메시지가 아닌 경우
         if not is_allowance_related(user_input):
-            response_message = "용돈기입장과 관련된 정보를 입력해 주세요. 예시: '친구랑 간식으로 3000원 썼어.'"
-            return Response({"message": response_message})
+            response_message = "용돈기입장과 관련된 정보를 입력해 주세요! <br>예시: '친구랑 간식으로 떡볶이를 3000원어치 사먹었어.'"
+            session_id = f"user_{child.id}"
+            chat_histories = get_message_history(session_id)
+            chat_histories.add_user_message(user_input)
+            chat_histories.add_ai_message(response_message)
+
+            return Response({})
 
         # 다중 항목 입력 방지: 금액 패턴이 2개 이상이면 오류 반환
         amount_count = len(re.findall(r'\d+(원|만원|천원|백원)', user_input))
@@ -170,7 +176,8 @@ class ChatbotProcessView(APIView):
             if user_input == '1' and "json" in response.lower():
                 try:
                     # JSON 파싱
-                    json_part = response.split("```json")[-1].split("```")[0].replace("'", '"')
+                    json_part = response.split(
+                        "```json")[-1].split("```")[0].replace("'", '"')
 
                     # 단일 JSON 객체만 처리 (배열이 아닌 경우 오류 처리)
                     plan_json = json.loads(json_part)

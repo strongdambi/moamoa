@@ -106,7 +106,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
         ```
         
         Step 6
-        - Always conduct conversations in Korean.
+        - Always be gentle and speak in Korean
     """),
     MessagesPlaceholder(variable_name="chat_history"),
     ("human", "{input}"),
