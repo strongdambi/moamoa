@@ -220,6 +220,12 @@ class ChildrenPRCreate(APIView):
 
                                         email=request.data.get("email"), parents=parent_user, first_name=first_name,
                                         birthday=birthday)
+            # 프로필 이미지 파일이 있는지 확인하고 저장
+        if 'profile_image' in request.FILES:
+            user.images = request.FILES['profile_image']  # 이미지 파일을 user의 images 필드에 저장
+
+        # 생성된 사용자를 저장
+        user.save()
 
         # 생성된 사용자의 정보를 시리얼라이즈
         serializer = UserSerializer(user)
