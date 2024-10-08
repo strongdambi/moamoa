@@ -19,7 +19,7 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.models import User
 from .models import FinanceDiary, User, MonthlySummary
 from .chat_history import get_message_history
-from .utils import chat_with_bot, calculate_age, is_allowance_related 
+from .utils import chat_with_bot, calculate_age, is_allowance_related, convert_relative_dates
 # 직렬화 라이브러리
 from .serializers import FinanceDiarySerializer, MonthlySummarySerializer
 # langchain 관련 라이브러리
@@ -105,7 +105,7 @@ class ChatMessageHistory(APIView):
         session_id = f"user_{child.id}"
         chat_histories = get_message_history(session_id).messages
         message_history = []
-
+        
         # 채팅 기록을 변환하여 저장
         for chat_history in chat_histories:
             message = {
@@ -113,7 +113,6 @@ class ChatMessageHistory(APIView):
                 "timestamp": chat_history.additional_kwargs.get('time_stamp'),
                 "content": chat_history.content  # 채팅 내역
             }
-
             # 사람이 입력한 대화 내용
             if isinstance(chat_history, HumanMessage):
                 message['type'] = "USER"
@@ -125,8 +124,9 @@ class ChatMessageHistory(APIView):
                     message['type'] = "AI"
                     message['ai_name'] = '모아모아'
                     message_history.append(message)
-                    
 
+                    
+        # formatted_response = message_history.replace('\n', '<br>')    
             # message_history.append(message) (율님 작성)
 
         # 채팅 기록을 응답으로 반환
@@ -146,11 +146,10 @@ class ChatbotProcessView(APIView):
         # user = request.user
         # parent_id = user.parents
         # 유저 총 금액
-        total = user.total
-
 
         try:
             child = User.objects.get(pk=child_pk, parents=user)
+            total = child.total
         except User.DoesNotExist:
             return Response({"message": "다른 유저는 이 기능을 사용할 수 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
@@ -159,6 +158,9 @@ class ChatbotProcessView(APIView):
             return Response({
                 "message": "용돈기입장과 관련된 정보를 입력해 주세요. 예시: '친구랑 간식으로 3000원 썼어.'"
             })
+        
+            
+        
 
         # 다중 항목 입력 방지: 금액 패턴이 2개 이상이면 오류 반환
         amount_count = len(re.findall(r'\d+(원|만원|천원|백원)', user_input))
@@ -183,16 +185,19 @@ class ChatbotProcessView(APIView):
                     # 단일 JSON 객체만 처리 (배열이 아닌 경우 오류 처리)
                     plan_json = json.loads(json_part)
 
-                    print(plan_json)
+                        
 
                     if isinstance(plan_json, list):
                         return Response({
                             "message": "한 번에 여러 항목을 입력할 수 없습니다. 한 번에 하나씩만 입력해 주세요."
                         }, status=400)
-                    transaction_type = plan_json.get("transaction_type")
+                    # 오늘, 내일 , 그저께 등등
+                    
+                        
+                        
                     # transaction type
+                    transaction_type = plan_json.get("transaction_type")
                     if transaction_type == "수입":
-
                         total += plan_json.get('amount')
                     elif transaction_type == '지출':
                         total -= plan_json.get('amount')
@@ -213,11 +218,11 @@ class ChatbotProcessView(APIView):
                     amount = plan_json.get('amount')
                     # 잔여 금액 업데이트 (수입이면 더하고, 지출이면 뺍니다)
                     if plan_json.get('transaction_type') == '수입':
-                        user.total += amount  # 잔여 금액 더하기
+                        child.total += amount  # 잔여 금액 더하기
                     else:
-                        user.total -= amount  # 잔여 금액 빼기
-                    user.total = total
-                    user.save()
+                        child.total -= amount  # 잔여 금액 빼기
+                    child.total = total
+                    child.save()
 
                     # 저장된 계획서를 시리얼라이즈
                     serializer = FinanceDiarySerializer(finance_diary)
@@ -242,7 +247,7 @@ class ChatbotProcessView(APIView):
                     "message": "입력한 내용을 다시 한 번 확인해 주시고, 용돈기입장을 다시 작성해 주세요!"
                 })
         
-        # formatted_response = response.replace('\n', '<br>')
+        
 
         return Response({"response": response})
 

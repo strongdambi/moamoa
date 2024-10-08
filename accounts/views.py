@@ -141,10 +141,7 @@ class KakaoCallbackView(APIView):
 
 
 # 아이들 로그인
-
-
 class LoginView(APIView):
-
     def post(self, request):
 
         # 요청 데이터에서 'username'과 'password'를 추출
@@ -260,7 +257,7 @@ class ChildrenPRView(APIView):
 
             # 부모와 자녀 정보를 함께 반환
             response_data = {"child": child_serializer.data,
-                             "parent": parent_serializer.data}
+                            "parent": parent_serializer.data}
 
             # serializer = UserSerializer(child)  조회된 자녀 객체를 시리얼라이즈
             return Response(response_data)  # 시리얼라이즈된 데이터 응답 반환

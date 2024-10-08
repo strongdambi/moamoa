@@ -45,6 +45,7 @@ def chat_with_bot(user_input, user_id):
     try:
         session_id = f"user_{user_id}"
         current_date = get_current_korea_date()
+        print(current_date)
         response = with_message_history.invoke(
             {"recent_day": current_date, "input": user_input},
             config={"configurable": {"session_id": session_id}}

@@ -11,8 +11,7 @@
 
   <!-- Chat Input Container -->
   <div class="chat-input-container">
-      <input type="hidden" id="childPk" value="{{ child_pk }}">
-      <input type="hidden" id="userId" value="{{ user_id }}">
+    <input type="hidden" id="childPk" value="{{ child_pk }}">
       <input type="text" id="chat-input" placeholder="입력">
       <button id="send-button">입력</button>
   </div>
@@ -100,26 +99,14 @@
 {% endblock %}
 
 {% block extra_script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.10/purify.min.js"></script>
 <script>
   
   
   const chatHistory = document.getElementById('chat-history');
   const chatInput = document.getElementById('chat-input');
   const sendButton = document.getElementById('send-button');
-{#  function getCookie(name) {#}
-{#    let cookieValue = null;#}
-{#    if (document.cookie && document.cookie !== '') {#}
-{#        const cookies = document.cookie.split(';');#}
-{#        for (let i = 0; i < cookies.length; i++) {#}
-{#            const cookie = cookies[i].trim();#}
-{#            if (cookie.substring(0, name.length + 1) === (name + '=')) {#}
-{#                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));#}
-{#                break;#}
-{#            }#}
-{#        }#}
-{#    }#}
-{#    return cookieValue;#}
-{#}#}
+
 
 function getChildPkFromUrl() {
   const pathSegments = window.location.pathname.split('/');
@@ -131,8 +118,6 @@ function loadChatHistory() {
   
   const childPk = getChildPkFromUrl();
 
-  console.log(childPk)
-    {#console.log(localStorage.getItem('accessToken'))#}
   fetch(`/api/v1/diary/chat/messages/${childPk}/`, {
       method: 'GET',
       credentials: 'include',
@@ -150,12 +135,21 @@ function loadChatHistory() {
       console.log(data);
       chatHistory.innerHTML = '';
 
+
       if (data && Array.isArray(data.response)) {
           data.response.forEach(message => {
               const messageElement = document.createElement('div');
               messageElement.classList.add('chat-bubble');
               messageElement.classList.add(message.type === 'USER' ? 'chat-right' : 'chat-left');
-              messageElement.textContent = `${message.type === 'USER' ? message.username : message.ai_name}: ${message.content}`;
+
+              const formattedContent = message.content.replace(/\n/g, '<br>'); // 추가 부분
+              
+              messageElement.innerHTML = DOMPurify.sanitize(
+                `${message.type === 'USER' ? message.username : message.ai_name}: ${formattedContent}`
+            );
+
+              //messageElement.textContent = `${message.type === 'USER' ? message.username : message.ai_name}: ${formattedContent}`;
+              
               chatHistory.appendChild(messageElement);
           });
           chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -173,7 +167,6 @@ function sendMessage() {
   const message = chatInput.value.trim();
   if (message) {
       const childPk = getChildPkFromUrl();
-      console.log("a" + childPk)
       fetch('/api/v1/diary/chat/', {
         credentials: 'include',
           method: 'POST',
@@ -184,7 +177,6 @@ function sendMessage() {
       })
       .then(response => response.json())
       .then(data => {
-          console.log(data)
           chatInput.value = '';
           loadChatHistory();
       })

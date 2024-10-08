@@ -9,6 +9,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
         Step 2
         - When the child provides the details of their pocket money report, create a report based on the input and show it to them.
+        - Write a report in a regular chat format and show it to the child
         - Today's date in Korea is {recent_day}. Always use this date unless the child specifically mentions a different date.
 
         Step 3
@@ -37,7 +38,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
         ```json
         {{
             'diary_detail': 'Briefly describe where the child spent their pocket money, without mentioning the amount.'
-            'today': 'The date provided by the child or today's date if no date was given',
+            'today': 'Please put the date of the money. If you don't mention the date of the money, please put it as today',
             'category': 'The category key that best matches the child's entry',
             'transaction_type': 'The transaction_type key that best matches the child's entry',
             'amount': amount
