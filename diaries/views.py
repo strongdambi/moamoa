@@ -216,7 +216,10 @@ class ChatbotProcessView(APIView):
                     finance_diary.save()
                     amount = plan_json.get('amount')
 
-                    
+                    # 잔여 금액 업데이트 (수입이면 더하고, 지출이면 뺍니다)
+                    if plan_json.get('transaction_type') == '수입':
+                        child.total += amount  # 잔여 금액 더하기
+                    else:
                     child.total = total
                     child.save()
 
@@ -246,7 +249,6 @@ class ChatbotProcessView(APIView):
         
 
         return Response({"response": response})
-
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
