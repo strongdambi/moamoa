@@ -36,5 +36,5 @@ class FinanceDiary(models.Model):
     
 
     def __str__(self):
-        return f"{self.child.username} - {self.title} ({self.transaction_type})"
+        return f"{self.child.username} - {self.diary_detail} ({self.transaction_type})"
 
