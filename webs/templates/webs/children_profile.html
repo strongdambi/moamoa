@@ -21,7 +21,7 @@
     <table class="table text-center">
       <thead>
         <tr>
-          <th>날짜</th>
+          <th>사용 날짜</th>
           <th>내용</th>
           <th>금액</th>
           <th>남은 돈</th>
@@ -200,44 +200,49 @@ document.addEventListener('DOMContentLoaded', function () {
     .then((response) => response.json())
     .then((data) => {
         allEntries = data.diary;  // 모든 항목을 저장
-        const remainingAmount = data.remaining_amount;  // 남은 돈
         currentIndex = 0;
         expanded = false;
         loadMoreBtn.textContent = '더보기';  // 버튼 텍스트를 '더보기'로 설정
-        displayEntries(remainingAmount);  // 남은 돈을 함께 표시
+        displayEntries();  // 항목을 표시
     })
     .catch((error) => {
         console.error('용돈기입장을 불러올 수 없습니다.', error);
     });
 }
 
-  // 항목을 5개씩 표시하는 함수
-  function displayEntries(remainingAmount) {
-      const diaryTableBody = document.getElementById('diary-table-body');
-      diaryTableBody.innerHTML = '';  // 테이블 초기화
-      const itemsToShow = expanded ? allEntries : allEntries.slice(0, itemsPerPage);  // 5개만 표시 또는 전체
-      itemsToShow.forEach(entry => {
-          const sign = entry.transaction_type === '지출' ? '-' : '+';
-          const formattedAmount = `${sign} ${parseInt(entry.amount).toLocaleString()}원`;
-          const amountClass = entry.transaction_type === '지출' ? 'expense' : 'income';
+function displayEntries() {
+    const diaryTableBody = document.getElementById('diary-table-body');
+    diaryTableBody.innerHTML = '';  // 테이블 초기화
+    const itemsToShow = expanded ? allEntries : allEntries.slice(0, itemsPerPage);  // 5개만 표시 또는 전체
 
-          const row = `
-          <tr>
-              <td>${entry.today}</td>
-              <td>${entry.diary_detail}</td>
-              <td class="${amountClass}">${formattedAmount}</td>
-              <td>${remainingAmount.toLocaleString()}원</td>
-          </tr>`;
-          diaryTableBody.insertAdjacentHTML('beforeend', row);
-      });
+    itemsToShow.forEach(entry => {
+        const sign = entry.transaction_type === '지출' ? '-' : '+';
+        const formattedAmount = `${sign} ${parseInt(entry.amount).toLocaleString()}원`;
+        const amountClass = entry.transaction_type === '지출' ? 'expense' : 'income';
+        
+        // 날짜를 mm.dd. 형식으로 변환
+        const [year, month, day] = entry.today.split('-');
+        const formattedDate = `${month}.${day}`;
+        
+        const remainingAmount = parseInt(entry.remaining).toLocaleString();  // 각 항목의 remaining 값 사용
 
-      // "더보기"/"닫기" 버튼 설정
-      if (allEntries.length > itemsPerPage) {
-          loadMoreBtn.style.display = 'inline';  // 더보기 버튼을 표시
-      } else {
-          loadMoreBtn.style.display = 'none';  // 항목이 5개 이하일 경우 더보기 버튼 숨김
-      }
-  }
+        const row = `
+        <tr>
+            <td>${formattedDate}</td>
+            <td>${entry.diary_detail}</td>
+            <td class="${amountClass}">${formattedAmount}</td>
+            <td>${remainingAmount}원</td>  <!-- 각 항목의 남은 금액 표시 -->
+        </tr>`;
+        diaryTableBody.insertAdjacentHTML('beforeend', row);
+    });
+
+    // "더보기"/"닫기" 버튼 설정
+    if (allEntries.length > itemsPerPage) {
+        loadMoreBtn.style.display = 'inline';  // 더보기 버튼을 표시
+    } else {
+        loadMoreBtn.style.display = 'none';  // 항목이 5개 이하일 경우 더보기 버튼 숨김
+    }
+}
 
     // month-picker 값 변경 시 데이터 다시 불러오기
     monthPicker.addEventListener('change', function() {

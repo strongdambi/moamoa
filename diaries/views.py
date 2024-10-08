@@ -59,14 +59,14 @@ class MonthlyDiaryView(APIView):
         queryset = child.diaries.filter(
             today__year=year,
             today__month=month
-        ).order_by('-today', '-id')
+        ).order_by('-created_at', '-id')
 
 
         serializer = FinanceDiarySerializer(queryset, many=True)
         return Response(
             {
                 "diary": serializer.data,
-                "remaining_amount": child.total,
+                "remaining_amount": queryset.last().remaining if queryset.exists() else 0,  # 가장 최근의 남은 금액 반환
             },
         )
 
