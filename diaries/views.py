@@ -65,7 +65,8 @@ class MonthlyDiaryView(APIView):
         serializer = FinanceDiarySerializer(queryset, many=True)
         return Response(
             {
-                "diary": serializer.data
+                "diary": serializer.data,
+                "remaining_amount": child.total,
             },
         )
 

@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function () {
     .then((data) => {
         const greeting = document.getElementById('child-greeting');
         greeting.textContent = `${data.child.first_name} 반가워!`;  // 자녀 이름 표시
-
+        
         // 응원 메시지가 있으면 업데이트
         if (data.child.encouragement) {
             encouragementElement.textContent = data.child.encouragement;  // 응원 메시지 표시
@@ -189,56 +189,55 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('월별 데이터를 불러올 수 없습니다.', error);
     });
 
-    // 용돈기입장 데이터 가져오기 함수
     function fetchDiary(year, month) {
-        fetch(`http://localhost:8000/api/v1/diary/${childId}/${year}/${month}/`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            allEntries = data.diary;  // 모든 항목을 저장
-            currentIndex = 0;
-            expanded = false;
-            loadMoreBtn.textContent = '더보기';  // 버튼 텍스트를 '더보기'로 설정
-            displayEntries();  // 항목을 화면에 표시
-        })
-        .catch((error) => {
-            console.error('용돈기입장을 불러올 수 없습니다.', error);
-        });
-    }
+    fetch(`http://localhost:8000/api/v1/diary/${childId}/${year}/${month}/`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        allEntries = data.diary;  // 모든 항목을 저장
+        const remainingAmount = data.remaining_amount;  // 남은 돈
+        currentIndex = 0;
+        expanded = false;
+        loadMoreBtn.textContent = '더보기';  // 버튼 텍스트를 '더보기'로 설정
+        displayEntries(remainingAmount);  // 남은 돈을 함께 표시
+    })
+    .catch((error) => {
+        console.error('용돈기입장을 불러올 수 없습니다.', error);
+    });
+}
 
-    // 항목을 5개씩 표시하는 함수
-    function displayEntries() {
-        const diaryTableBody = document.getElementById('diary-table-body');
-        diaryTableBody.innerHTML = '';  // 테이블 초기화
-        const itemsToShow = expanded ? allEntries : allEntries.slice(0, itemsPerPage);  // 5개만 표시 또는 전체
-        itemsToShow.forEach(entry => {
-            const sign = entry.transaction_type === '지출' ? '-' : '+';
-            const formattedAmount = `${sign} ${parseInt(entry.amount).toLocaleString()}원`;
-            const amountClass = entry.transaction_type === '지출' ? 'expense' : 'income';
+  // 항목을 5개씩 표시하는 함수
+  function displayEntries(remainingAmount) {
+      const diaryTableBody = document.getElementById('diary-table-body');
+      diaryTableBody.innerHTML = '';  // 테이블 초기화
+      const itemsToShow = expanded ? allEntries : allEntries.slice(0, itemsPerPage);  // 5개만 표시 또는 전체
+      itemsToShow.forEach(entry => {
+          const sign = entry.transaction_type === '지출' ? '-' : '+';
+          const formattedAmount = `${sign} ${parseInt(entry.amount).toLocaleString()}원`;
+          const amountClass = entry.transaction_type === '지출' ? 'expense' : 'income';
 
-            const row = `
-            <tr>
-                <td>${entry.today}</td>
-                <td>${entry.diary_detail}</td>
-                <td class="${amountClass}">${formattedAmount}</td>
-                <td>${parseInt(entry.remaining_amount).toLocaleString()}원</td>
-            </tr>`;
-            diaryTableBody.insertAdjacentHTML('beforeend', row);
-        });
+          const row = `
+          <tr>
+              <td>${entry.today}</td>
+              <td>${entry.diary_detail}</td>
+              <td class="${amountClass}">${formattedAmount}</td>
+              <td>${remainingAmount.toLocaleString()}원</td>
+          </tr>`;
+          diaryTableBody.insertAdjacentHTML('beforeend', row);
+      });
 
-        // "더보기"/"닫기" 버튼 설정
-        if (allEntries.length > itemsPerPage) {
-            loadMoreBtn.style
-            loadMoreBtn.style.display = 'inline';  // 더보기 버튼을 표시
-        } else {
-            loadMoreBtn.style.display = 'none';  // 항목이 5개 이하일 경우 더보기 버튼 숨김
-        }
-    }
+      // "더보기"/"닫기" 버튼 설정
+      if (allEntries.length > itemsPerPage) {
+          loadMoreBtn.style.display = 'inline';  // 더보기 버튼을 표시
+      } else {
+          loadMoreBtn.style.display = 'none';  // 항목이 5개 이하일 경우 더보기 버튼 숨김
+      }
+  }
 
     // month-picker 값 변경 시 데이터 다시 불러오기
     monthPicker.addEventListener('change', function() {
