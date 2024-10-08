@@ -155,21 +155,13 @@ header {
     }
 }
 
-/* 로고 */
-.logo {
-    display: block;
-    margin: 50px auto 20px auto;
-    width: 150px;
-    height: auto; /* 비율 유지 */
-}
-
 /* 로그인 버튼 */
 .login-buttons {
     text-align: center;
     margin-top: 20px;
 }
 .login-buttons button {
-    width: 90%;
+    width: 70%;
     height: 50px;
     font-size: 18px;
     margin-bottom: 15px;
