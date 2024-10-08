@@ -26,20 +26,69 @@ header {
 }
 
 /* 왼쪽 영역 */
-.leftlogo {
-    color: #FF488EFF;
-    text-decoration: none;
-    font-size: 40px;
-    font-weight: 900;
-    margin: 0;
-    padding: 0;
+
+/* 타이틀 스타일 */
+.main-title {
+    color: #333;
+    margin-top: 50px;
+    margin-bottom: 10px;
+    text-align: center;
 }
+
+.moamoa-title {
+    font-family: 'Jua', sans-serif;
+    color: #ffbd41;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* 강조점을 추가하는 스타일 */
+.strong-text {
+    position: relative; 
+    display: inline-block;
+    font-size: 2.2rem;
+    font-weight: bold;
+}
+
+.strong-text::before {
+    content: ''; 
+    position: absolute;
+    top: -20px;
+    left: 50%; 
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    background-color: #ffbd41; 
+    border-radius: 50%; 
+}
+
+/* 해시태그 스타일 */
+.tag-section {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.tag {
+    background-color: #ffecb3;
+    padding: 5px 10px;
+    border-radius: 15px;
+    color: #333;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* 설명 스타일 */
+.description p {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
 .leftdesc {
     font-size: xx-large;
     font-weight: 900;
-}
-.leftdesc span {
-    color: #FF488EFF;
 }
 .lefticon {
     width: 60px;
@@ -104,41 +153,6 @@ header {
         font-size: 22px;
         bottom: 10px;
     }
-}
-
-/* 푸터 */
-footer {
-    position: relative;
-    bottom: 0;
-    width: 100%;
-    background-color: #FFF3D6;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    border-top: 3px solid #FFAA00;
-}
-footer a {
-    text-align: center;
-    color: #FFCD00;
-}
-footer img {
-    width: 30px;
-    height: 30px;
-}
-footer .plus-btn {
-    position: relative;
-    bottom: 20px;
-    width: 60px;
-    height: 60px;
-    background-color: #FFCD00;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 30px;
-    border: none;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* 로고 */
