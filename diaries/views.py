@@ -30,6 +30,9 @@ from langchain_core.messages.ai import AIMessage
 from openai import OpenAI
 # 비동기 관련 라이브러리
 from asgiref.sync import sync_to_async
+# 시간 라이브러리
+from datetime import datetime
+
 
 
 # 아이들 작성한 기입장 삭제
@@ -111,7 +114,6 @@ class ChatMessageHistory(APIView):
 
         # 채팅 기록을 변환하여 저장
         for chat_history in chat_histories:
-
             message = {
                 # redis에 저장되어있는 timestamp
                 "timestamp": chat_history.additional_kwargs.get('time_stamp'),
@@ -124,10 +126,9 @@ class ChatMessageHistory(APIView):
                 message_history.append(message)
             # # AI가 입력한 대화 내용
             elif isinstance(chat_history, AIMessage):
-                if 'json' not in chat_history.content:  # json 데이터는 제외
-                    message['type'] = "AI"
-                    message['ai_name'] = '모아모아'
-                    message_history.append(message)
+                message['type'] = "AI"
+                message['ai_name'] = '모아모아'
+                message_history.append(message)
 
         # formatted_response = message_history.replace('\n', '<br>')
         # message_history.append(message) (율님 작성)
@@ -135,8 +136,6 @@ class ChatMessageHistory(APIView):
         # 채팅 기록을 응답으로 반환
         return Response({"response": message_history})
 
-
-# 아이들만 작용하는 챗봇
 class ChatbotProcessView(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능
 
@@ -153,9 +152,8 @@ class ChatbotProcessView(APIView):
 
         # 용돈기입 관련 메시지가 아닌 경우
         if not is_allowance_related(user_input):
-            # 예외처리 코드 추가적으로 입력해야됨
             response_message = "용돈기입장과 관련된 정보를 입력해 주세요. 예시: '친구랑 간식으로 3000원 썼어.'"
-            return Response({})
+            return Response({"message": response_message})
 
         # 다중 항목 입력 방지: 금액 패턴이 2개 이상이면 오류 반환
         amount_count = len(re.findall(r'\d+(원|만원|천원|백원)', user_input))
@@ -165,7 +163,6 @@ class ChatbotProcessView(APIView):
             }, status=400)
 
         # OpenAI 프롬프트를 통해 채팅 응답을 받음
-
         response = chat_with_bot(user_input, child_pk)
 
         # 1 또는 2 입력에 대한 처리
@@ -182,29 +179,38 @@ class ChatbotProcessView(APIView):
                         return Response({
                             "message": "한 번에 여러 항목을 입력할 수 없습니다. 한 번에 하나씩만 입력해 주세요."
                         }, status=400)
-                    # 오늘, 내일 , 그저께 등등
 
-                    # transaction type에 따라서 total, remaining 값
+                    # 오늘 날짜 확인 및 문자열 -> 날짜 변환
+                    today_str = plan_json.get('today')
+                    if today_str:
+                        today_date = datetime.strptime(today_str, '%Y-%m-%d').date()  # 문자열을 날짜로 변환
+                    else:
+                        today_date = timezone.now().date()
+
+                    # 수입/지출에 따른 잔액 계산
                     transaction_type = plan_json.get("transaction_type")
-                    if transaction_type == "수입":
-                        total += plan_json.get('amount')
+                    amount = plan_json.get('amount')
 
-                    elif transaction_type == '지출':
-                        total -= plan_json.get('amount')
+                    # 잔액 계산 후 저장 전에 잔액 업데이트
+                    if transaction_type == "수입":
+                        child.total += amount
+                    elif transaction_type == "지출":
+                        child.total -= amount
+
                     # 정상적인 단일 항목 처리
                     finance_diary = FinanceDiary(
                         diary_detail=plan_json.get('diary_detail'),
-                        today=plan_json.get('today') or timezone.now().date(),
+                        today=today_date,
                         category=plan_json.get('category'),
                         transaction_type=transaction_type,
-                        amount=plan_json.get('amount'),
-                        remaining=total,
+                        amount=amount,
+                        remaining=child.total,  # 추가 전에 잔액 설정
                         child=child,
                         parent=user
                     )
                     finance_diary.save()
 
-                    child.total = total
+                    # child의 total 값을 저장
                     child.save()
 
                     # 저장된 계획서를 시리얼라이즈
@@ -235,7 +241,6 @@ class ChatbotProcessView(APIView):
 
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
-
 
 class MonthlySummaryView(APIView):
 
