@@ -95,6 +95,10 @@
       color: #888;
       margin-top: 5px;
     }
+    .chat-bubble strong {
+      font-weight: bold;
+      color: black; /* 강조 색상, 원하는 대로 수정 가능 */
+  }
   </style>
 {% endblock %}
 
@@ -142,15 +146,34 @@ function loadChatHistory() {
               messageElement.classList.add('chat-bubble');
               messageElement.classList.add(message.type === 'USER' ? 'chat-right' : 'chat-left');
 
-              const formattedContent = message.content.replace(/\n/g, '<br>'); // 추가 부분
+              function decodeHTMLEntities(text) {
+                const textArea = document.createElement('textarea');
+                textArea.innerHTML = text;
+                return textArea.value;
+              }
+              const decodedContent = decodeHTMLEntities(message.content);
+              const formattedContent = decodedContent
+                .replace(/\n\n/g, '<br>')
+                .replace(/\n/g, '<br>')
+                .replace(/---/g, '')
+                .replace(/\"1\./g, '<br>1.')
+                .replace(/\"2\./g, '<br>2.')
+                .replace(/\"/g, "")
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .trim(); // 추가 부분
               
-              messageElement.innerHTML = DOMPurify.sanitize(
-                `${message.type === 'USER' ? message.username : message.ai_name}: ${formattedContent}`
-            );
+              console.log('Formatted content:', formattedContent); // 디버깅용 로그
+              const sanitizeConfig = {ALLOWED_TAGS: ['br', 'strong'],
+                                      KEEP_CONTENT: true
+                                    };
+              
+              const sanitizedContent = DOMPurify.sanitize(
+                `${message.type === 'USER' ? message.username : message.ai_name}: ${formattedContent}`, sanitizeConfig);
+            
 
-              //messageElement.textContent = `${message.type === 'USER' ? message.username : message.ai_name}: ${formattedContent}`;
-              
-              chatHistory.appendChild(messageElement);
+            // messageElement.textContent = `${message.type === 'USER' ? message.username : message.ai_name}: ${formattedContent}`;
+            messageElement.innerHTML = sanitizedContent;
+            chatHistory.appendChild(messageElement);
           });
           chatHistory.scrollTop = chatHistory.scrollHeight;
       } else {
