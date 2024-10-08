@@ -207,7 +207,7 @@
 
         <!-- Greeting -->
         <div class="greeting">
-            <p>안녕하세요.<br><span class="childname">다모아</span>, <span class="parentname">다모아</span> 님의 부모님!</p>
+            <p>안녕하세요.<br><span class="childname">다모아</span> 님의 부모님!</p>
         </div>
 
         <!-- 년월 선택 입력 필드 -->
@@ -390,7 +390,6 @@
                 document.querySelector('.summaryname').textContent = data.child.first_name;
                 document.querySelector('.childname').textContent = data.child.first_name;
                 document.querySelector('.childname2').textContent = data.child.first_name;
-                document.querySelector('.parentname').textContent = data.parent.first_name;
 
                 //나이계산기
                 const birthDate = data.child.birthday;
