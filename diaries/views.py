@@ -60,13 +60,14 @@ class MonthlyDiaryView(APIView):
         queryset = child.diaries.filter(
             today__year=year,
             today__month=month
-        ).order_by('-today', '-id')
+        ).order_by('-created_at', '-id')
 
 
         serializer = FinanceDiarySerializer(queryset, many=True)
         return Response(
             {
-                "diary": serializer.data
+                "diary": serializer.data,
+                "remaining_amount": queryset.last().remaining if queryset.exists() else 0,  # 가장 최근의 남은 금액 반환
             },
         )
 
@@ -209,7 +210,11 @@ class ChatbotProcessView(APIView):
                     )
                     finance_diary.save()
 
-                    
+                    # 잔여 금액 업데이트 (수입이면 더하고, 지출이면 뺍니다)
+                    if plan_json.get('transaction_type') == '수입':
+                        child.total += amount  # 잔여 금액 더하기
+                    else:
+                        child.total -= amount  # 잔여 금액 빼기
                     child.total = total
                     child.save()
 
@@ -239,7 +244,6 @@ class ChatbotProcessView(APIView):
         
 
         return Response({"response": response})
-
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
