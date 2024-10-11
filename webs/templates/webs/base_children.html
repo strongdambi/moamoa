@@ -121,8 +121,6 @@
     <script>
         function getChildPkFromUrl() {
             const pathSegments = window.location.pathname.split('/');
-            console.log(">>>>>>>>>>>>>>>>>>>>>")
-            console.log(pathSegments)
             return pathSegments[pathSegments.length - 2];
         }
     
@@ -139,7 +137,6 @@
             logoutButton();
         }
     });
-    
         function logoutButton() {
             fetch('/api/v1/accounts/logout/', {
                 credentials: 'include',
@@ -152,8 +149,7 @@
                 throw new Error('로그아웃 실패');
             })
             .then(data => {
-                console.log(data.success);
-                window.location.href = '/webs';
+                window.location.href = '/';
             })
             .catch(error => {
                 console.error('로그아웃 에러:',error);

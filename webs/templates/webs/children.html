@@ -39,7 +39,7 @@
                 const password = document.getElementById('password').value;
 
                 // 로그인 API 호출
-                fetch('http://localhost:8000/api/v1/accounts/login/', {
+                fetch('/api/v1/accounts/login/', {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
