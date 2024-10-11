@@ -27,7 +27,7 @@
             <h4>프로필 수정</h4>
             <!-- <label>프로필사진</label> -->
             <input type="text" id="edit-firstname" placeholder="이름"><br>
-            <input type="date" id="edit-birthday" placeholder="생일"><br>
+            <input type="date" id="edit-birthday" placeholder="생일" required max="" onkeydown="return false;"><br>
             <input type="password" id="edit-password" placeholder="새 비밀번호"><br>
             <label for="edit-upload" class="custom-file-upload">프로필사진 파일 선택</label>
             <input type="file" id="edit-upload" style="display: none;"><br>
@@ -40,6 +40,12 @@
 {% block extra_script %}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
+            const today = new Date().toISOString().split('T')[0];
+            
+            // 생일 입력 필드의 max 속성 설정
+            document.getElementById('edit-birthday').setAttribute('max', today);
+            
             // API에서 부모 프로필 가져오기
             fetch('http://localhost:8000/api/v1/accounts/', {
                 method: 'GET',

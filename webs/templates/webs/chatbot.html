@@ -5,6 +5,7 @@
 {% block title %}모아모아-챗봇{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'webs/css/chatbot.css' %}">
 <div class="chat-container">
   <div class="chat-history" id="chat-history"></div>
   <div class="chat-input-container" id="chat-input-container">
@@ -21,143 +22,6 @@
   </div>
 </div>
 {% endblock %}
-
-{% block extra_head %}
-<style>
-  body {
-    background-color: #F0F2F5;
-    font-family: 'Noto Sans KR', sans-serif;
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-  }
-
-  .chat-container {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 60px);
-    /* 모아모아 배너 높이를 60px로 가정 */
-    width: 100%;
-    background-color: #FFFFFF;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  }
-
-  .chat-history {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 20px;
-  }
-
-  .message-container {
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .chat-username {
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 5px;
-    color: #65676B;
-  }
-
-  .chat-bubble {
-    border-radius: 18px;
-    padding: 12px 16px;
-    max-width: 70%;
-    word-wrap: break-word;
-    position: relative;
-    font-size: 15px;
-    line-height: 1.4;
-  }
-
-
-  .chat-left .chat-username,
-  .chat-left .timestamp {
-    align-self: flex-start;
-  }
-
-  .chat-right .chat-username,
-  .chat-right .timestamp {
-    align-self: flex-end;
-  }
-
-  .chat-left .chat-bubble {
-    background-color: #FFF3D6;
-    align-self: flex-start;
-  }
-
-  .chat-left .chat-bubble::before {
-    left: -15px;
-    border-right-color: #FFF3D6;
-    border-left: 0;
-  }
-
-  .chat-right .chat-bubble {
-    background-color: #DFF2D8;
-    align-self: flex-end;
-  }
-
-  .chat-right .chat-bubble::before {
-    right: -15px;
-    border-left-color: #DFF2D8;
-    border-right: 0;
-  }
-
-  .timestamp {
-    font-size: 12px;
-    color: #65676B;
-    margin-top: 5px;
-  }
-
-  .chat-input-container {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    background-color: #F0F2F5;
-    border-top: 1px solid #E4E6EB;
-  }
-
-  #chat-input {
-    flex-grow: 1;
-    border: none;
-    background-color: #FFFFFF;
-    border-radius: 20px;
-    padding: 10px 15px;
-    font-size: 15px;
-    outline: none;
-    transition: box-shadow 0.3s ease;
-  }
-
-  #chat-input:focus {
-    box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.2);
-  }
-
-  #send-button {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    margin-left: 10px;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s ease;
-  }
-
-  #send-button:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 50%;
-  }
-
-  #send-button svg {
-    width: 24px;
-    height: 24px;
-    color: #0084FF;
-  }
-</style>
-{% endblock %}
-
 {% block extra_script %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.10/purify.min.js"></script>
 <script>
@@ -192,32 +56,40 @@
       })
       .then(data => {
         chatHistory.innerHTML = '';
-
+  
         if (data && Array.isArray(data.response)) {
           data.response.forEach(message => {
             const messageContainer = document.createElement('div');
             messageContainer.classList.add('message-container');
             messageContainer.classList.add(message.type === 'USER' ? 'chat-right' : 'chat-left');
-
+  
             const usernameElement = document.createElement('div');
             usernameElement.classList.add('chat-username');
-            usernameElement.textContent = message.type === 'USER' ? message.username : message.ai_name;
-
+  
+            // 프로필 이미지 추가 부분
+            const profileImage = document.createElement('img');
+            profileImage.src = message.user_profile_image || message.ai_profile_image; // 기본 이미지 설정
+            profileImage.alt = 'Profile';
+            profileImage.classList.add('profile-image'); // CSS로 동그랗게 만들기 위해 클래스 추가
+  
+            // 이미지와 이름을 함께 추가
+            usernameElement.appendChild(profileImage);
+            usernameElement.appendChild(document.createTextNode(message.type === 'USER' ? message.username : message.ai_name));
+  
             const messageElement = document.createElement('div');
             messageElement.classList.add('chat-bubble');
-
+  
+            // 메시지 내용 처리
             function decodeHTMLEntities(text) {
               const textArea = document.createElement('textarea');
               textArea.innerHTML = text;
               return textArea.value;
             }
             let decodedContent = decodeHTMLEntities(message.content);
-
             const jsonBlockRegex = /```json[\s\S]*?```/g;
             decodedContent = decodedContent.replace(jsonBlockRegex, '용돈기입장에 성공적으로 저장되었어요!😀');
-
+  
             let formattedContent = decodedContent.trim();
-            console.log(formattedContent)
             if (formattedContent) {
               formattedContent = formattedContent
                 .replace(/\n\n/g, '<br>')
@@ -229,20 +101,20 @@
                 .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
                 .replace(/1\. 네 (또는|아니면)/g, '1. 네')
                 .trim();
-
+  
               const sanitizeConfig = {
                 ALLOWED_TAGS: ['br', 'strong'],
                 KEEP_CONTENT: true
               };
-
+  
               const sanitizedContent = DOMPurify.sanitize(formattedContent, sanitizeConfig);
-
+  
               messageElement.innerHTML = sanitizedContent;
-
+  
               const timestampElement = document.createElement('div');
               timestampElement.classList.add('timestamp');
               timestampElement.textContent = formatTimestamp(message.timestamp);
-
+  
               messageContainer.appendChild(usernameElement);
               messageContainer.appendChild(messageElement);
               messageContainer.appendChild(timestampElement);

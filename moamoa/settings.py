@@ -37,7 +37,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    # 'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,11 +44,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Third party
-
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
-    # 'channels',
     # Local app
     'accounts',
     'diaries',
@@ -182,9 +179,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'webs/static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
 STATICFILES_DIRS = [BASE_DIR / 'webs/static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 

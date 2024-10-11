@@ -108,7 +108,7 @@ class ChatMessageHistory(APIView):
         except User.DoesNotExist:
             return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
-        # # 자녀와의 채팅 세션 처리 (child.id 사용)
+        # 자녀와의 채팅 세션 처리 (child.id 사용)
         session_id = f"user_{child.id}"
         chat_histories = get_message_history(session_id).messages
         message_history = []
@@ -124,16 +124,16 @@ class ChatMessageHistory(APIView):
             if isinstance(chat_history, HumanMessage):
                 message['type'] = "USER"
                 message['username'] = child.first_name
-                if child.images:
-                    message['user_profile_image'] = request.build_absolute_uri(
+                message['user_profile_image'] = request.build_absolute_uri(
                         child.images.url)
                 message_history.append(message)
             # # AI가 입력한 대화 내용
             elif isinstance(chat_history, AIMessage):
                 message['type'] = "AI"
                 message['ai_name'] = '모아모아'
+                message['ai_profile_image'] = request.build_absolute_uri(
+                        '/media/profile_images/default_profile.png')
                 message_history.append(message)
-
         return Response({"response": message_history})
 
 
