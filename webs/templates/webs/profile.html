@@ -2,7 +2,7 @@
 
 {% load static %}
 
-{% block title %}모아모아 - 부모 프로필{% endblock %}
+{% block title %}모아모아 :: 똑똑한 용돈 관리 습관{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'webs/css/profile.css' %}">
@@ -78,7 +78,7 @@
                     data.children.forEach((child, index) => {
                         const profileCard = document.createElement('div');
                         profileCard.classList.add('profile-card');
-                        const childImage = child.images ? child.images : "{% static 'webs/images/default_profile.png' %}";
+                        const childImage = child.images ? child.images : "{% static 'default_profile.png' %}";
                         
                         const remainingAmount = child.total || 0;  // 자녀의 총 잔액
 

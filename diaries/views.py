@@ -133,7 +133,7 @@ class ChatMessageHistory(APIView):
                 message['type'] = "AI"
                 message['ai_name'] = '모아모아'
                 message['ai_profile_image'] = request.build_absolute_uri(
-                        '/media/profile_images/default_profile.png')
+                        '/media/default_profile.png')
                 message_history.append(message)
         return Response({"response": message_history})
 
