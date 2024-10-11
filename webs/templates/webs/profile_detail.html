@@ -3,67 +3,72 @@
 {% block title %}모아모아 :: 똑똑한 용돈 관리 습관{% endblock %}
 {% block content %}
 
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<link rel="stylesheet" href="{% static 'webs/css/profile_detail.css' %}">
-<!-- jQuery와 jQuery UI 추가 -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="{% static 'webs/css/profile_detail.css' %}">
+    <!-- jQuery와 jQuery UI 추가 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+    <style>
+        .container {
+            height: 100vh;
+            overflow-y: auto;
+        }
+    </style>
 
 
+    <div class="container">
+        <!-- Greeting -->
+        <div class="greeting">
+            <h4>안녕하세요.<br><span class="childname">아이이름</span> 자녀의 부모님!</h4>
+        </div>
 
+        <!-- 년월 선택 입력 필드 -->
+        <div class="d-flex justify-content-center mb-3">
+            <select id="year-picker" class="form-select w-auto"
+                    style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">년</select>
+            <select id="month-picker" class="form-select w-auto ms-2"
+                    style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">월</select>
+        </div>
 
-<div class="container">
-    <!-- Greeting -->
-    <div class="greeting">
-        <h4>안녕하세요.<br><span class="childname">아이이름</span> 자녀의 부모님!</h4>
-    </div>
+        <!-- Profile Card -->
+        <div class="profile-card">
+            <img src="#" class="childavatar" alt="Child Avatar">
+            <div class="profile-info">
+                <h5><span class="childname2">다모아</span> 만 <span class="age"></span>세</h5>
+                <p>현재 잔액: <span class="current-amount"></span></p>
+            </div>
+        </div>
 
-    <!-- 년월 선택 입력 필드 -->
-    <div class="d-flex justify-content-center mb-3">
-        <select id="year-picker" class="form-select w-auto"
-            style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">년</select>
-        <select id="month-picker" class="form-select w-auto ms-2"
-            style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">월</select>
-    </div>
+        <!-- Spending Summary -->
+        <div class="spending-summary">
+            <div class="spending-chart">
+                <div id="pie-chart"></div>
+                <p><span class="summarymonth"></span>월 <span class="summaryname"></span> 자녀의 소비</p>
+            </div>
+            <div class="spending-info">
+                <p>이번 달 최대 소비: <strong class="maximumconsumption">간식</strong></p>
+                <p>총 수입: <span class="totalincome">30000</span>원</p>
+                <p>총 지출: <span class="totalexpenses">30000</span>원</p>
+                <p>남은 금액: <span class="remainingamount">30000</span>원</p>
+            </div>
+        </div>
 
-    <!-- Profile Card -->
-    <div class="profile-card">
-        <img src="#" class="childavatar" alt="Child Avatar">
-        <div class="profile-info">
-            <h5><span class="childname2">다모아</span> 만 <span class="age"></span>세</h5>
-            <p>현재 잔액: <span class="current-amount"></span></p>
+        <div class="spending-summary-red"></div>
+
+        <!-- Evaluation -->
+        <div class="evaluation">
+            <h6>평가</h6>
+            <p class="evaluationmsg"></p>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="suggestions">
+            <h6>아이에게 보낸 메시지</h6>
+            <div class="encouragement"></div>
         </div>
     </div>
-
-    <!-- Spending Summary -->
-    <div class="spending-summary">
-        <div class="spending-chart">
-            <div id="pie-chart"></div>
-            <p><span class="summarymonth"></span>월 <span class="summaryname"></span> 자녀의 소비</p>
-        </div>
-        <div class="spending-info">
-            <p>이번 달 최대 소비: <strong class="maximumconsumption">간식</strong></p>
-            <p>총 수입: <span class="totalincome">30000</span>원</p>
-            <p>총 지출: <span class="totalexpenses">30000</span>원</p>
-            <p>남은 금액: <span class="remainingamount">30000</span>원</p>
-        </div>
-    </div>
-
-    <div class="spending-summary-red"></div>
-
-    <!-- Evaluation -->
-    <div class="evaluation">
-        <h6>평가</h6>
-        <p class="evaluationmsg"></p>
-    </div>
-
-    <!-- Suggestions -->
-    <div class="suggestions">
-        <h6>아이에게 보낸 메시지</h6>
-        <div class="encouragement"></div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_script %}

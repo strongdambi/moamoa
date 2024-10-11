@@ -71,22 +71,22 @@ header {
 
 /* 강조점을 추가하는 스타일 */
 .strong-text {
-    position: relative; 
+    position: relative;
     display: inline-block;
     font-size: 2.2rem;
     font-weight: bold;
 }
 
 .strong-text::before {
-    content: ''; 
+    content: '';
     position: absolute;
     top: -20px;
-    left: 50%; 
+    left: 50%;
     transform: translateX(-50%);
     width: 8px;
     height: 8px;
-    background-color: #ffbd41; 
-    border-radius: 50%; 
+    background-color: #ffbd41;
+    border-radius: 50%;
 }
 
 /* 해시태그 스타일 */
@@ -116,19 +116,24 @@ header {
     font-size: xx-large;
     font-weight: 900;
 }
+
 .lefticon {
     width: 60px;
     height: 60px;
 }
+
 .leftlist h5 {
     font-weight: bold;
 }
+
 .leftlist span {
     font-size: 14px;
 }
+
 .leftcopy {
     font-size: 12px;
 }
+
 .leftcopy span {
     font-weight: bold;
 }
@@ -138,10 +143,11 @@ header {
     margin: 0 auto;
     background-color: #F9F4E2;
     padding: 0;
-    min-height: 100vh;
+    height: 100vh; /* 1011 */
     display: flex;
     flex-direction: column;
 }
+
 #app .content {
     flex: 1;
 }
@@ -156,10 +162,12 @@ header {
         bottom: 0;
         z-index: -1;
     }
+
     footer img {
         width: 24px;
         height: 24px;
     }
+
     footer .plus-btn {
         width: 50px;
         height: 50px;
@@ -173,6 +181,7 @@ header {
         width: 20px;
         height: 20px;
     }
+
     footer .plus-btn {
         width: 45px;
         height: 45px;
@@ -186,6 +195,7 @@ header {
     text-align: center;
     margin-top: 20px;
 }
+
 .login-buttons button {
     width: 70%;
     height: 50px;
@@ -193,14 +203,17 @@ header {
     margin-bottom: 15px;
     border-radius: 25px;
 }
+
 .kakao-login {
     background-color: #FFCD00;
     color: #000;
 }
+
 .kids-login {
     background-color: #EDEDED;
     color: #000;
 }
+
 .footer-text {
     font-size: 14px;
     text-align: center;
@@ -214,15 +227,19 @@ header {
     font-size: 18px;
     margin-bottom: 20px;
 }
+
 .card-container {
     padding: 10px;
 }
+
 .profile-card:nth-child(even) {
     background-color: #F9F4E2;
 }
+
 .profile-card:nth-child(odd) {
     background-color: #E3F2E1;
 }
+
 .profile-card {
     border-radius: 15px;
     padding: 15px;
@@ -231,27 +248,33 @@ header {
     align-items: center;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
 .profile-card img {
     width: 50px;
     height: 50px;
     border-radius: 10px;
 }
+
 .profile-info {
     margin-left: 15px;
 }
+
 .profile-info h5 {
     margin: 0;
 }
+
 .profile-info p {
     margin: 5px 0;
     font-size: 14px;
 }
+
 .profile-edit {
     margin-left: auto;
     font-size: 12px;
     color: #7F7F7F;
     cursor: pointer;
 }
+
 .add-account {
     color: #7F7F7F;
     margin-top: 20px;

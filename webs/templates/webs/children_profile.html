@@ -5,58 +5,67 @@
 {% block title %}모아모아 :: 똑똑한 용돈 관리 습관{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'webs/css/children_profile.css' %}">
+    <link rel="stylesheet" href="{% static 'webs/css/children_profile.css' %}">
+    <style>
+        .container {
+            height: 100vh;
+            overflow-y: auto;
+        }
+    </style>
+    <div class="container">
+        <!-- 아이 환영 메시지 -->
+        <div class="text-center mt-3">
+            <img id="child-profile-image" src="" alt="프로필 이미지" class="profile-image">
+            <h2 id="child-greeting">아이의 이름을 불러옵니다...</h2>
+        </div>
 
-<div class="container">
-  <!-- 아이 환영 메시지 -->
-  <div class="text-center mt-3">
-    <img id="child-profile-image" src="" alt="프로필 이미지" class="profile-image">
-    <h2 id="child-greeting">아이의 이름을 불러옵니다...</h2>
-  </div>
+        <!-- 용돈기입장 섹션 -->
+        <div class="spending-log mt-4 p-3" style="background-color: #FFF4DB; border-radius: 10px;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">용돈기입장</h5>
+                <!-- 년월 선택 입력 필드 -->
+                <div class="d-flex">
+                    <select id="year-picker" class="form-select w-auto"
+                            style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">년</select>
+                    <select id="month-picker" class="form-select w-auto ms-2"
+                            style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">월</select>
+                </div>
+            </div>
+            <table class="table text-center">
+                <thead>
+                <tr>
+                    <th>사용 날짜</th>
+                    <th>내용</th>
+                    <th>금액</th>
+                    <th>남은 돈</th>
+                </tr>
+                </thead>
+                <tbody id="diary-table-body">
+                <!-- 데이터가 여기에 추가됩니다 -->
+                </tbody>
+            </table>
+            <div class="text-center">
+                <a href="#" id="load-more-btn" class="text-muted">더보기</a>
+            </div>
+        </div>
 
-  <!-- 용돈기입장 섹션 -->
-  <div class="spending-log mt-4 p-3" style="background-color: #FFF4DB; border-radius: 10px;">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">용돈기입장</h5>
-      <!-- 년월 선택 입력 필드 -->
-      <div class="d-flex">
-        <select id="year-picker" class="form-select w-auto" style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">년</select>
-        <select id="month-picker" class="form-select w-auto ms-2" style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">월</select>
-      </div> 
+        <!-- 응원 메시지 -->
+        <div class="encouragement mt-4 p-3" style="background-color: #FFFCD6; border-radius: 10px;">
+            <h5 class="mb-0">응원의 메시지</h5>
+            <p>비어있음</p>
+        </div>
     </div>
-    <table class="table text-center">
-      <thead>
-        <tr>
-          <th>사용 날짜</th>
-          <th>내용</th>
-          <th>금액</th>
-          <th>남은 돈</th>
-        </tr>
-      </thead>
-      <tbody id="diary-table-body">
-        <!-- 데이터가 여기에 추가됩니다 -->
-      </tbody>
-    </table>
-    <div class="text-center">
-      <a href="#" id="load-more-btn" class="text-muted">더보기</a>
+
+    <!-- 하단 네비게이션 -->
+    <div class="bottom-nav text-center">
+        <a href="#" id="chatbot-button" class="nav-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" class="bi bi-plus-lg"
+                 viewBox="0 0 16 16">
+                <path fill-rule="evenodd"
+                      d="M8 1a.5.5 0 0 1 .5.5v6.5H15a.5.5 0 0 1 0 1H8.5v6.5a.5.5 0 0 1-1 0V9H1a.5.5 0 0 1 0-1h6.5V1.5a.5.5 0 0 1 .5-.5z"/>
+            </svg>
+        </a>
     </div>
-  </div>
-
-  <!-- 응원 메시지 -->
-  <div class="encouragement mt-4 p-3" style="background-color: #FFFCD6; border-radius: 10px;">
-    <h5 class="mb-0">응원의 메시지</h5>
-    <p>비어있음</p>
-  </div>
-</div>
-
-<!-- 하단 네비게이션 -->
-<div class="bottom-nav text-center">
-  <a href="#" id="chatbot-button" class="nav-btn">
-    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" class="bi bi-plus-lg" viewBox="0 0 16 16">
-      <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v6.5H15a.5.5 0 0 1 0 1H8.5v6.5a.5.5 0 0 1-1 0V9H1a.5.5 0 0 1 0-1h6.5V1.5a.5.5 0 0 1 .5-.5z"/>
-    </svg>
-  </a>
-</div>
 {% endblock %}
 
 {% block extra_script %}
