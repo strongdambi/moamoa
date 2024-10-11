@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let expanded = false;  // 더보기 버튼 상태 (확장 여부)
 
     // 자녀 정보 가져오기
-    fetch(`http://localhost:8000/api/v1/accounts/children/${childId}/`, {
+    fetch(`/api/v1/accounts/children/${childId}/`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // 기록이 있는 년/월 가져오기
-    fetch(`http://localhost:8000/api/v1/diary/${childId}/available-months/`, {
+    fetch(`/api/v1/diary/${childId}/available-months/`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 용돈기입장 데이터를 가져오는 함수
     function fetchDiary(year, month) {
-        fetch(`http://localhost:8000/api/v1/diary/${childId}/${year}/${month}/`, {
+        fetch(`/api/v1/diary/${childId}/${year}/${month}/`, {
             method: 'GET',
             credentials: 'include',
             headers: {
