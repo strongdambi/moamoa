@@ -62,7 +62,7 @@
 {% block extra_script %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const childId = window.location.pathname.split("/")[3];  // URL에서 자녀 ID 추출
+    const childId = window.location.pathname.split("/")[2];  // URL에서 자녀 ID 추출
     const yearPicker = document.getElementById('year-picker');  // 년도 선택 요소
     const monthPicker = document.getElementById('month-picker');  // 월 선택 요소
     const loadMoreBtn = document.getElementById('load-more-btn');  // 더보기 버튼
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 챗봇 버튼 클릭 이벤트 추가
     document.getElementById('chatbot-button').addEventListener('click', function() {
         const childPk = childId;  // 자녀의 PK 값을 가져옴
-        window.location.href = `/webs/chatbot/${childPk}/`;  // 해당 URL로 이동
+        window.location.href = `/chatbot/${childPk}/`;  // 해당 URL로 이동
     });
 });
 </script>
