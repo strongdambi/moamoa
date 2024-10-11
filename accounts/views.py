@@ -166,11 +166,21 @@ class LoginView(APIView):
 
         # 사용자를 위한 JWT 리프레시 토큰과 액세스 토큰을 발행
         refresh = RefreshToken.for_user(user)
-        res_data["tokens"] = {"access_token": str(
-            refresh.access_token), "refresh_token": str(refresh)}
 
-        # 인증 토큰과 사용자 정보를 포함한 응답을 반환
-        return Response(res_data, status=status.HTTP_200_OK)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
+        # 쿠키에 토큰 설정 (HTTP-Only 쿠키로 저장)
+        response = Response(res_data, status=status.HTTP_200_OK)
+        response.set_cookie('access_token', access_token, httponly=True, samesite='Lax', secure=False)
+        response.set_cookie('refresh_token', refresh_token, httponly=True, samesite='Lax', secure=False)
+
+        return response
+
+        # res_data["tokens"] = {"access_token": str(refresh.access_token), "refresh_token": str(refresh)}
+        #
+        # # 인증 토큰과 사용자 정보를 포함한 응답을 반환
+        # return Response(res_data, status=status.HTTP_200_OK)
 
 
 # 아이들 회원가입
@@ -246,24 +256,37 @@ class ChildrenPRView(APIView):
 
     # 특정 자녀의 정보를 조회 (자식의 토큰으로도 조회 가능)
     def get(self, request, pk):
+
         try:
             # 부모인 경우, 해당 자녀를 조회
             if request.user.parents_id is None:
                 # 요청된 pk(자녀의 ID)와 부모 사용자를 기준으로 자녀 객체를 조회
                 child = User.objects.get(pk=pk, parents=request.user)
-
             else:
                 # 자식의 토큰으로 자신의 정보를 조회할 수 있게 처리
                 if request.user.pk != pk:
                     return Response({"error": "자신의 정보만 조회할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
 
-            parent = request.user  # 자녀의 부모 정보도 가져오기
+                child = request.user
+
+
+            # child 객체에서 부모 ID가 있는지 확인
+            if child.parents_id:
+                parent = child.parents  # 부모 객체를 가져옴
+            else:
+                parent = None  # 부모 객체가 없으면 None으로 설정
+
             child_serializer = UserSerializer(child)  # 자녀 객체를 시리얼라이즈
-            parent_serializer = UserSerializer(parent)  # 부모 객체를 시리얼라이즈
+            # parent 객체가 존재하는지 확인
+            if parent:
+                parent_serializer = UserSerializer(parent)  # 부모 객체 직렬화
+            else:
+                parent_serializer = None  # 부모 객체가 없으면 None으로 설정
+
+
 
             # 부모와 자녀 정보를 함께 반환
-            response_data = {"child": child_serializer.data,
-                            "parent": parent_serializer.data}
+            response_data = {"child": child_serializer.data, "parent": parent_serializer.data}
 
             # serializer = UserSerializer(child)  조회된 자녀 객체를 시리얼라이즈
             return Response(response_data)  # 시리얼라이즈된 데이터 응답 반환
