@@ -140,7 +140,6 @@
                 .then(response => response.json())
                 .then(data => {
 
-                    console.log(data)
                     if (data.message) {
                         document.querySelector('.spending-summary-red').textContent = data.message;
                         document.querySelector('.spending-summary').style.display = 'none';
@@ -149,12 +148,9 @@
                         document.querySelector('.spending-summary').style.display = 'block';
                         document.querySelector('.evaluation').style.display = 'block';
                         document.querySelector('.spending-summary-red').textContent = '';
-                        console.log(data.content)
 
                         let jsonString = data.content.replace(/'/g, '"');
                         let parsedData = JSON.parse(jsonString);
-
-                        console.log(parsedData)
 
                         // 요약 내용 업데이트
                         document.querySelector('.totalincome').textContent = parsedData.summary.총_수입.toLocaleString('ko-KR');
@@ -271,14 +267,12 @@
         yearPicker.addEventListener('change', function () {
             const selectedYear = yearPicker.value;
             const selectedMonth = monthPicker.value;
-            console.log(id, selectedYear, selectedMonth)
             diaries_monthlysummary(id, selectedYear, selectedMonth);
         });
 
         monthPicker.addEventListener('change', function () {
             const selectedYear = yearPicker.value;
             const selectedMonth = monthPicker.value;
-            console.log(id, selectedYear, selectedMonth)
             diaries_monthlysummary(id, selectedYear, selectedMonth);
         });
     });
