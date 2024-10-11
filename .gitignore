@@ -12,8 +12,8 @@
 # media/*
 # !default_profile.png
 
-media/
-!media/profile_images/default_profile.png
+media/**
+!media/profile_images/.default_profile.png
 
 
 # Icon must end with two \r
