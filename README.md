@@ -1,17 +1,14 @@
-# 🎁 NBCN (Newbie Coding News)
+# 🎁 모아모아 (아이들을 위한 용돈기입장)
 
-NBCN(Newbie Coding News)은 IT 산업의 초보자들을 위한 **뉴스 및 커뮤니티 플랫폼**입니다. 이 프로젝트는 Django와 Django REST Framework(DRF)를 기반으로 구현되었으며, 사용자는 크롤링된 IT 관련 뉴스를 확인하고, AI 요약본을 통해 뉴스를 빠르게 파악할 수 있습니다. 또한 사용자 등급에 따라 질문 게시판, 자유 게시판, 홍보 게시판에 게시글을 작성하고 댓글을 달 수 있습니다.
+모아모아는 아이(5세~13세)들에게 금융에대한 이해와 교육을 알려주기 위해 만든 서비스이며, AI와의 채팅을통해 용돈기입장 작성을 도와주고 그렇게 쌓인 월간 용돈기입장의 데이터를 통해서 부모님들에게 아이의 소비 습관을 보여주고 그 소비습관에 맞는 방향성을 제시해주는 서비스입니다. 
 
 ---
 
 ## 🌟 주요 기능
 
-- **회원가입 및 로그인**: JWT 기반 인증 시스템을 사용하여 사용자 관리.
-- **프로필 관리**: 회원 프로필 조회 및 수정.
-- **NBCN 뉴스**: AI가 크롤링된 뉴스를 요약하여 제공하며, 북마크 기능으로 뉴스를 저장.
-- **게시판 시스템**: 자유, 질문, 홍보 게시판 제공 및 좋아요/북마크 기능.
-- **댓글 및 좋아요**: 게시글에 대한 댓글 작성 및 좋아요 기능.
-- **사용자 역할 관리**: 관리자, 마스터, 일반 사용자(뉴비)로 역할에 따른 권한 부여.
+- **회원가입 및 로그인**: 주 계정(부모님 계정)과 하위 계정(자녀 계정)을 나누어 부모님이 메인 페이지에서 카카오 소셜 로그인을 하여 자녀의 회원가입을 진행. 만들어진 자녀 계정은 메인 홈페이지의 자녀 로그인을 통해서 자녀 페이지로 진입 가능.
+- **용돈기입장 작성**: AI와의 대화를 통해 직접 AI가 용돈 기입장의 내용(사용한 날짜, 입출, 항목, 금액, 지출요약)을 정리하여 데이터베이스에 저장
+- **월간 소비습관 분석**: 월말 마다 AI가 자녀의 해당 월의 용돈 기입장을 가져와서 소비습관, 사용한 소비의 카테고리 분류 그리고 개선 방향성을 부모에게 요약하여 제공
 
 ---
 
@@ -20,8 +17,7 @@ NBCN(Newbie Coding News)은 IT 산업의 초보자들을 위한 **뉴스 및 커
 ### 1️⃣ 저장소 클론
 
 ```bash
-git clone https://github.com/strongdambi/spartanews11.git
-cd NBCN
+git clone [https://github.com/strongdambi/moamoa.git
 ```
 
 ### 2️⃣ 가상 환경 설정 및 패키지 설치
@@ -37,6 +33,7 @@ pip install -r requirements.txt
 
 ```bash
 python manage.py migrate
+python manage.py makemigrations
 ```
 
 ### 4️⃣ 슈퍼유저 생성 (관리자 계정)
@@ -55,65 +52,45 @@ python manage.py runserver
 
 ## 🖇️ 와이어 프레임
 
-!
+![image (1)](https://github.com/user-attachments/assets/855a476c-5724-4f73-b3c6-aa6841316a16)
 
 ---
 
 ## 📋 API 사용법
 
-자세한 API 명세서는 [Postman API Documentation]()에서 확인할 수 있습니다.
+| 기능                    | HTTP 메서드 | 엔드포인트                                   | 설명                                                    |
+|-------------------------|-------------|---------------------------------------------|-------------------------------------------------------------|
+| **부모 회원가입**       | POST        | `/api/v1/accounts/auth/kakao/callback/`       | 인덱스의 카카오 소셜 로그인을 통해 회원가입 진행 및 토큰 발급                 |
+| **자녀 회원가입**        | POST       | `/api/v1/accounts/children/create/`            | 부모프로필 페이지에서 자녀 추가를 통해 회원가입 진행                        |
+| **자녀 로그인**          | POST        | `/api/v1/accounts/login/`                     | 인덱스의 키즈 로그인을 통해서 아이디 및 비밀번호 입력후 쿠키 및 JWT토큰 발급  |
+| **로그아웃**             | POST        | `/api/v1/accounts/logout/`                    | refresh_token 블랙리스트 추가 및 쿠키의 JWT토큰 삭제                        |           
+| **refresh_token 발행**   | POST        | `/api/v1/accounts/token/refresh/`             | refresh_token을 통해 access_token 재발급                                    |
+| **부모 프로필**          | GET         | `/api/v1/accounts/`                           | 부모 프로필 및 부모의 자녀들 조회                                            |
+| **자녀 정보 조회**       | GET         | `/api/v1/accounts/children/<int:pk>/`           | 자녀의 생일, 이름, 아이디 프로필이미지 조회                                |
+| **자녀 정보 수정**       | PUT         | `/api/v1/accounts/children/<int:pk>/`         | 자녀의 생일, 이름, 아이디, 비밀번호, 프로필 수정                             |
+| **자녀 정보 삭제**       | DELETE      | `/api/v1/accounts/children/<int:pk>/`         | 자녀의 정보 및 데이터를 삭제                                                |
+| **자녀 월말 결산 작성**  | POST        | `/api/v1/diary/monthly/<int:child_id>/`     | 자녀의 월간 용돈기입장 데이터를 토대로 AI가 결산 작성                        |
+| **용돈기입장 작성**      | POST        | `/api/v1/diary/chat/`                       | AI와의 대화를 통해 수집한 json데이터를 저장                                 |
+| **AI챗봇 채팅 기록**     | GET         | `/api/v1/diary/chat/messages/<int:child_pk>/`  | AI와 자녀가 대화한 내용을 전달                                             |
+| **기입장 특정 삭제**     | DELETE      | `/api/v1/diary/chat/<int:diary_pk>/delete/`  | 자녀의 특정 용돈기입장 내용 삭제                                           |
+| **월별 용돈 기입장 조회**| GET         | `/api/v1/diary/<int:child_pk>/<int:year>/<int:month>/`| 년월을 기준으로 작성한 용돈기입장 조회                            |
+| **용돈기입장 데이터가있는 월 조회**| GET | `/api/v1/diary/<int:child_pk>/available-months/`| 용돈 기입장 데이터가 있는 월 조회                                    |
 
-| 기능                    | HTTP 메서드 | 엔드포인트                                   | 설명                                      |
-|-------------------------|-------------|---------------------------------------------|-------------------------------------------|
-| **회원가입**            | POST        | `/api/v1/accounts/`                            | 사용자 정보를 입력해 회원가입 후 JWT 토큰 발급   |
-| **회원 탈퇴**           | DELETE      | `/api/v1/accounts/`                            | 회원 탈퇴 (소프트 삭제)                         |
-| **로그인**              | POST        | `/api/v1/accounts/login/`                      | 유저네임, 비밀번호로 로그인 후 JWT 토큰 발급     |
-| **로그아웃**             | POST        | `/api/v1/accounts/logout/`                    | 소프트 삭제로 is_active 계정 비활성화           |
-| **프로필 조회 및 수정**  | GET/POST     | `/api/v1/accounts/<str:username>/`           | 로그인한 사용자의 정보(북마크, 작성글 포함)를 조회|
-| **게시글 목록 조회**     | GET         | `/api/v1/articles/(free/ask/company)/`        | 자유, 질문, 홍보 게시글 목록 조회                |
-| **게시글 작성**         | POST        | `/api/v1/articles/`                            | 새로운 게시글 작성                              |
-| **게시글 수정**         | PUT         | `/api/v1/articles/<int:pk>/`                   | 기존 게시글 수정                                |
-| **게시글 삭제**         | DELETE      | `/api/v1/articles/<int:pk>/`                   | 게시글 삭제                                     |
-| **게시글 좋아요**        | POST        | `/api/v1/articles/<int:pk>/like/`             | 게시글에 좋아요 추가/취소                        |
-| **게시글 북마크**        | POST        | `/api/v1/articles/<int:pk>/bookmark/`         | 게시글을 북마크에 추가/제거                      |
-| **뉴스 목록 조회**       | GET         | `/api/v1/nbcns/`                              | 크롤링된 뉴스 목록을 조회                        |
-| **뉴스 생성**            | POST        | `/api/v1/nbcns/`                              | 새로운 뉴스 생성                                |
-| **뉴스 상세 조회**       | GET        | `/api/v1/nbcns/<int:pk>/`                      | 선택한 뉴스 조회                                |
-| **뉴스 삭제**          | DELETE       | `/api/v1/nbcns/<int:pk>/`                      | 선택한 뉴스 삭제                                |
-| **뉴스 북마크**         | POST        | `/api/v1/nbcns/<int:pk>/bookmark/`             | 뉴스 북마크 추가/취소                           |
-| **댓글 목록 조회**       | GET         | `/api/v1/articles/<int:pk>/comments/`         | 특정 게시글의 댓글 목록 조회                     |
-| **댓글 작성**           | POST        | `/api/v1/articles/<int:pk>/comments/`          | 특정 게시글에 댓글 작성                         |
-| **댓글 수정**           | PUT         | `/api/v1/comments/<int:pk>/`                   | 댓글 수정                                      |
-| **댓글 삭제**           | DELETE      | `/api/v1/comments/<int:pk>/`                   | 댓글 삭제 (소프트 삭제)                         |
 
 ---
 
 ## 🖼️ ERD (Entity Relationship Diagram)
 
 ### ERD 이미지
+![moamoa_erd](https://github.com/user-attachments/assets/cb77ebea-f4d5-4078-9326-380445a616d3)
 
-!
-
-### ERD 설명
-
-- **User 모델**: 사용자는 게시글을 작성하고, 댓글을 남길 수 있으며, 좋아요 기능을 이용할 수 있고, 뉴스 및 게시글을 북마크할 수 있습니다.
-- **Article 모델**: 게시글은 자유, 질문, 홍보 게시판으로 분류되며, 댓글 및 좋아요 기능을 제공합니다.
-- **NBCN 모델**: 뉴스는 사용자에 의해 북마크될 수 있으며, AI가 요약한 콘텐츠가 제공됩니다.
-- **Comment 모델**: 댓글은 특정 게시글과 연관되며, 사용자에 의해 작성됩니다.
-
----
-
-## 🔑 역할 기반 접근 제어
-
-- **관리자**: 모든 기능(뉴스 생성, 삭제, 게시글 관리)에 접근할 수 있습니다.
-- **마스터**: 홍보 게시판에 글을 작성할 수 있습니다.
-- **일반 사용자 (뉴비)**: 질문 및 자유 게시판에 글을 작성할 수 있습니다.
 
 ---
 
 ## 🛠️ 데이터베이스 관리
 
 이 프로젝트는 **SQLite3**을 기본 데이터베이스로 사용합니다.
+추후**MySQL**로 전환 예정
 
 ---
 
@@ -122,24 +99,21 @@ python manage.py runserver
 ### 백엔드 구성
 
 - **Django REST Framework**: API 설계를 위한 프레임워크.
+- **KAKAO API**: 카카오 소셜 로그인을 위한 API.
 - **SQLite3**: 데이터베이스 관리.
-- **BeautifulSoup**: 뉴스 크롤링을 위한 라이브러리.
+- **Redis**: AI 채팅 내역 저장 관리.
+- **Langchain**: AI 서비스 사용을 위한 라이브러리.
+- **OpenAI**: AI 모델.
 - **JWT**: 토큰 방식의 사용자 인증 시스템.
 
 ---
 
-## 🛠️ 통합 및 인터페이스
-
-- **크롤링 통합**: BeautifulSoup을 사용하여 IT 관련 뉴스 데이터를 주기적으로 크롤링합니다.
-- **REST API**: JSON 형식으로 데이터를 주고받으며, Postman을 사용해 API를 문서화합니다.
-
----
 
 ## 🔐 보안
 
 - **HTTPS 사용**: 모든 API 요청은 HTTPS를 통해 암호화되어 전송됩니다.
 - **JWT 인증**: 사용자는 JWT 토큰을 통해 인증되며, 권한 관리가 이루어집니다.
 - **비밀번호 암호화**: 사용자의 비밀번호는 해시화되어 안전하게 저장됩니다.
-- **역할 기반 권한 관리**: 관리자만 뉴스 크롤링 및 관리 기능을 사용할 수 있습니다.
+- **HTTP ONLY**: JavaScript를 통한 쿠키에 접근을 방지하여 쿠키 값에 접근을 막아줍니다.
 
 ---
