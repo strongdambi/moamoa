@@ -255,15 +255,19 @@
             const chartContainer = document.getElementById('pie-chart');
             chartContainer.innerHTML = '';  // 차트를 다시 그리기 위해 초기화
 
-            const width = chartContainer.clientWidth;
-            const height = width;
-            const margin = 40;
+            const width = 60;
+            const height = 60;
+            const margin = 20;
             const radius = Math.min(width, height) / 2 - margin;
+            const innerRadius = 30;
             d3.select("#pie-chart svg").remove();
 
             const svg = d3.select("#pie-chart")
                 .append("svg")
+                .attr("width", width) 
+                .attr("height", height) 
                 .attr("viewBox", `0 0 ${width} ${height}`)
+                .style("max-width", "40%")
                 .append("g")
                 .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
@@ -275,15 +279,17 @@
                 .value(d => d[1]);
 
             const data_ready = pie(Object.entries(data));
+            const total = Object.values(data).reduce((acc, val) => acc + val, 0);
 
-            svg.selectAll('whatever')
+            // 도넛형 파이 조각 그리기
+            svg.selectAll('path')
                 .data(data_ready)
                 .join('path')
                 .attr('d', d3.arc()
-                    .innerRadius(0)
-                    .outerRadius(radius)
+                    .innerRadius(innerRadius)  // 도넛 중앙 반지름
+                    .outerRadius(radius)  // 외곽 반지름 설정
                 )
-                .attr('fill', d => color(d.data[0]))
+                .attr('fill', d => color(d.data[0]))  // 파이 색상 설정
                 .attr("stroke", "white")
                 .style("stroke-width", "2px")
                 .style("opacity", 0.7);
@@ -291,12 +297,16 @@
             svg.selectAll('text')
                 .data(data_ready)
                 .join('text')
-                .text(d => `${d.data[0]}: ${d.data[1].toLocaleString()}원`)
-                .attr("transform", d => `translate(${d3.arc()
-                    .innerRadius(0)
-                    .outerRadius(radius).centroid(d)})`)
+                .text(d => `${((d.data[1] / total) * 100).toFixed(1)}%`)  // 비율을 퍼센트로 변환하여 표시
+                .attr("transform", d => {
+                    const pos = d3.arc()
+                        .innerRadius(innerRadius)
+                        .outerRadius(radius * 1.3) // 텍스트 외곽으로 배치
+                        .centroid(d);
+                    return `translate(${pos[0]}, ${pos[1]})`;
+                })
                 .style("text-anchor", "middle")
-                .style("font-size", "14px");
+                .style("font-size", "4px");
         }
 </script>
 {% endblock %}
