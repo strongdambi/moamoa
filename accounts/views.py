@@ -363,12 +363,21 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        refresh_token_str = request.data.get("refresh_token")
         try:
-            refresh_token = RefreshToken(refresh_token_str)
+            # 쿠키로 refreshtoken 가져오기
+            refresh_token = request.COOKIES.get('refresh_token')
+            print(refresh_token)
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                # 블랙리스트 추가
+                token.blacklist()
+
+            response = Response({"message": "로그아웃 되었습니다."}, status = status.HTTP_200_OK)
+            # 쿠키에 저장된 토큰들 삭제
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+            return response
         except TokenError:
-            return Response({"error": "해당 토큰은 사용할 수 없습니다."},
-                            status=status.HTTP_400_BAD_REQUEST)
-        refresh_token.blacklist()
-        return Response({"success": "로그아웃 되었습니다."},
-                        status=status.HTTP_200_OK)
+            return Response({"error": "유효하지 않은 토큰입니다."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": f"로그아웃 중 오류가 발생했습니다. {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
