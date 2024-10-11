@@ -54,9 +54,9 @@ class MonthlyDiaryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, child_pk, year, month):
-        user = request.user
+
         try:
-            child = User.objects.get(pk=child_pk, parents=user)
+            child = User.objects.get(pk=child_pk)
         except User.DoesNotExist:
             return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
@@ -101,14 +101,15 @@ class ChatMessageHistory(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능
 
     def get(self, request, child_pk):
-        user = request.user
+
         
         try:
-            child = User.objects.get(pk=child_pk, parents=user)  # 부모와 자녀 관계 확인
+            child = User.objects.get(pk=child_pk)
         except User.DoesNotExist:
             return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
-        # # 자녀와의 채팅 세션 처리 (child.id 사용)
+
+        # 자녀와의 채팅 세션 처리 (child.id 사용)
         session_id = f"user_{child.id}"
         chat_histories = get_message_history(session_id).messages
         message_history = []
@@ -124,16 +125,16 @@ class ChatMessageHistory(APIView):
             if isinstance(chat_history, HumanMessage):
                 message['type'] = "USER"
                 message['username'] = child.first_name
-                if child.images:
-                    message['user_profile_image'] = request.build_absolute_uri(
+                message['user_profile_image'] = request.build_absolute_uri(
                         child.images.url)
                 message_history.append(message)
             # # AI가 입력한 대화 내용
             elif isinstance(chat_history, AIMessage):
                 message['type'] = "AI"
                 message['ai_name'] = '모아모아'
+                message['ai_profile_image'] = request.build_absolute_uri(
+                        '/media/default_profile.png')
                 message_history.append(message)
-
         return Response({"response": message_history})
 
 
@@ -143,11 +144,10 @@ class ChatbotProcessView(APIView):
     def post(self, request):
         user_input = request.data.get('message')
         child_pk = request.data.get('child_pk')  # body에서 child_pk를 추출
-        user = request.user  # 현재 로그인한 사용자
+        user = request.user
 
         try:
-            child = User.objects.get(pk=child_pk, parents=user)
-            total = child.total
+            child = User.objects.get(pk=child_pk)
         except User.DoesNotExist:
             return Response({"message": "다른 유저는 이 기능을 사용할 수 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
@@ -213,7 +213,7 @@ class ChatbotProcessView(APIView):
                         amount=amount,
                         remaining=child.total,  # 추가 전에 잔액 설정
                         child=child,
-                        parent=user
+                        parent=user.parents
                     )
                     finance_diary.save()
 
