@@ -28,8 +28,6 @@ from langchain_core.messages.human import HumanMessage
 from langchain_core.messages.ai import AIMessage
 # openai 관련 라이브러리
 from openai import OpenAI
-# 비동기 관련 라이브러리
-from asgiref.sync import sync_to_async
 # 시간 라이브러리
 from datetime import datetime
 
@@ -49,7 +47,6 @@ class ChatbotProcessDelete(APIView):
 
 
 # 아이 월별 용돈기입장 리스트(영훈)
-
 class MonthlyDiaryView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -75,8 +72,6 @@ class MonthlyDiaryView(APIView):
 
 
 # 키즈 프로필 콤보박스 월을 동적으로 표시하기 위함
-
-
 class AvailableMonthsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -95,19 +90,14 @@ class AvailableMonthsView(APIView):
 
 
 # 채팅 메시지 기록을 가져오는 뷰
-
-
 class ChatMessageHistory(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능
 
     def get(self, request, child_pk):
-
-        
         try:
             child = User.objects.get(pk=child_pk)
         except User.DoesNotExist:
             return Response({"message": "다른 유저는 볼 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-
 
         # 자녀와의 채팅 세션 처리 (child.id 사용)
         session_id = f"user_{child.id}"
@@ -128,7 +118,8 @@ class ChatMessageHistory(APIView):
                 message['user_profile_image'] = request.build_absolute_uri(
                         child.images.url)
                 message_history.append(message)
-            # # AI가 입력한 대화 내용
+                
+            # AI가 입력한 대화 내용
             elif isinstance(chat_history, AIMessage):
                 message['type'] = "AI"
                 message['ai_name'] = '모아모아'
@@ -248,6 +239,7 @@ class ChatbotProcessView(APIView):
 
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
 
 class MonthlySummaryView(APIView):
 
