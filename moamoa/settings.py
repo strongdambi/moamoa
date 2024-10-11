@@ -37,7 +37,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    # 'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,11 +44,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Third party
-
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
-    # 'channels',
     # Local app
     'accounts',
     'diaries',
@@ -61,12 +58,10 @@ ASGI_APPLICATION = 'moamoa.asgi.application'
 
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', #추가
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # 추가
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -77,7 +72,7 @@ AUTH_USER_MODEL = "accounts.User"
 ROOT_URLCONF = 'moamoa.urls'
 
 
-#추가 시작
+
 # https://blog.stackademic.com/django-react-secure-authentication-using-http-only-cookie-ac718f0a2797
 CORS_ALLOW_CREDENTIALS = True  # 쿠키를 포함한 요청 허용
 CORS_ORIGIN_ALLOW_ALL = False  # 특정 도메인만 허용할 때는 False로 설정
@@ -85,7 +80,7 @@ CORS_ALLOWED_ORIGINS = ['http://localhost'] # 프론트엔드가 작동하는 �
 CSRF_TRUSTED_ORIGINS = ['http://localhost'] # 프론트엔드 도메인을 CSRF 신뢰 목록에 추가
 # CORS_ALLOW_CREDENTIALS = True  # 쿠키 인증을 허용합니다.
 # CORS_ALLOW_ALL_ORIGINS = True  # 모든 도메인에서 요청 허용
-#추가 끝
+
 
 TEMPLATES = [
     {
@@ -117,15 +112,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-# 비동기 channel layers  redis로 지정
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
-#         'CONFIG': {
-#             "hosts": [(os.environ.get('REDIS_HOST', 'localhost'), 6379)],
-#         },
-#     },
-# }
 
 
 SIMPLE_JWT = {
@@ -143,13 +129,6 @@ REST_FRAMEWORK = {
 }
 
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
-#
-# CRONJOBS = [
-#     ('*/1 * * * *', 'diaries.cron.monthly')  # 매 1분마다 실행되는 작업 예시
-# ]
-
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -182,9 +161,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'webs/static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
 STATICFILES_DIRS = [BASE_DIR / 'webs/static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 

@@ -12,9 +12,6 @@ import re
 # 캡슐 라이브러리
 from .prompts import chat_prompt
 from .chat_history import get_message_history
-# 비동기 처리 라이브러리
-import aiohttp
-
 
 llm = ChatOpenAI(model="gpt-4o-mini", api_key=settings.OPENAI_API_KEY)
 

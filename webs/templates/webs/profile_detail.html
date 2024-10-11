@@ -1,6 +1,6 @@
 {% extends 'webs/base.html' %}
 {% load static %}
-{% block title %}모아모아 - 부모 프로필{% endblock %}
+{% block title %}모아모아 :: 똑똑한 용돈 관리 습관{% endblock %}
 {% block content %}
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -10,10 +10,13 @@
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
+
+
+
 <div class="container">
     <!-- Greeting -->
     <div class="greeting">
-        <h4>안녕하세요.<br><span class="childname">아이이름</span> 자녀의 부모님!</ㅗ>
+        <h4>안녕하세요.<br><span class="childname">아이이름</span> 자녀의 부모님!</h4>
     </div>
 
     <!-- 년월 선택 입력 필드 -->
@@ -137,7 +140,6 @@
                 .then(response => response.json())
                 .then(data => {
 
-                    console.log(data)
                     if (data.message) {
                         document.querySelector('.spending-summary-red').textContent = data.message;
                         document.querySelector('.spending-summary').style.display = 'none';
@@ -145,13 +147,10 @@
                     } else if (data.content) {
                         document.querySelector('.spending-summary').style.display = 'block';
                         document.querySelector('.evaluation').style.display = 'block';
-
-                        console.log(data.content)
+                        document.querySelector('.spending-summary-red').textContent = '';
 
                         let jsonString = data.content.replace(/'/g, '"');
                         let parsedData = JSON.parse(jsonString);
-
-                        console.log(parsedData)
 
                         // 요약 내용 업데이트
                         document.querySelector('.totalincome').textContent = parsedData.summary.총_수입.toLocaleString('ko-KR');
@@ -268,14 +267,12 @@
         yearPicker.addEventListener('change', function () {
             const selectedYear = yearPicker.value;
             const selectedMonth = monthPicker.value;
-            console.log(id, selectedYear, selectedMonth)
             diaries_monthlysummary(id, selectedYear, selectedMonth);
         });
 
         monthPicker.addEventListener('change', function () {
             const selectedYear = yearPicker.value;
             const selectedMonth = monthPicker.value;
-            console.log(id, selectedYear, selectedMonth)
             diaries_monthlysummary(id, selectedYear, selectedMonth);
         });
     });

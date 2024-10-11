@@ -28,10 +28,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 User = get_user_model()
 
-
 # 부모 회원가입
-
-
 class KakaoCallbackView(APIView):
     # 카카오 OAuth를 통한 로그인 프로세스를 처리하는 뷰
     def get(self, request, *args, **kwargs):
@@ -42,8 +39,6 @@ class KakaoCallbackView(APIView):
         # 인증 코드가 없는 경우 오류 메시지와 함께 요청
         if not code:
             return Response({"error": "인증 코드가 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 카카오로부터 액세스 토큰을 요청
 
         # 자동 로그인
         token_req = requests.get(
@@ -63,8 +58,6 @@ class KakaoCallbackView(APIView):
         profile_request = requests.get("https://kapi.kakao.com/v2/user/me",
                                        headers={"Authorization": f"Bearer {access_token}"})
         profile_data = profile_request.json()
-
-        # print(profile_data)
 
         # 사용자 계정 정보를 추출
         kakao_account = profile_data.get("kakao_account")
@@ -106,10 +99,8 @@ class KakaoCallbackView(APIView):
             # 사용자를 로그인 시킵니다. settings.py 추가
             login(request, user)
 
-            # 추가 시작
             # JWT 토큰을 발급합니다.
             refresh = RefreshToken.for_user(user)
-
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
 
@@ -120,20 +111,12 @@ class KakaoCallbackView(APIView):
             response = redirect(frontend_url)  # 프론트엔드 도메인으로 리다이렉트
 
             # 쿠키에 토큰 설정 (HTTPOnly=True로 보안을 강화)
-            # response.set_cookie('access_token', access_token, httponly=True, samesite='Lax', secure=True)
             response.set_cookie('access_token', access_token,
                                 httponly=True, samesite='Lax', secure=False)
             response.set_cookie('refresh_token', refresh_token,
                                 httponly=True, samesite='Lax', secure=True)
 
             return response
-
-
-            # #이거 제거 해주세요.
-            # refresh = RefreshToken.for_user(user)
-            # return Response({"message": "카카오톡 로그인 성공", "access_token": str(refresh.access_token),
-            #                  "refresh_token": str(refresh), "user_id": user.id, "username": kakao_id, 'email': email,
-            #                  'first_name': nickname}, status=status.HTTP_200_OK)
 
         # 사용자 이름 충돌 시 오류를 반환합니다.
         except IntegrityError:
@@ -166,16 +149,19 @@ class LoginView(APIView):
 
         # 사용자를 위한 JWT 리프레시 토큰과 액세스 토큰을 발행
         refresh = RefreshToken.for_user(user)
-        res_data["tokens"] = {"access_token": str(
-            refresh.access_token), "refresh_token": str(refresh)}
 
-        # 인증 토큰과 사용자 정보를 포함한 응답을 반환
-        return Response(res_data, status=status.HTTP_200_OK)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
+        # 쿠키에 토큰 설정 (HTTP-Only 쿠키로 저장)
+        response = Response(res_data, status=status.HTTP_200_OK)
+        response.set_cookie('access_token', access_token, httponly=True, samesite='Lax', secure=False)
+        response.set_cookie('refresh_token', refresh_token, httponly=True, samesite='Lax', secure=False)
+
+        return response
 
 
 # 아이들 회원가입
-
-
 class ChildrenPRCreate(APIView):
     # API 뷰에서 인증된 사용자만 접근을 허용
     permission_classes = [IsAuthenticated]
@@ -214,10 +200,10 @@ class ChildrenPRCreate(APIView):
 
         # 유효성 검사를 통과한 데이터로 새로운 사용자(자녀)를 생성 parents=parent_user 부모 사용자를 외래키로 설정
         user = User.objects.create_user(username=request.data.get("username"), password=request.data.get("password"),
-
                                         email=request.data.get("email"), parents=parent_user, first_name=first_name,
                                         birthday=birthday)
-            # 프로필 이미지 파일이 있는지 확인하고 저장
+        
+        # 프로필 이미지 파일이 있는지 확인하고 저장
         if 'profile_image' in request.FILES:
             user.images = request.FILES['profile_image']  # 이미지 파일을 user의 images 필드에 저장
 
@@ -238,7 +224,6 @@ class ChildrenPRCreate(APIView):
 
 
 # 아이들 조회, 수정, 삭제
-
 class ChildrenPRView(APIView):
     # API 뷰에서 인증된 사용자만 접근을 허용
     permission_classes = [IsAuthenticated]
@@ -246,24 +231,35 @@ class ChildrenPRView(APIView):
 
     # 특정 자녀의 정보를 조회 (자식의 토큰으로도 조회 가능)
     def get(self, request, pk):
+
         try:
             # 부모인 경우, 해당 자녀를 조회
             if request.user.parents_id is None:
                 # 요청된 pk(자녀의 ID)와 부모 사용자를 기준으로 자녀 객체를 조회
                 child = User.objects.get(pk=pk, parents=request.user)
-
             else:
                 # 자식의 토큰으로 자신의 정보를 조회할 수 있게 처리
                 if request.user.pk != pk:
                     return Response({"error": "자신의 정보만 조회할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
 
-            parent = request.user  # 자녀의 부모 정보도 가져오기
+                child = request.user
+
+            # child 객체에서 부모 ID가 있는지 확인
+            if child.parents_id:
+                parent = child.parents  # 부모 객체를 가져옴
+            else:
+                parent = None  # 부모 객체가 없으면 None으로 설정
+
             child_serializer = UserSerializer(child)  # 자녀 객체를 시리얼라이즈
-            parent_serializer = UserSerializer(parent)  # 부모 객체를 시리얼라이즈
+            
+            # parent 객체가 존재하는지 확인
+            if parent:
+                parent_serializer = UserSerializer(parent)  # 부모 객체 직렬화
+            else:
+                parent_serializer = None  # 부모 객체가 없으면 None으로 설정
 
             # 부모와 자녀 정보를 함께 반환
-            response_data = {"child": child_serializer.data,
-                            "parent": parent_serializer.data}
+            response_data = {"child": child_serializer.data, "parent": parent_serializer.data}
 
             # serializer = UserSerializer(child)  조회된 자녀 객체를 시리얼라이즈
             return Response(response_data)  # 시리얼라이즈된 데이터 응답 반환
@@ -275,7 +271,6 @@ class ChildrenPRView(APIView):
 
 
     # 자녀의 정보를 수정
-
     def put(self, request, pk):
         try:
             child = User.objects.get(pk=pk, parents=request.user)
@@ -315,7 +310,6 @@ class ChildrenPRView(APIView):
             return Response({"error": "아이들을 찾을수가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
     # 특정 자녀의 정보 삭제
-
     def delete(self, request, pk):
         try:
             child = User.objects.get(pk=pk, parents=request.user)
@@ -324,9 +318,8 @@ class ChildrenPRView(APIView):
         except User.DoesNotExist:
             return Response({"error": "아이들을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
+
 # 부모 수정, 조회
-
-
 class AccountsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -366,8 +359,6 @@ class AccountsView(APIView):
 
 
 # 아이들 로그아웃
-
-
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 

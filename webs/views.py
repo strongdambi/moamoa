@@ -23,7 +23,7 @@ def Create_view(request):
 # 키즈 프로필
 def ChildrenProfile_view(request, child_pk):
     # 키즈 정보 가져오기
-    child = get_object_or_404(User, pk=child_pk, parents=request.user)
+    child = get_object_or_404(User, pk=child_pk)
     # 템플릿으로 child 객체 전달
     return render(request, 'webs/children_profile.html', {'child': child})
 
