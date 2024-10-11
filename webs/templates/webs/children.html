@@ -39,7 +39,7 @@
                 const password = document.getElementById('password').value;
 
                 // 로그인 API 호출
-                fetch('http://localhost:8000/api/v1/accounts/login/', {
+                fetch('/api/v1/accounts/login/', {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
@@ -52,7 +52,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.id) {
-                        window.location.href = `/webs/children_profile/${data.id}/`;
+                        window.location.href = `/child_profile/${data.id}/`;
                     } else {
                         alert('로그인 실패: 아이디 또는 비밀번호를 확인하세요.');
                     }

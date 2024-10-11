@@ -1,4 +1,5 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
 from accounts.models import User
 
 
@@ -16,8 +17,15 @@ def Children_view(request):
 def Profile_view(request):
     return render(request, 'webs/profile.html')
 
-# 키즈 계정 회원 가입
 def Create_view(request):
+    # GET 요청일 때만 로그인 여부를 확인합니다.
+    if request.method == 'GET':
+        # 사용자가 로그인하지 않은 경우
+        if not request.user.is_authenticated:
+            # 로그인 페이지로 리다이렉트
+            return redirect('/')
+    
+    # 로그인된 사용자는 페이지를 볼 수 있습니다.
     return render(request, 'webs/children_create.html')
 
 # 키즈 프로필
