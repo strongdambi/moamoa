@@ -90,7 +90,7 @@ python manage.py runserver
 ## 🛠️ 데이터베이스 관리
 
 이 프로젝트는 **SQLite3**을 기본 데이터베이스로 사용합니다.
-추후**MySQL**로 전환 예정
+(추후**MySQL**로 전환 예정)
 
 ---
 
