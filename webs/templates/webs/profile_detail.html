@@ -3,278 +3,283 @@
 {% block title %}모아모아 :: 똑똑한 용돈 관리 습관{% endblock %}
 {% block content %}
 
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<link rel="stylesheet" href="{% static 'webs/css/profile_detail.css' %}">
-<!-- jQuery와 jQuery UI 추가 -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="{% static 'webs/css/profile_detail.css' %}">
+    <!-- jQuery와 jQuery UI 추가 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+    <style>
+        .container {
+            height: 100vh;
+            overflow-y: auto;
+        }
+    </style>
 
 
+    <div class="container">
+        <!-- Greeting -->
+        <div class="greeting">
+            <h4>안녕하세요.<br><span class="childname">아이이름</span> 자녀의 부모님!</h4>
+        </div>
 
+        <!-- 년월 선택 입력 필드 -->
+        <div class="d-flex justify-content-center mb-3">
+            <select id="year-picker" class="form-select w-auto"
+                    style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">년</select>
+            <select id="month-picker" class="form-select w-auto ms-2"
+                    style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">월</select>
+        </div>
 
-<div class="container">
-    <!-- Greeting -->
-    <div class="greeting">
-        <h4>안녕하세요.<br><span class="childname">아이이름</span> 자녀의 부모님!</h4>
-    </div>
+        <!-- Profile Card -->
+        <div class="profile-card">
+            <img src="#" class="childavatar" alt="Child Avatar">
+            <div class="profile-info">
+                <h5><span class="childname2">다모아</span> 만 <span class="age"></span>세</h5>
+                <p>현재 잔액: <span class="current-amount"></span></p>
+            </div>
+        </div>
 
-    <!-- 년월 선택 입력 필드 -->
-    <div class="d-flex justify-content-center mb-3">
-        <select id="year-picker" class="form-select w-auto"
-            style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">년</select>
-        <select id="month-picker" class="form-select w-auto ms-2"
-            style="background-color: rgb(255, 252, 241); border-color: #FFCD00;">월</select>
-    </div>
+        <!-- Spending Summary -->
+        <div class="spending-summary">
+            <div class="spending-chart">
+                <div id="pie-chart"></div>
+                <p><span class="summarymonth"></span>월 <span class="summaryname"></span> 자녀의 소비</p>
+            </div>
+            <div class="spending-info">
+                <p>이번 달 최대 소비: <strong class="maximumconsumption">간식</strong></p>
+                <p>총 수입: <span class="totalincome">30000</span>원</p>
+                <p>총 지출: <span class="totalexpenses">30000</span>원</p>
+                <p>남은 금액: <span class="remainingamount">30000</span>원</p>
+            </div>
+        </div>
 
-    <!-- Profile Card -->
-    <div class="profile-card">
-        <img src="#" class="childavatar" alt="Child Avatar">
-        <div class="profile-info">
-            <h5><span class="childname2">다모아</span> 만 <span class="age"></span>세</h5>
-            <p>현재 잔액: <span class="current-amount"></span></p>
+        <div class="spending-summary-red"></div>
+
+        <!-- Evaluation -->
+        <div class="evaluation">
+            <h6>평가</h6>
+            <p class="evaluationmsg"></p>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="suggestions">
+            <h6>아이에게 보낸 메시지</h6>
+            <div class="encouragement"></div>
         </div>
     </div>
-
-    <!-- Spending Summary -->
-    <div class="spending-summary">
-        <div class="spending-chart">
-            <div id="pie-chart"></div>
-            <p><span class="summarymonth"></span>월 <span class="summaryname"></span> 자녀의 소비</p>
-        </div>
-        <div class="spending-info">
-            <p>이번 달 최대 소비: <strong class="maximumconsumption">간식</strong></p>
-            <p>총 수입: <span class="totalincome">30000</span>원</p>
-            <p>총 지출: <span class="totalexpenses">30000</span>원</p>
-            <p>남은 금액: <span class="remainingamount">30000</span>원</p>
-        </div>
-    </div>
-
-    <div class="spending-summary-red"></div>
-
-    <!-- Evaluation -->
-    <div class="evaluation">
-        <h6>평가</h6>
-        <p class="evaluationmsg"></p>
-    </div>
-
-    <!-- Suggestions -->
-    <div class="suggestions">
-        <h6>아이에게 보낸 메시지</h6>
-        <div class="encouragement"></div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_script %}
-<script type="text/javascript">
+    <script type="text/javascript">
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const id = window.location.href.split('/').slice(-2)[0];
+        document.addEventListener('DOMContentLoaded', function () {
+            const id = window.location.href.split('/').slice(-2)[0];
 
-        // 년/월 선택 기본값 설정
-        const yearPicker = document.getElementById('year-picker');
-        const monthPicker = document.getElementById('month-picker');
-        let availableYears = {};  // 사용할 수 있는 년도를 저장할 객체
+            // 년/월 선택 기본값 설정
+            const yearPicker = document.getElementById('year-picker');
+            const monthPicker = document.getElementById('month-picker');
+            let availableYears = {};  // 사용할 수 있는 년도를 저장할 객체
 
-        // 사용 가능한 년/월 가져오기
-        fetch(`http://localhost:8000/api/v1/diary/${id}/available-months/`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' }
-        })
-            .then(response => response.json())
-            .then(data => {
-                const availableMonths = data.available_months;  // DB에서 가져온 사용 가능한 월 리스트
-                availableMonths.forEach(month => {
-                    const [year] = month.split('-');  // 년도 추출
-                    availableYears[year] = true;  // 해당 년도를 저장
-                });
-
-                // 사용 가능한 년도 옵션 추가
-                Object.keys(availableYears).forEach(year => {
-                    const option = document.createElement('option');
-                    option.value = year;
-                    option.textContent = year;
-                    yearPicker.appendChild(option);
-                });
-
-                // 최신 년도와 월로 기본 설정
-                const latestYear = Object.keys(availableYears).sort().pop();  // 가장 최신 년도
-                yearPicker.value = latestYear;  // 최신 년도로 설정
-
-                // 월을 1~12월로 고정 설정
-                populateMonthPicker();
-
-                // 현재 월 설정
-                const currentDate = new Date();
-                const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0');
-                monthPicker.value = currentMonth;  // 최신 월로 설정
-
-                // 초기 데이터 로드
-                diaries_monthlysummary(id, latestYear, currentMonth);
-            })
-            .catch(error => {
-                console.error('월별 데이터를 불러올 수 없습니다.', error);
-            });
-
-        // 월 선택 항목 생성 (1~12월 고정)
-        function populateMonthPicker() {
-            monthPicker.innerHTML = '';
-            for (let i = 1; i <= 12; i++) {
-                const option = document.createElement('option');
-                option.value = i.toString().padStart(2, '0');
-                option.textContent = i + '월';
-                monthPicker.appendChild(option);
-            }
-        }
-
-        // 소비 요약 API 호출
-        function diaries_monthlysummary(id, year, month) {
-            fetch(`http://localhost:8000/api/v1/diary/monthly/${id}/`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ year: year, month: month })
-            })
-                .then(response => response.json())
-                .then(data => {
-
-                    if (data.message) {
-                        document.querySelector('.spending-summary-red').textContent = data.message;
-                        document.querySelector('.spending-summary').style.display = 'none';
-                        document.querySelector('.evaluation').style.display = 'none';
-                    } else if (data.content) {
-                        document.querySelector('.spending-summary').style.display = 'block';
-                        document.querySelector('.evaluation').style.display = 'block';
-                        document.querySelector('.spending-summary-red').textContent = '';
-
-                        let jsonString = data.content.replace(/'/g, '"');
-                        let parsedData = JSON.parse(jsonString);
-
-                        // 요약 내용 업데이트
-                        document.querySelector('.totalincome').textContent = parsedData.summary.총_수입.toLocaleString('ko-KR');
-                        document.querySelector('.totalexpenses').textContent = parsedData.summary.총_지출.toLocaleString('ko-KR');
-                        document.querySelector('.remainingamount').textContent = parsedData.summary.남은_금액.toLocaleString('ko-KR');
-                        document.querySelector('.maximumconsumption').textContent = parsedData.summary.가장_많이_지출한_카테고리;
-
-                        // 평가 업데이트
-                        document.querySelector('.evaluationmsg').textContent = parsedData.summary.지출_패턴_평가;
-
-                        const categoryExpenses = parsedData.summary.카테고리별_지출;
-                        const parsedCategoryExpenses = Object.fromEntries(
-                            Object.entries(categoryExpenses).map(([key, value]) => [key, parseFloat(value)])
-                        );
-
-                        // 차트 그리기
-                        drawPieChart(parsedCategoryExpenses);
-
-                        // 선택된 월 표시
-                        const selectedMonthText = month;
-                        document.querySelector('.summarymonth').textContent = selectedMonthText;
-                    }
-                });
-        }
-
-        // 프로필 및 조언 API 호출
-        function loadProfileAndEncouragement(id) {
-            fetch(`http://localhost:8000/api/v1/accounts/children/${id}/`, {
+            // 사용 가능한 년/월 가져오기
+            fetch(`http://localhost:8000/api/v1/diary/${id}/available-months/`, {
                 method: 'GET',
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {'Content-Type': 'application/json'}
             })
                 .then(response => response.json())
                 .then(data => {
-                    const profilePictureElement = document.querySelector('.childavatar');
-                    profilePictureElement.src = data.child.images || "{% static 'webs/images/default_profile.png' %}";
-                    
-                    document.querySelector('.summaryname').textContent = data.child.first_name;
-                    document.querySelector('.childname').textContent = data.child.first_name;
-                    document.querySelector('.childname2').textContent = data.child.first_name;
+                    const availableMonths = data.available_months;  // DB에서 가져온 사용 가능한 월 리스트
+                    availableMonths.forEach(month => {
+                        const [year] = month.split('-');  // 년도 추출
+                        availableYears[year] = true;  // 해당 년도를 저장
+                    });
 
-                    // 나이 계산
-                    const birthDate = data.child.birthday;
-                    const birthYear = birthDate.split("-")[0];  // 생년 추출
-                    const currentYear = new Date().getFullYear();  // 현재 년도
-                    const age = currentYear - birthYear;  // 나이 계산
+                    // 사용 가능한 년도 옵션 추가
+                    Object.keys(availableYears).forEach(year => {
+                        const option = document.createElement('option');
+                        option.value = year;
+                        option.textContent = year;
+                        yearPicker.appendChild(option);
+                    });
 
-                    // 나이를 화면에 표시
-                    document.querySelector('.age').textContent = age;
+                    // 최신 년도와 월로 기본 설정
+                    const latestYear = Object.keys(availableYears).sort().pop();  // 가장 최신 년도
+                    yearPicker.value = latestYear;  // 최신 년도로 설정
 
-                    // 현재 잔액 표시 (total)
-                    const totalAmount = data.child.total || 0;  // 총 잔액 가져오기, 기본값 0
-                    document.querySelector('.current-amount').textContent = totalAmount.toLocaleString('ko-KR') + "원";
+                    // 월을 1~12월로 고정 설정
+                    populateMonthPicker();
 
-                    // 조언 업데이트
-                    document.querySelector('.encouragement').textContent = data.child.encouragement;
+                    // 현재 월 설정
+                    const currentDate = new Date();
+                    const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                    monthPicker.value = currentMonth;  // 최신 월로 설정
+
+                    // 초기 데이터 로드
+                    diaries_monthlysummary(id, latestYear, currentMonth);
                 })
-                .catch(error => console.error('Error:', error));
-        }
+                .catch(error => {
+                    console.error('월별 데이터를 불러올 수 없습니다.', error);
+                });
 
-        // 파이 차트 그리기 함수
-        function drawPieChart(data) {
-            const chartContainer = document.getElementById('pie-chart');
-            chartContainer.innerHTML = '';  // 차트를 다시 그리기 위해 초기화
+            // 월 선택 항목 생성 (1~12월 고정)
+            function populateMonthPicker() {
+                monthPicker.innerHTML = '';
+                for (let i = 1; i <= 12; i++) {
+                    const option = document.createElement('option');
+                    option.value = i.toString().padStart(2, '0');
+                    option.textContent = i + '월';
+                    monthPicker.appendChild(option);
+                }
+            }
 
-            const width = chartContainer.clientWidth;
-            const height = width;
-            const margin = 40;
-            const radius = Math.min(width, height) / 2 - margin;
-            d3.select("#pie-chart svg").remove();
+            // 소비 요약 API 호출
+            function diaries_monthlysummary(id, year, month) {
+                fetch(`http://localhost:8000/api/v1/diary/monthly/${id}/`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({year: year, month: month})
+                })
+                    .then(response => response.json())
+                    .then(data => {
 
-            const svg = d3.select("#pie-chart")
-                .append("svg")
-                .attr("viewBox", `0 0 ${width} ${height}`)
-                .append("g")
-                .attr("transform", `translate(${width / 2}, ${height / 2})`);
+                        if (data.message) {
+                            document.querySelector('.spending-summary-red').textContent = data.message;
+                            document.querySelector('.spending-summary').style.display = 'none';
+                            document.querySelector('.evaluation').style.display = 'none';
+                        } else if (data.content) {
+                            document.querySelector('.spending-summary').style.display = 'block';
+                            document.querySelector('.evaluation').style.display = 'block';
+                            document.querySelector('.spending-summary-red').textContent = '';
 
-            const color = d3.scaleOrdinal()
-                .domain(Object.keys(data))
-                .range(d3.schemeSet2);
+                            let jsonString = data.content.replace(/'/g, '"');
+                            let parsedData = JSON.parse(jsonString);
 
-            const pie = d3.pie()
-                .value(d => d[1]);
+                            // 요약 내용 업데이트
+                            document.querySelector('.totalincome').textContent = parsedData.summary.총_수입.toLocaleString('ko-KR');
+                            document.querySelector('.totalexpenses').textContent = parsedData.summary.총_지출.toLocaleString('ko-KR');
+                            document.querySelector('.remainingamount').textContent = parsedData.summary.남은_금액.toLocaleString('ko-KR');
+                            document.querySelector('.maximumconsumption').textContent = parsedData.summary.가장_많이_지출한_카테고리;
 
-            const data_ready = pie(Object.entries(data));
+                            // 평가 업데이트
+                            document.querySelector('.evaluationmsg').textContent = parsedData.summary.지출_패턴_평가;
 
-            svg.selectAll('whatever')
-                .data(data_ready)
-                .join('path')
-                .attr('d', d3.arc()
-                    .innerRadius(0)
-                    .outerRadius(radius)
-                )
-                .attr('fill', d => color(d.data[0]))
-                .attr("stroke", "white")
-                .style("stroke-width", "2px")
-                .style("opacity", 0.7);
+                            const categoryExpenses = parsedData.summary.카테고리별_지출;
+                            const parsedCategoryExpenses = Object.fromEntries(
+                                Object.entries(categoryExpenses).map(([key, value]) => [key, parseFloat(value)])
+                            );
 
-            svg.selectAll('text')
-                .data(data_ready)
-                .join('text')
-                .text(d => `${d.data[0]}: ${d.data[1].toLocaleString()}원`)
-                .attr("transform", d => `translate(${d3.arc()
-                    .innerRadius(0)
-                    .outerRadius(radius).centroid(d)})`)
-                .style("text-anchor", "middle")
-                .style("font-size", "14px");
-        }
+                            // 차트 그리기
+                            drawPieChart(parsedCategoryExpenses);
 
-        // API 호출하여 초기 데이터 로딩
-        loadProfileAndEncouragement(id);  // 프로필 및 조언 데이터 로딩
+                            // 선택된 월 표시
+                            const selectedMonthText = month;
+                            document.querySelector('.summarymonth').textContent = selectedMonthText;
+                        }
+                    });
+            }
 
-        // 년/월 선택 시 소비 요약 및 프로필 데이터 갱신
-        yearPicker.addEventListener('change', function () {
-            const selectedYear = yearPicker.value;
-            const selectedMonth = monthPicker.value;
-            diaries_monthlysummary(id, selectedYear, selectedMonth);
+            // 프로필 및 조언 API 호출
+            function loadProfileAndEncouragement(id) {
+                fetch(`http://localhost:8000/api/v1/accounts/children/${id}/`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {'Content-Type': 'application/json'}
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        const profilePictureElement = document.querySelector('.childavatar');
+                        profilePictureElement.src = data.child.images || "{% static 'webs/images/default_profile.png' %}";
+
+                        document.querySelector('.summaryname').textContent = data.child.first_name;
+                        document.querySelector('.childname').textContent = data.child.first_name;
+                        document.querySelector('.childname2').textContent = data.child.first_name;
+
+                        // 나이 계산
+                        const birthDate = data.child.birthday;
+                        const birthYear = birthDate.split("-")[0];  // 생년 추출
+                        const currentYear = new Date().getFullYear();  // 현재 년도
+                        const age = currentYear - birthYear;  // 나이 계산
+
+                        // 나이를 화면에 표시
+                        document.querySelector('.age').textContent = age;
+
+                        // 현재 잔액 표시 (total)
+                        const totalAmount = data.child.total || 0;  // 총 잔액 가져오기, 기본값 0
+                        document.querySelector('.current-amount').textContent = totalAmount.toLocaleString('ko-KR') + "원";
+
+                        // 조언 업데이트
+                        document.querySelector('.encouragement').textContent = data.child.encouragement;
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+            // 파이 차트 그리기 함수
+            function drawPieChart(data) {
+                const chartContainer = document.getElementById('pie-chart');
+                chartContainer.innerHTML = '';  // 차트를 다시 그리기 위해 초기화
+
+                const width = chartContainer.clientWidth;
+                const height = width;
+                const margin = 40;
+                const radius = Math.min(width, height) / 2 - margin;
+                d3.select("#pie-chart svg").remove();
+
+                const svg = d3.select("#pie-chart")
+                    .append("svg")
+                    .attr("viewBox", `0 0 ${width} ${height}`)
+                    .append("g")
+                    .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+                const color = d3.scaleOrdinal()
+                    .domain(Object.keys(data))
+                    .range(d3.schemeSet2);
+
+                const pie = d3.pie()
+                    .value(d => d[1]);
+
+                const data_ready = pie(Object.entries(data));
+
+                svg.selectAll('whatever')
+                    .data(data_ready)
+                    .join('path')
+                    .attr('d', d3.arc()
+                        .innerRadius(0)
+                        .outerRadius(radius)
+                    )
+                    .attr('fill', d => color(d.data[0]))
+                    .attr("stroke", "white")
+                    .style("stroke-width", "2px")
+                    .style("opacity", 0.7);
+
+                svg.selectAll('text')
+                    .data(data_ready)
+                    .join('text')
+                    .text(d => `${d.data[0]}: ${d.data[1].toLocaleString()}원`)
+                    .attr("transform", d => `translate(${d3.arc()
+                        .innerRadius(0)
+                        .outerRadius(radius).centroid(d)})`)
+                    .style("text-anchor", "middle")
+                    .style("font-size", "14px");
+            }
+
+            // API 호출하여 초기 데이터 로딩
+            loadProfileAndEncouragement(id);  // 프로필 및 조언 데이터 로딩
+
+            // 년/월 선택 시 소비 요약 및 프로필 데이터 갱신
+            yearPicker.addEventListener('change', function () {
+                const selectedYear = yearPicker.value;
+                const selectedMonth = monthPicker.value;
+                diaries_monthlysummary(id, selectedYear, selectedMonth);
+            });
+
+            monthPicker.addEventListener('change', function () {
+                const selectedYear = yearPicker.value;
+                const selectedMonth = monthPicker.value;
+                diaries_monthlysummary(id, selectedYear, selectedMonth);
+            });
         });
-
-        monthPicker.addEventListener('change', function () {
-            const selectedYear = yearPicker.value;
-            const selectedMonth = monthPicker.value;
-            diaries_monthlysummary(id, selectedYear, selectedMonth);
-        });
-    });
-</script>
+    </script>
 {% endblock %}
