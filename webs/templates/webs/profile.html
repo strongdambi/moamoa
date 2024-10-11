@@ -78,8 +78,8 @@
                     data.children.forEach((child, index) => {
                         const profileCard = document.createElement('div');
                         profileCard.classList.add('profile-card');
-                        //const childImage = child.images ? child.images : "{% static 'webs/images/default_profile.png' %}";
-                        const childImage = child.images
+                        const childImage = child.images ? child.images : "{% static 'webs/images/default_profile.png' %}";
+                        
                         const remainingAmount = child.total || 0;  // 자녀의 총 잔액
 
                         profileCard.innerHTML = `
