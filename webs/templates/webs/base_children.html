@@ -121,13 +121,15 @@
     <script>
         function getChildPkFromUrl() {
             const pathSegments = window.location.pathname.split('/');
+            console.log(">>>>>>>>>>>>>>>>>>>>>")
+            console.log(pathSegments)
             return pathSegments[pathSegments.length - 2];
         }
     
         document.getElementById('children_profile').addEventListener('click', function() {
             const childPk = getChildPkFromUrl(); 
         
-            window.location.href = `/webs/children_profile/${childPk}/`;  // 해당 URL로 이동
+            window.location.href = `/child_profile/${childPk}/`;  // 해당 URL로 이동
     });
 
 
