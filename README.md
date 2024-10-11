@@ -12,6 +12,14 @@
 
 ---
 
+## 프로젝트 핵심 기술 및 버전
+- Programming Language : **Python 3.10**
+- Web Framework : **Django 4.2**
+- API Toolkit : **DjangoRestFramework 3.15.2**
+- Database : **SQLite, MariaDB**
+- Version Control : **Git, Github**
+- LLM : **Open AI, LangChain**
+
 ## 🛠️ 설치 방법
 
 ### 1️⃣ 저장소 클론
@@ -117,3 +125,6 @@ python manage.py runserver
 - **HTTP ONLY**: JavaScript를 통한 쿠키에 접근을 방지하여 쿠키 값에 접근을 막아줍니다.
 
 ---
+
+## :eyes: 트러블슈팅
+
