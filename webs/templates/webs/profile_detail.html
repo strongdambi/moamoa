@@ -183,7 +183,13 @@
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' }
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (response.status === 401) {  // 401 Unauthorized 확인
+                        window.location.href = '/login/';  // 로그인 페이지로 리다이렉트
+                        return;
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     const profilePictureElement = document.querySelector('.childavatar');
                     profilePictureElement.src = data.child.images || "{% static 'webs/images/default_profile.png' %}";

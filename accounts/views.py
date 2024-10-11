@@ -7,6 +7,7 @@ from django.contrib.auth import login
 from django.db.utils import IntegrityError
 from django.contrib.auth import get_user_model
 
+
 from rest_framework import status
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.views import APIView
@@ -22,7 +23,6 @@ from django.shortcuts import redirect
 from django.conf import settings
 
 from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 
 from rest_framework.parsers import MultiPartParser, FormParser
 
@@ -366,7 +366,6 @@ class LogoutView(APIView):
         try:
             # 쿠키로 refreshtoken 가져오기
             refresh_token = request.COOKIES.get('refresh_token')
-            print(refresh_token)
             if refresh_token:
                 token = RefreshToken(refresh_token)
                 # 블랙리스트 추가
@@ -376,6 +375,7 @@ class LogoutView(APIView):
             # 쿠키에 저장된 토큰들 삭제
             response.delete_cookie('access_token')
             response.delete_cookie('refresh_token')
+            response.delete_cookie('sessionid')
             return response
         except TokenError:
             return Response({"error": "유효하지 않은 토큰입니다."}, status=status.HTTP_400_BAD_REQUEST)
