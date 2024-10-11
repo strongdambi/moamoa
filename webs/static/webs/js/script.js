@@ -8,14 +8,14 @@ if (kakaoLoginButton) {
 var kidsLoginButton = document.querySelector('.kids-login');
 if (kidsLoginButton) {
     kidsLoginButton.addEventListener('click', function () {
-        location.href = '/webs/children/';
+        location.href = '/login/';
     });
 }
 
 var addAccountButton = document.querySelector('.add-account');
 if (addAccountButton) {
     addAccountButton.addEventListener('click', function () {
-        location.href = '/webs/create/';
+        location.href = '/signin/';
     });
 }
 

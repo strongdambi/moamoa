@@ -7,6 +7,7 @@ from django.contrib.auth import login
 from django.db.utils import IntegrityError
 from django.contrib.auth import get_user_model
 
+
 from rest_framework import status
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.views import APIView
@@ -22,7 +23,6 @@ from django.shortcuts import redirect
 from django.conf import settings
 
 from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 
 from rest_framework.parsers import MultiPartParser, FormParser
 
@@ -105,7 +105,7 @@ class KakaoCallbackView(APIView):
             refresh_token = str(refresh)
 
             # 프론트엔드로 리다이렉트할 URL (프론트엔드 도메인)
-            frontend_url = settings.FRONTEND_URL + '/webs/profile/'  # 프로필 페이지로 리다이렉트
+            frontend_url = settings.FRONTEND_URL + '/profile/'  # 프로필 페이지로 리다이렉트
 
             # 리다이렉트 시, JWT 토큰을 쿠키에 설정 (HTTP-Only 쿠키로 저장)
             response = redirect(frontend_url)  # 프론트엔드 도메인으로 리다이렉트
@@ -363,12 +363,21 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        refresh_token_str = request.data.get("refresh_token")
         try:
-            refresh_token = RefreshToken(refresh_token_str)
+            # 쿠키로 refreshtoken 가져오기
+            refresh_token = request.COOKIES.get('refresh_token')
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                # 블랙리스트 추가
+                token.blacklist()
+
+            response = Response({"message": "로그아웃 되었습니다."}, status = status.HTTP_200_OK)
+            # 쿠키에 저장된 토큰들 삭제
+            response.delete_cookie('access_token')
+            response.delete_cookie('refresh_token')
+            response.delete_cookie('sessionid')
+            return response
         except TokenError:
-            return Response({"error": "해당 토큰은 사용할 수 없습니다."},
-                            status=status.HTTP_400_BAD_REQUEST)
-        refresh_token.blacklist()
-        return Response({"success": "로그아웃 되었습니다."},
-                        status=status.HTTP_200_OK)
+            return Response({"error": "유효하지 않은 토큰입니다."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": f"로그아웃 중 오류가 발생했습니다. {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
