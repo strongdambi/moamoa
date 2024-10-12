@@ -1,9 +1,16 @@
 
 #child-greeting {
-    margin: 30px;
+    margin: 10px;
+    font-family: 'EliceDigitalBaeum-Bd', sans-serif;
+    font-size: 18px;
 }
 .encouragement, .spending-log {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.encouragement p {
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .profile-image {
@@ -16,6 +23,7 @@
 
 .mb-0 {
     color: #527835;
+    font-family: 'EliceDigitalBaeum-Bd', sans-serif;
 }
 
 /* 하단 내비게이션 */
