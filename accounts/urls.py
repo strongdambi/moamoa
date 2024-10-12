@@ -10,5 +10,6 @@ urlpatterns = [
     path("logout/", views.LogoutView.as_view()),  # 아이들 로그아웃
     path('children/create/', views.ChildrenPRCreate.as_view()), # 아이들 회원가입
     path('children/<int:pk>/', views.ChildrenPRView.as_view()), # 아이 상세조회, 수정, 삭제
+    path('check_token/', views.CheckTokenView.as_view()), # 유저 토큰 여부 확인
 ]
 
