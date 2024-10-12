@@ -261,7 +261,7 @@ class MonthlySummaryView(APIView):
             child = get_object_or_404(User, pk=child_id, parents=parent)
         except User.DoesNotExist:
             return Response({"error": "해당하는 자녀를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-
+        
         # 해당 연도와 월에 맞는 계획서를 조회
         summary = MonthlySummary.objects.filter(
             child=child, parent=parent, year=year, month=month).first()
@@ -307,15 +307,6 @@ class MonthlySummaryView(APIView):
                     category_expenditure[category] = 0
                 category_expenditure[category] += diary.amount
 
-            # 총 지출액이 0이 아니면 카테고리별 지출 비율 계산
-            if total_expenditure > 0:
-                category_percentage = {category: (amount / total_expenditure) * 100 for category, amount in category_expenditure.items()}
-            else:
-                category_percentage = {category: 0 for category in category_expenditure}  # 총 지출액이 0인 경우 비율을 0으로 설정
-
-            # category_percentage를 JSON으로 변환
-            category_percentage_json = json.dumps(category_percentage, ensure_ascii=False)
-
             # OpenAI에게 메시지 보내서 자동으로 요약, 평가, 계산
             messages = [
                 {
@@ -331,7 +322,7 @@ class MonthlySummaryView(APIView):
                         f"1. 총_수입 (Total income): {total_income}\n"
                         f"2. 총_지출 (Total expenditure): {total_expenditure}\n"
                         f"3. 남은_금액 (Remaining amount): {total_income - total_expenditure}\n"
-                        f"4. 카테고리별_지출 (Expenditure by category): {category_percentage_json}\n"
+                        f"4. 카테고리별_지출 (Expenditure by category): {category_expenditure}\n"
                         f"5. 가장_많이_지출한_카테고리 (Category with the highest expenditure)\n"
                         f"6. 지출_패턴_평가 (Evaluation of the spending pattern, within 100 characters)\n"
                         f"7. 개선을_위한_조언 (Friendly advice for improvement, within 100 characters). "
