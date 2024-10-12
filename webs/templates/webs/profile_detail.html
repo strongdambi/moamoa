@@ -10,8 +10,12 @@
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
-
-
+<style>
+    .container {
+        height: 100vh;
+        overflow-y: auto;
+    }
+</style>
 
 <div class="container">
     <!-- Greeting -->
@@ -136,7 +140,7 @@
         }
 
         // 사용 가능한 년/월 가져오기
-        fetch(`http://localhost:8000/api/v1/diary/${id}/available-months/`, {
+        fetch(`/api/v1/diary/${id}/available-months/`, {
             method: 'GET',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' }
@@ -190,7 +194,7 @@
 
         // 소비 요약 API 호출
         function diaries_monthlysummary(id, year, month) {
-            fetch(`http://localhost:8000/api/v1/diary/monthly/${id}/`, {
+            fetch(`/api/v1/diary/monthly/${id}/`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
@@ -269,12 +273,18 @@
 
         // 프로필 및 조언 API 호출
         function loadProfileAndEncouragement(id) {
-            fetch(`http://localhost:8000/api/v1/accounts/children/${id}/`, {
+            fetch(`/api/v1/accounts/children/${id}/`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' }
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (response.status === 401) {  // 401 Unauthorized 확인
+                        window.location.href = '/login/';  // 로그인 페이지로 리다이렉트
+                        return;
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     const profilePictureElement = document.querySelector('.childavatar');
                     profilePictureElement.src = data.child.images || "{% static 'webs/images/default_profile.png' %}";

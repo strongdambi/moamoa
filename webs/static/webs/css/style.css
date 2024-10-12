@@ -9,9 +9,35 @@ body {
     width: 100%;
     background-color: #FFF3D6;
     display: flex;
-    justify-content: space-around;
-    padding: 0px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+    height: 60px; /* 높이를 명시적으로 지정 */
 }
+
+#logoutBtn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: auto; /* 로그아웃 버튼을 오른쪽으로 밀기 */
+}
+
+#logoutBtn img {
+    width: 30px;
+    height: 30px;
+    transition: transform 0.3s ease;
+}
+
+#logoutBtn:hover img {
+    transform: scale(1.1);
+}
+
+.navbar-brand {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
 .navbar-brand img {
     display: block;
     margin: 0 auto;
@@ -125,7 +151,7 @@ header {
     margin: 0 auto;
     background-color: #F9F4E2;
     padding: 0;
-    min-height: 100vh;
+    height: 100vh; /* 1011 */
     display: flex;
     flex-direction: column;
 }

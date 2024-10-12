@@ -3,7 +3,7 @@ document.querySelector('.kakao-login').addEventListener('click', function () {
 });
 
 document.querySelector('.kids-login').addEventListener('click', function () {
-    location.href = '/webs/children/';
+    location.href = '/login/';
 });
 
 document.querySelector('.add-account').addEventListener('click', function () {
