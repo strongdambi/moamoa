@@ -207,6 +207,11 @@ document.addEventListener('DOMContentLoaded', function () {
         diaryTableBody.innerHTML = '';  // 테이블을 비움
         const itemsToShow = expanded ? allEntries : allEntries.slice(0, itemsPerPage);  // 확장 여부에 따라 표시할 항목 결정
 
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear().toString(); // 현재 년도 데이터
+        const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0'); // 현재 월
+        
+
         itemsToShow.forEach(entry => {
             const sign = entry.transaction_type === '지출' ? '-' : '+';  // 지출 또는 수입에 따라 부호 결정
             const formattedAmount = `${sign} ${parseInt(entry.amount).toLocaleString()}원`;  // 금액 포맷
@@ -225,7 +230,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td>${entry.diary_detail}</td>
                 <td class="${amountClass}">${formattedAmount}</td>
                 <td>${remainingAmount}원</td>
-                <td><span class="delete-btn">X</span></td>
+                <td style="display: ${year === currentYear && month === currentMonth ? 'table-cell' : 'none'};">
+                    <span class="delete-btn">X</span>
+                </td>
             </tr>`;
             diaryTableBody.insertAdjacentHTML('beforeend', row);  // 행을 테이블에 추가
         });
