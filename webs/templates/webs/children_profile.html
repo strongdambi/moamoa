@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // 프로필 이미지 설정 (이미지가 있는 경우만)
         if (data.child.images) {
-            profileImageElement.src = `http://localhost:8000${data.child.images}`;  // 이미지 URL을 설정
+            profileImageElement.src = `${data.child.images}`;  // 이미지 URL을 설정
         } else {
             profileImageElement.src = `{% static 'webs/images/default_profile.png' %}`;  // 기본 이미지 사용
         }
