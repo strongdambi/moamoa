@@ -29,8 +29,8 @@
         #app { background-color: #FFFFFE; padding: 0; }
         .logo { width: 180px; margin: 30px auto; display: block; }
 
-    </style>
-    <title>{% block title %}모아모아 :: 똑똑한 용돈 관리 습관{% endblock %}</title>
+</style>
+<title>{% block title %}모아모아 :: 똑똑한 용돈 관리 습관{% endblock %}</title>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -93,17 +93,25 @@
                             </div>
                         </div>
 
-                        <div class="mt-5 bottom-0 start-0 leftcopy"><span>엄카회수TF</span><br>이영훈, 김기홍, 김경민, 윤율</div>
+                        <div class="mt-5 bottom-0 start-0 leftcopy">
+                            <span>엄카회수TF</span> 이영훈, 김기홍, 김경민, 윤율<br>
+                            <span>아이템컬리</span> 공동대표: 김경민, 신송이 | 개인정보책임자 : 김경민 |  사업자등록번호 : 323-55-00655  | 서울특별시 강남구 선릉로8길 22, 101호
+                        </div>
                     </div>
                 </div>
 
                 <!-- 오른쪽 콘텐츠 영역 -->
                 <div id="app" class="col-lg-5 mx-auto">
                     <!-- banner -->
-                    <nav class="navbar d-flex justify-content-around align-items-center py-2">
-                        <a href = "#" class="navbar-brand" id = "parent_profile">
+                    <nav class="navbar d-flex justify-content-between align-items-center py-2">
+                        <div class="navbar-left"></div>
+                        <a href="#" class="navbar-brand" id="parent_profile">
                             <img src="{% static 'webs/images/banner_logo.png' %}" width="150" height="auto" class="d-inline-block align-top" alt="Logo">
                         </a>
+                        <button id="logoutBtn" class="btn btn-link">
+                            <img src="{% static 'webs/images/logout_btn.png' %}" width="30" height="30" alt="Logout">
+                        </button>
+                        <i class="fa-regular fa-power-off"></i>
                     </nav>
                     {% block content %}{% endblock %}
                 </div>
@@ -122,9 +130,39 @@
     
         document.getElementById('parent_profile').addEventListener('click', function() {
         
-            window.location.href = `/webs/profile/`;  // 해당 URL로 이동
+            window.location.href = `/profile/`;  // 해당 URL로 이동
     });
+    
+    /* 로그아웃 */
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('정말 로그아웃 하시겠습니까?')) {  // 수정된 부분
+                logoutButton();
+            }
+        });
+        
+            function logoutButton() {
+                fetch('/api/v1/accounts/logout/', {
+                    credentials: 'include',
+                    method: 'POST',
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('로그아웃 실패');
+                })
+                .then(data => {
+                    window.location.href = '/';
+                })
+                .catch(error => {
+                    console.error('로그아웃 에러:',error);
+                    alert('로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요')
+                });
+            }
 </script>
-    {% block extra_script %}{% endblock %}
+{% block extra_script %}
+<script>
+</script>
+    {% endblock %}
 </body>
 </html>

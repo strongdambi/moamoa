@@ -261,7 +261,7 @@ class MonthlySummaryView(APIView):
             child = get_object_or_404(User, pk=child_id, parents=parent)
         except User.DoesNotExist:
             return Response({"error": "해당하는 자녀를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-
+        
         # 해당 연도와 월에 맞는 계획서를 조회
         summary = MonthlySummary.objects.filter(
             child=child, parent=parent, year=year, month=month).first()
