@@ -104,6 +104,26 @@
         const monthPicker = document.getElementById('month-picker');
         let availableYears = {};  // 사용할 수 있는 년도를 저장할 객체
 
+        // 카테고리별 색상 설정
+        const categoryColors = {
+            '음식': '#FF9999',
+            '음료/간식': '#FFCC99',
+            '문구/완구': '#FFFF99',
+            '교통': '#99FF99',
+            '문화/여가': '#99CCFF',
+            '선물': '#FF99CC',
+            '저축': '#99FFFF',
+            '기타': '#CC99FF'
+        };
+
+        // 최대 소비 카테고리 박스 업데이트 함수
+        function updateMaxExpenditureBox(category) {
+            const categoryElement = document.querySelector('.maximumconsumption');
+            const color = categoryColors[category] || '#000';  // 카테고리에 맞는 색상 설정 (없을 경우 기본 검정색)
+            categoryElement.textContent = category;
+            categoryElement.style.color = color;  // 텍스트 색상 적용
+        }
+
         // 월 선택 항목 생성 (1~12월 고정)
         function populateMonthPicker() {
             monthPicker.innerHTML = '';
@@ -195,7 +215,11 @@
                         document.querySelector('.totalincome').textContent = parsedData.summary.총_수입.toLocaleString('ko-KR');
                         document.querySelector('.totalexpenses').textContent = parsedData.summary.총_지출.toLocaleString('ko-KR');
                         document.querySelector('.remainingamount').textContent = parsedData.summary.남은_금액.toLocaleString('ko-KR');
-                        document.querySelector('.maximumconsumption').textContent = parsedData.summary.가장_많이_지출한_카테고리;
+                        const maxConsumptionCategory = parsedData.summary.가장_많이_지출한_카테고리;
+
+                         // 최대 소비 카테고리 업데이트
+                        updateMaxExpenditureBox(maxConsumptionCategory);
+
 
                         // 평가 업데이트
                         document.querySelector('.evaluationmsg').textContent = parsedData.summary.지출_패턴_평가;
