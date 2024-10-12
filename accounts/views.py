@@ -28,6 +28,13 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 User = get_user_model()
 
+
+class CheckTokenView(APIView):
+    def get(self, request):
+        if not request.auth:
+            return Response({}, status=401)
+        return Response({}, status=200)
+
 # 부모 회원가입
 class KakaoCallbackView(APIView):
     # 카카오 OAuth를 통한 로그인 프로세스를 처리하는 뷰

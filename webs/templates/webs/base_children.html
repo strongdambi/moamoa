@@ -137,11 +137,37 @@
             return pathSegments[pathSegments.length - 2];
         }
     
-        document.getElementById('children_profile').addEventListener('click', function() {
-            const childPk = getChildPkFromUrl(); 
+        document.getElementById('children_profile').addEventListener('click', function(event) {
+            event.preventDefault(); // 기본 동작 방지
+            const childPk = getChildPkFromUrl();
+            checkTokenAndRedirect(childPk);
+        });
         
-            window.location.href = `/child_profile/${childPk}/`;  // 해당 URL로 이동
-    });
+        function getChildPkFromUrl() {
+            const path = window.location.pathname;
+            const parts = path.split('/');
+            return parts[parts.length - 2]; // URL의 마지막에서 두 번째 부분 반환
+        }
+        
+        function checkTokenAndRedirect(childPk) {
+            fetch('/api/v1/accounts/check_token/', {
+                credentials: 'include',
+                method: 'GET',
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = `/child_profile/${childPk}/`;  // 로그인 했을 시에 프로필로 이동
+                } else {
+                    window.location.href = '/';  // 로그인이 안되었을 시에 메인 페이지로 이동
+                }
+            })
+            .catch(error => {
+                console.error('토큰 확인 중 오류 발생:', error);
+                alert('프로필 접근 중 오류가 발생했습니다.');
+                window.location.href = '/';
+            });
+        }
+        
 
 
     /* 로그아웃 */
