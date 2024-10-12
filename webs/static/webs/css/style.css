@@ -53,6 +53,19 @@ header {
 
 /* 왼쪽 영역 */
 
+.mt-3 {
+    height: 85vh;
+    width: 480px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.mt-5 {
+    margin-top: 10px !important;
+}
+
 /* 타이틀 스타일 */
 .main-title {
     color: #333;
