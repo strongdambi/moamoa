@@ -49,13 +49,12 @@ class ChatbotProcessDelete(APIView):
         
         # 수입 지출 판단
         # 수입이면 다시 마이너스
-        print(child.total)
-        print(diary_entry.amount)
         if diary_entry.transaction_type == '수입':
             child.total -= diary_entry.amount
         # 지출내용이면 다시 플러스
         elif diary_entry.transaction_type == '지출':
             child.total += diary_entry.amount    
+            
         child.save()    
         diary_entry.delete()
         return Response({"message": "성공적으로 삭제되었습니다."}, status=status.HTTP_204_NO_CONTENT)
