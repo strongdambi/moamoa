@@ -65,7 +65,7 @@
             <p>
               <span class="darkpink">⦁</span>음식
               <span class="apricot">⦁</span>음료/간식
-              <span class="yellow">⦁</span>문구/완구<br />
+              <span class="yellow">⦁</span>문구/완구<br/>
               <span class="green">⦁</span>교통
               <span class="sky">⦁</span>문화/여가
               <span class="pink">⦁</span>선물<br />
@@ -119,14 +119,14 @@
     
       // 카테고리별 색상 설정
       const categoryColors = {
-        음식: '#FF9999',
-        '음료/간식': '#FFCC99',
-        '문구/완구': '#FFFF99',
-        교통: '#99FF99',
+        '음식': '#FF9999',
+        '음료/간식': '#FFB76F',
+        '문구/완구': '#FDEA3B',
+        '교통': '#7BEF7B',
         '문화/여가': '#99CCFF',
-        선물: '#FF99CC',
-        저축: '#99FFFF',
-        기타: '#CC99FF'
+        '선물': '#FF99CC',
+        '저축': '#21FFFF',
+        '기타': '#CC99FF'
       }
     
       // 최대 소비 카테고리 박스 업데이트 함수
@@ -399,7 +399,7 @@
         .attr('transform', `translate(${width / 2}, ${height / 2})`)
     
       // 카테고리별 색상 설정
-      const color = d3.scaleOrdinal().domain(['음식', '음료/간식', '문구/완구', '교통', '문화/여가', '선물', '저축', '기타']).range(['#FF9999', '#FFCC99', '#FFFF99', '#99FF99', '#99CCFF', '#FF99CC', '#99FFFF', '#CC99FF'])
+      const color = d3.scaleOrdinal().domain(['음식', '음료/간식', '문구/완구', '교통', '문화/여가', '선물', '저축', '기타']).range(['#FF9999', '#FFB76F', '#FDEA3B', '#7BEF7B', '#99CCFF', '#FF99CC', '#21FFFF', '#CC99FF'])
     
       const pie = d3.pie().value((d) => d[1])
     
