@@ -73,6 +73,7 @@ python manage.py runserver
 | **자녀 로그인**          | POST        | `/api/v1/accounts/login/`                     | 인덱스의 키즈 로그인을 통해서 아이디 및 비밀번호 입력후 쿠키 및 JWT토큰 발급  |
 | **로그아웃**             | POST        | `/api/v1/accounts/logout/`                    | refresh_token 블랙리스트 추가 및 쿠키의 JWT토큰 삭제                        |           
 | **refresh_token 발행**   | POST        | `/api/v1/accounts/token/refresh/`             | refresh_token을 통해 access_token 재발급                                    |
+| **AUTH 여부 확인**      | GET         | `/api/v1/accounts/check_token/`                | 유저의 AUTH를 체크                                                          |
 | **부모 프로필**          | GET         | `/api/v1/accounts/`                           | 부모 프로필 및 부모의 자녀들 조회                                            |
 | **자녀 정보 조회**       | GET         | `/api/v1/accounts/children/<int:pk>/`           | 자녀의 생일, 이름, 아이디 프로필이미지 조회                                |
 | **자녀 정보 수정**       | PUT         | `/api/v1/accounts/children/<int:pk>/`         | 자녀의 생일, 이름, 아이디, 비밀번호, 프로필 수정                             |
@@ -83,6 +84,7 @@ python manage.py runserver
 | **기입장 특정 삭제**     | DELETE      | `/api/v1/diary/chat/<int:diary_pk>/delete/`  | 자녀의 특정 용돈기입장 내용 삭제                                           |
 | **월별 용돈 기입장 조회**| GET         | `/api/v1/diary/<int:child_pk>/<int:year>/<int:month>/`| 년월을 기준으로 작성한 용돈기입장 조회                            |
 | **용돈기입장 데이터가있는 월 조회**| GET | `/api/v1/diary/<int:child_pk>/available-months/`| 용돈 기입장 데이터가 있는 월 조회                                    |
+
 
 
 ---
