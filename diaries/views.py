@@ -411,8 +411,7 @@ class MonthlySummaryView(APIView):
                     f"3. 남은_금액 (Remaining amount): {total_income - total_expenditure}\n"
                     f"4. 카테고리별_지출 (Expenditure by category): {category_expenditure}\n"
                     f"5. 가장_많이_지출한_카테고리 (Category with the highest expenditure)\n"
-                    f"6. 지출_패턴_평가 (Evaluation of the spending pattern, within 100 characters)\n"
-                    f"7. 개선을_위한_조언 (Friendly advice for improvement, within 100 characters). "
+                    f"6. 지출_패턴_평가 (Don't say kid's name. Say just kid and Evaluation of the spending pattern and Friendly advice for improvement to parent, within 400 characters)\n"
                 )
             }
         ]
