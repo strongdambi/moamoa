@@ -405,7 +405,40 @@
     
       const data_ready = pie(Object.entries(data))
       const total = Object.values(data).reduce((acc, val) => acc + val, 0)
-    
+      
+      // 카테고리와 색상을 매핑하는 객체
+      const categoryColors = {
+        '음식': 'darkpink',
+        '음료/간식': 'apricot',
+        '문구/완구': 'yellow',
+        '교통': 'green',
+        '문화/여가': 'sky',
+        '선물': 'pink',
+        '저축': 'teal',
+        '기타': 'lavender'
+      };
+
+      // 카테고리를 퍼센트 기준으로 정렬
+      const sortedCategories = Object.entries(data)
+        .map(([category, amount]) => {
+          return {
+            category,
+            amount,
+            percentage: (amount / total) * 100
+          };
+        })
+        .filter(item => item.percentage >= 0.1) // 0.1% 부터 표시
+        .sort((a, b) => b.percentage - a.percentage); // 퍼센트가 높은 순으로 정렬
+
+      // 그래프에 표시된 카테고리만 목록으로 표시
+      const transparentBox = document.querySelector('.transparent-box p');
+      transparentBox.innerHTML = ''; // 기존 내용을 초기화
+
+      sortedCategories.forEach(item => {
+        const colorClass = categoryColors[item.category] || 'default-color';
+        transparentBox.innerHTML += `<span class="${colorClass}">⦁</span>${item.category} `;
+      });
+      
       // 도넛형 파이 조각 그리기
       svg
         .selectAll('path')
