@@ -29,6 +29,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 User = get_user_model()
 
 
+# 유저 토큰 확인
 class CheckTokenView(APIView):
     def get(self, request):
         if not request.auth:

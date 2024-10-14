@@ -257,10 +257,10 @@ client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
 class MonthlySummaryView(APIView):
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request, child_id):
+
         year = request.data.get('year')
         month = request.data.get('month')
 
@@ -276,118 +276,131 @@ class MonthlySummaryView(APIView):
             child = get_object_or_404(User, pk=child_id, parents=parent)
         except User.DoesNotExist:
             return Response({"error": "해당하는 자녀를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-        
-        # 해당 연도와 월에 맞는 계획서를 조회
-        summary = MonthlySummary.objects.filter(
-            child=child, parent=parent, year=year, month=month).first()
 
-        if summary:
-            # 계획서가 존재하는 경우, 기존 계획서를 반환
-            serializer = MonthlySummarySerializer(summary)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        # 현재 날짜 구하기
+        current_date = datetime.now()
+        current_year = current_date.year
+        current_month = current_date.month
+
+        # 요청 받은 year, month를 비교
+        year = int(year)
+        month = int(month)
+
+        if year == current_year and month == current_month:
+
+            # 현재 년도와 월인 경우 데이터를 계속 업데이트
+            summary, created = MonthlySummary.objects.update_or_create(
+                child=child,
+                parent=parent,
+                year=year,
+                month=month,
+                defaults=self.create_summary_content(child, year, month)  # 요약 정보 업데이트 함수 사용
+            )
+
+            return Response(self.create_summary_content(child, year, month), status=status.HTTP_200_OK)
+
         else:
-            # 계획서가 존재하지 않는 경우, 새로운 계획서를 생성
-            # 자녀 이름과 나이 계산
-            child_name = child.first_name
-            child_age = calculate_age(child.birthday) if child.birthday else "Unknown"
 
-            # 자녀의 이번 달 용돈기입장 데이터 가져오기
-            current_year = year
-            current_month = month
+            # 해당 연도와 월에 맞는 계획서를 조회
+            summary = MonthlySummary.objects.filter(child=child, parent=parent, year=year, month=month).first()
+            # print(summary)
+            #
+            #
+            if summary:
+                # 계획서가 존재하는 경우, 기존 계획서를 반환
+                serializer = MonthlySummarySerializer(summary)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
 
-            # 데이터 필터링: 해당 월의 수입/지출 데이터만 가져오기
-            diaries = FinanceDiary.objects.filter(
-                child=child, today__year=current_year, today__month=current_month)
+                # 데이터가 없을 경우 새 계획서 생성]
+                summary_content = self.create_summary_content(child, year, month)
 
-            if not diaries.exists():
-                return Response({
-                    "username": child_name,
-                    "age": child_age,
-                    "message": f"{child_name}님의 {current_year}년 {current_month}월 용돈기입장 기록이 없습니다."
-                }, status=200)
-
-            # 총 수입 계산 (transaction_type이 '수입'인 항목만)
-            total_income = diaries.filter(transaction_type='수입').aggregate(
-                Sum('amount'))['amount__sum'] or 0
-
-            # 총 지출 계산 (transaction_type이 '지출'인 항목만)
-            total_expenditure = diaries.filter(transaction_type='지출').aggregate(
-                Sum('amount'))['amount__sum'] or 0
-
-            # 카테고리별 지출 계산 (지출 항목만 대상으로)
-            category_expenditure = {}
-            for diary in diaries.filter(transaction_type='지출'):
-                category = diary.category
-                if category not in category_expenditure:
-                    category_expenditure[category] = 0
-                category_expenditure[category] += diary.amount
-
-            # OpenAI에게 메시지 보내서 자동으로 요약, 평가, 계산
-            messages = [
-                {
-                    "role": "system",
-                    "content": (
-                        f"You are a financial advisor for children. You are given pocket money records for {child_name}, a {child_age}-year-old child. "
-                        f"Each record has a transaction_type field, which indicates whether the transaction is an '수입' (income) or '지출' (expense). "
-                        f"Ensure that only records with transaction_type set to '지출' are considered in the expense calculation. "
-                        f"Respond entirely in Korean. "
-                        f"Here are the records categorized by transaction type and amount:\n"
-                        f"{[f'{diary.diary_detail} ({diary.transaction_type}): {diary.amount} KRW' for diary in diaries]}\n\n"
-                        f"Please provide the following information in JSON format, using the provided data:\n"
-                        f"1. 총_수입 (Total income): {total_income}\n"
-                        f"2. 총_지출 (Total expenditure): {total_expenditure}\n"
-                        f"3. 남은_금액 (Remaining amount): {total_income - total_expenditure}\n"
-                        f"4. 카테고리별_지출 (Expenditure by category): {category_expenditure}\n"
-                        f"5. 가장_많이_지출한_카테고리 (Category with the highest expenditure)\n"
-                        f"6. 지출_패턴_평가 (Evaluation of the spending pattern, within 100 characters)\n"
-                        f"7. 개선을_위한_조언 (Friendly advice for improvement, within 100 characters). "
+                if not summary_content["message"]:
+                    MonthlySummary.objects.get_or_create(
+                        child=child,
+                        parent=parent,
+                        year=year,
+                        month=month,
+                        defaults={"content": summary_content}  # 여기서 JSON 데이터를 content로 저장
                     )
-                }
-            ]
 
-            try:
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=messages,
-                    max_tokens=2444,
-                    temperature=0.7,
-                    top_p=1,
-                    frequency_penalty=0,
-                    presence_penalty=0
+                return Response(summary_content, status=status.HTTP_200_OK)
+
+    def create_summary_content(self, child, year, month):
+        # 자녀 이름과 나이 계산
+        child_name = child.first_name
+        child_age = calculate_age(child.birthday) if child.birthday else "Unknown"
+
+        # 자녀의 이번 달 용돈기입장 데이터 가져오기
+        current_year = year
+        current_month = month
+
+        # 데이터 필터링: 해당 월의 수입/지출 데이터만 가져오기
+        diaries = FinanceDiary.objects.filter(child=child, today__year=current_year, today__month=current_month)
+        if not diaries.exists():
+            # 1013
+            return {"username": child_name, "age": child_age,
+                    "message": f"{child_name}님의 {current_year}년 {current_month}월 용돈기입장 기록이 없습니다."}
+
+        # 총 수입 계산 (transaction_type이 '수입'인 항목만)
+        total_income = diaries.filter(transaction_type='수입').aggregate(Sum('amount'))['amount__sum'] or 0
+
+        # 총 지출 계산 (transaction_type이 '지출'인 항목만)
+        total_expenditure = diaries.filter(transaction_type='지출').aggregate(Sum('amount'))['amount__sum'] or 0
+
+        # 카테고리별 지출 계산 (지출 항목만 대상으로)
+        category_expenditure = {}
+        for diary in diaries.filter(transaction_type='지출'):
+            category = diary.category
+            if category not in category_expenditure:
+                category_expenditure[category] = 0
+            category_expenditure[category] += diary.amount
+
+        # OpenAI에게 메시지 보내서 자동으로 요약, 평가, 계산
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    f"You are a financial advisor for children. You are given pocket money records for {child_name}, a {child_age}-year-old child. "
+                    f"Each record has a transaction_type field, which indicates whether the transaction is an '수입' (income) or '지출' (expense). "
+                    f"Ensure that only records with transaction_type set to '지출' are considered in the expense calculation. "
+                    f"Respond entirely in Korean. "
+                    f"Here are the records categorized by transaction type and amount:\n"
+                    f"{[f'{diary.diary_detail} ({diary.transaction_type}): {diary.amount} KRW' for diary in diaries]}\n\n"
+                    f"Please provide the following information in JSON format, using the provided data:\n"
+                    f"1. 총_수입 (Total income): {total_income}\n"
+                    f"2. 총_지출 (Total expenditure): {total_expenditure}\n"
+                    f"3. 남은_금액 (Remaining amount): {total_income - total_expenditure}\n"
+                    f"4. 카테고리별_지출 (Expenditure by category): {category_expenditure}\n"
+                    f"5. 가장_많이_지출한_카테고리 (Category with the highest expenditure)\n"
+                    f"6. 지출_패턴_평가 (Evaluation of the spending pattern, within 100 characters)\n"
+                    f"7. 개선을_위한_조언 (Friendly advice for improvement, within 100 characters). "
                 )
+            }
+        ]
 
-                # OpenAI 응답 처리
-                chat_response = response.choices[0].message.content
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            max_tokens=2444,
+            temperature=0.7,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0
+        )
 
-                # JSON 문자열 추출 및 파싱
-                json_str = chat_response.strip().strip('`').strip()
-                if json_str.startswith('json'):
-                    json_str = json_str[4:].strip()
-                summary_data = json.loads(json_str)
+        # OpenAI 응답 처리
+        chat_response = response.choices[0].message.content
 
-                # 요약 정보를 JSON으로 저장
-                summary_content = {
-                    "username": child_name,
-                    "age": child_age,
-                    "summary": summary_data  # 파싱된 JSON 데이터 저장
-                }
+        # JSON 문자열 추출 및 파싱
+        json_str = chat_response.strip().strip('`').strip()
+        if json_str.startswith('json'):
+            json_str = json_str[4:].strip()
+        summary_data = json.loads(json_str)
 
-                # 데이터베이스에 저장
-                summary, created = MonthlySummary.objects.get_or_create(
-                    child=child,
-                    parent=parent,
-                    year=current_year,
-                    month=current_month,
-                    defaults={"content": summary_content}
-                )
-                if not created:
-                    summary.content = summary_content
-                    summary.save()
-
-                return Response(summary_content, status=200)
-
-            except json.JSONDecodeError:
-                return Response({"error": "OpenAI 응답을 JSON으로 파싱할 수 없습니다."}, status=500)
-
-            except Exception as e:
-                return Response({"error": f"OpenAI API 호출 중 오류 발생: {str(e)}"}, status=500)
+        # 요약 정보를 JSON으로 저장
+        return {
+            "username": child_name,
+            "age": child_age,
+            "summary": summary_data  # 파싱된 JSON 데이터 저장
+        }
