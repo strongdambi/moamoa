@@ -140,23 +140,39 @@
   function sendMessage() {
     const message = chatInput.value.trim();
     if (message) {
-      const childPk = getChildPkFromUrl();
-      fetch('/api/v1/diary/chat/', {
-        credentials: 'include',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: message, child_pk: childPk })
-      })
+        const childPk = getChildPkFromUrl();
+        
+        // 입력창 비활성화 및 로딩 상태 표시
+        chatInput.disabled = true;  // 입력창 비활성화
+        chatInput.value = '';  // 입력창 내용 비우기
+        chatInput.placeholder = '모아모아가 생각 중입니다...🤔';  // 로딩 상태 표시
+
+        fetch('/api/v1/diary/chat/', {
+            credentials: 'include',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: message, child_pk: childPk })
+        })
         .then(response => response.json())
         .then(data => {
-          chatInput.value = '';
-          loadChatHistory();
+            loadChatHistory();
+            
+            // 입력창 활성화 및 원래 상태로 복원
+            chatInput.disabled = false;  // 입력창 다시 활성화
+            chatInput.placeholder = '메시지를 입력하세요...';  // 원래의 placeholder 복원
+            chatInput.focus();  // 입력창에 포커스 유지
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            
+            // 오류가 발생해도 입력창을 다시 활성화
+            chatInput.disabled = false;
+            chatInput.placeholder = '메시지를 입력하세요...';  // 오류 후에도 placeholder 복원
+        });
     }
-  }
+}
 
   document.addEventListener('DOMContentLoaded', function () {
     sendButton.addEventListener('click', sendMessage);
