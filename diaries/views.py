@@ -32,16 +32,31 @@ from openai import OpenAI
 from datetime import datetime
 
 
+class CheckTokenView(APIView):
+    def get(self, request):
+        if not request.auth:
+            return Response({}, status=401)
+        return Response({}, status=200)
 
 # 아이들 작성한 기입장 삭제
 class ChatbotProcessDelete(APIView):
     def delete(self, request, pk):
+        child = request.user
+        
         # pk 값과 child 필드를 기준으로 FinanceDiary 항목
         diary_entry = get_object_or_404(
-            FinanceDiary, pk=pk, child=request.user)
-        # 현재 사용자가 diary_entry의 child와 동일한지 확인
-        if diary_entry.child != request.user:
-            return Response({"error": "이 항목을 삭제할 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+            FinanceDiary, pk=pk, child=child.pk)
+        
+        # 수입 지출 판단
+        # 수입이면 다시 마이너스
+        print(child.total)
+        print(diary_entry.amount)
+        if diary_entry.transaction_type == '수입':
+            child.total -= diary_entry.amount
+        # 지출내용이면 다시 플러스
+        elif diary_entry.transaction_type == '지출':
+            child.total += diary_entry.amount    
+        child.save()    
         diary_entry.delete()
         return Response({"message": "성공적으로 삭제되었습니다."}, status=status.HTTP_204_NO_CONTENT)
 

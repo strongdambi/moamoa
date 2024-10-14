@@ -104,6 +104,8 @@
                 .replace(/\"/g, "")
                 .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
                 .replace(/1\. 네 (또는|아니면)/g, '1. 네')
+                .replace(/1\. 맞아요/g, '<br>1. 맞아요')
+                .replace(/2\. 아니요/g, '<br>2. 아니요')
                 .trim();
   
               const sanitizeConfig = {
