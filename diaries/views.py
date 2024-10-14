@@ -43,7 +43,7 @@ class ChatbotProcessDelete(APIView):
     def delete(self, request, pk):
         child = request.user
         
-        # pk 값과 child 필드를 기준으로 FinanceDiary 항목
+        # pk 값과 child 필드를 기준으로 FinanceDiary 항목 찾기
         diary_entry = get_object_or_404(
             FinanceDiary, pk=pk, child=child.pk)
         
@@ -51,12 +51,36 @@ class ChatbotProcessDelete(APIView):
         # 수입이면 다시 마이너스
         if diary_entry.transaction_type == '수입':
             child.total -= diary_entry.amount
-        # 지출내용이면 다시 플러스
+        # 지출이면 다시 플러스
         elif diary_entry.transaction_type == '지출':
             child.total += diary_entry.amount    
-            
-        child.save()    
+        
+        # 항목 삭제
         diary_entry.delete()
+
+        # 잔액을 다시 계산하는 함수
+        def update_remaining_balance(child):
+            # 해당 child의 모든 finance_diary 기록을 today 날짜 기준으로 정렬해서 불러옵니다.
+            finance_entries = FinanceDiary.objects.filter(child=child).order_by('today')
+            
+            total_balance = 0
+            for entry in finance_entries:
+                if entry.transaction_type == "수입":
+                    total_balance += entry.amount
+                elif entry.transaction_type == "지출":
+                    total_balance -= entry.amount
+                
+                # 각 항목의 remaining을 업데이트
+                entry.remaining = total_balance
+                entry.save()
+
+            # child.total 업데이트
+            child.total = total_balance
+            child.save()
+        
+        # 잔액 업데이트
+        update_remaining_balance(child)
+
         return Response({"message": "성공적으로 삭제되었습니다."}, status=status.HTTP_204_NO_CONTENT)
 
 
@@ -143,6 +167,7 @@ class ChatMessageHistory(APIView):
         return Response({"response": message_history})
 
 
+# 아이들 작성한 기입장 처리
 class ChatbotProcessView(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능
 
@@ -176,6 +201,26 @@ class ChatbotProcessView(APIView):
         # OpenAI 프롬프트를 통해 채팅 응답을 받음
         response = chat_with_bot(user_input, child_pk)
 
+        # 잔액 업데이트 함수 정의
+        def update_remaining_balance(child):
+            # 해당 child의 모든 finance_diary 기록을 today 날짜 기준으로 정렬해서 불러옵니다.
+            finance_entries = FinanceDiary.objects.filter(child=child).order_by('today')
+            
+            total_balance = 0
+            for entry in finance_entries:
+                if entry.transaction_type == "수입":
+                    total_balance += entry.amount
+                elif entry.transaction_type == "지출":
+                    total_balance -= entry.amount
+                
+                # 각 항목의 remaining을 업데이트
+                entry.remaining = total_balance
+                entry.save()
+
+            # child.total 업데이트
+            child.total = total_balance
+            child.save()
+
         # 1 또는 2 입력에 대한 처리
         if user_input in ['1', '2']:
             if user_input == '1' and "json" in response.lower():
@@ -203,12 +248,6 @@ class ChatbotProcessView(APIView):
                     transaction_type = plan_json.get("transaction_type")
                     amount = plan_json.get('amount')
 
-                    # 잔액 계산 후 저장 전에 잔액 업데이트
-                    if transaction_type == "수입":
-                        child.total += amount
-                    elif transaction_type == "지출":
-                        child.total -= amount
-
                     # 정상적인 단일 항목 처리
                     finance_diary = FinanceDiary(
                         diary_detail=plan_json.get('diary_detail'),
@@ -222,8 +261,8 @@ class ChatbotProcessView(APIView):
                     )
                     finance_diary.save()
 
-                    # child의 total 값을 저장
-                    child.save()
+                    # 새로운 항목이 저장된 후 잔액 업데이트
+                    update_remaining_balance(child)
 
                     # 저장된 계획서를 시리얼라이즈
                     serializer = FinanceDiarySerializer(finance_diary)
