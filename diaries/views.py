@@ -289,12 +289,15 @@ class MonthlySummaryView(APIView):
         if year == current_year and month == current_month:
 
             # 현재 년도와 월인 경우 데이터를 계속 업데이트
-            summary, created = MonthlySummary.objects.update_or_create(
+            summary_content = self.create_summary_content(child, year, month)  
+
+            # 현재 년도와 월인 경우 데이터를 계속 업데이트
+            MonthlySummary.objects.update_or_create(
                 child=child,
                 parent=parent,
                 year=year,
                 month=month,
-                defaults=self.create_summary_content(child, year, month)  # 요약 정보 업데이트 함수 사용
+                defaults={"content": summary_content}  # 여기서 JSON 데이터를 content로 저장
             )
 
             return Response(self.create_summary_content(child, year, month), status=status.HTTP_200_OK)
@@ -338,7 +341,6 @@ class MonthlySummaryView(APIView):
         # 데이터 필터링: 해당 월의 수입/지출 데이터만 가져오기
         diaries = FinanceDiary.objects.filter(child=child, today__year=current_year, today__month=current_month)
         if not diaries.exists():
-            # 1013
             return {"username": child_name, "age": child_age,
                     "message": f"{child_name}님의 {current_year}년 {current_month}월 용돈기입장 기록이 없습니다."}
 
