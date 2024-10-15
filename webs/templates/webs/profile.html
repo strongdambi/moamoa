@@ -182,18 +182,6 @@
             if (newEncouragement) {
                 formData.append('encouragement', newEncouragement);
             }
-
-            //const requestData = { first_name: newFirstName, birthday: newBirthday, };
-            //if (newPassword) { requestData.password = newPassword; }
-            //if (file) { requestData.profile_image = file; }
-            //if (encouragement) { requestData.encouragement = encouragement; }
-            //formData.append('firstname', firstname);
-            //formData.append('birthday', birthday);
-            //formData.append('password', password);
-            //formData.append('encouragement', encouragement);
-            //if (file) { formData.append('profile_image', file);  }
-
-
             fetch(`/api/v1/accounts/children/${childId}/`, {
                 method: 'PUT',
                 credentials: 'include',
