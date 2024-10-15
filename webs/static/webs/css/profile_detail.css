@@ -107,8 +107,9 @@ svg {
     background-color: rgba(255, 255, 255, 0);
     border-radius: 10px;
     padding: 10px;
+    margin-left: 10px;
     text-align: center;
-    width: 180px;
+    width: 180px !important;
     height: 100px;
     font-size: 12px;
 }
@@ -118,15 +119,15 @@ svg {
 }
 
 .apricot {
-    color: #FFCC99;
+    color: #FFB76F;
 }
 
 .yellow {
-    color: #FFFF99;
+    color: #FDEA3B;
 }
 
 .green {
-    color: #99FF99;
+    color: #7BEF7B;
 }
 
 .sky {
@@ -138,7 +139,7 @@ svg {
 }
 
 .teal {
-    color: #99FFFF; 
+    color: #21FFFF; 
 }
 
 .lavender {

@@ -379,7 +379,6 @@ class MonthlySummaryView(APIView):
         # 데이터 필터링: 해당 월의 수입/지출 데이터만 가져오기
         diaries = FinanceDiary.objects.filter(child=child, today__year=current_year, today__month=current_month)
         if not diaries.exists():
-            # 1013
             return {"username": child_name, "age": child_age,
                     "message": f"{child_name}님의 {current_year}년 {current_month}월 용돈기입장 기록이 없습니다."}
 
