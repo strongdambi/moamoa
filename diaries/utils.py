@@ -68,7 +68,7 @@ def chat_with_bot(user_input, user_id):
 # 우리들의 소악마들을 위한 결계
 def is_allowance_related(input_text):
     # 예/아니오 선택이 있을 경우
-    if input_text in ['1', '2']:
+    if input_text in ['1', '2','네','아니오','맞아요','틀려요']:
         return True
     
     # 금액 패턴 (숫자+원 또는 한글로 만원, 천원 등)

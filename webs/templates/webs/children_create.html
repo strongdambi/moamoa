@@ -15,8 +15,8 @@
             <input type="text" id="first_name" placeholder="이름" required>
             <input type="date" id="birthday" placeholder="생년월일" required max="{{ today }}" onkeydown="return false;">
             <input type="text" id="username" placeholder="아이디(영문, 한글 가능)" required autocomplete="username">
-            <input type="password" id="password" placeholder="비밀번호" required autocomplete="new-password">
-            <input type="password" id="password2" placeholder="비밀번호 확인" required autocomplete="new-password">
+            <input type="password" id="password" placeholder="비밀번호(영문+숫자 조합 8자 이상)" required autocomplete="new-password">
+            <input type="password" id="password2" placeholder="비밀번호 확인(영문+숫자 조합 8자 이상)" required autocomplete="new-password">
 
             <!-- Profile Upload -->
             <div class="profile-upload">
@@ -97,6 +97,9 @@
         const profilePicture = document.getElementById('profile-picture');
 
         const submitButton = document.querySelector('.submit-button');
+
+
+        
         let formSubmitting = false;  // 폼이 이미 제출 추적
 
         // 파일 선택 시 미리보기 이미지 변경
@@ -126,7 +129,7 @@
             if (birthday > today) {
                 alert('미래의 날짜를 생년월일로 선택할 수 없습니다.');
                 return;  // 폼 전송 중단
-    }
+            }
 
             // FormData 객체 생성
             const formData = new FormData();
@@ -138,7 +141,7 @@
             if (profileImage) {
                 formData.append('profile_image', profileImage);  // 프로필 이미지 추가
             }
-
+            
             // 첫 번째 클릭 시 버튼을 비활성화하고 두 번째 클릭 시 경고 메시지를 띄움
             submitButton.disabled = true;
             submitButton.textContent = '처리 중...';  // 버튼 텍스트 변경
@@ -156,17 +159,22 @@
             })
             .then(response => {
                 if (!response.ok) {
+
                     return response.json().then(errorData => { throw errorData });
                 }
                 return response.json();
             })
             .then(data => {
+                if (data.error) {
+                    // 서버에서 반환한 에러 메시지 표시
+                    throw new Error(data.error);
+                }
                 alert('계정이 성공적으로 생성되었습니다.');
                 window.location.href = '/profile/';
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('오류가 발생했습니다.');
+                alert(error.message ||'오류가 발생했습니다.');
 
                 submitButton.disabled = false;
                 submitButton.textContent = '아이 계정 추가';

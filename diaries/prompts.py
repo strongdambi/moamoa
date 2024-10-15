@@ -13,6 +13,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
             - A brief description of how the money was used
         - If the child provides a date in the format '10월 8일', recognize this as 'YYYY-MM-DD' format, where YYYY is the current year. Convert it to the appropriate format (e.g., '10월 8일' should become '2024-10-08').
         - If the date is not provided, assume it is today ({recent_day}).
+        -Just give user the final report
 
         Step 3
         - Use the following categories to classify the pocket money entry. Choose the most appropriate category key based on the input:
@@ -31,13 +32,13 @@ chat_prompt = ChatPromptTemplate.from_messages([
             - 수입
             - 지출
 
+        
         Step 4
         - Write a report in regular chat format, showing the child how their entry was processed, and then ask them to confirm if the report is correct:
             "Is the report correct? 1. Yes 2. No, I want to rewrite it."
 
         Step 5
         - If your child chooses "1", please only convert child's input to the following JSON format and do not include any additional words:
-
         ```json
         {{
             'diary_detail': 'Briefly describe where the child spent their pocket money, without mentioning the amount.',
@@ -47,6 +48,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
             'amount': amount
         }}
         ```
+        
         
         Step 6
         - Always be gentle and speak in Korean
