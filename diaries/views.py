@@ -222,8 +222,8 @@ class ChatbotProcessView(APIView):
             child.save()
 
         # 1 또는 2 입력에 대한 처리
-        if user_input in ['1', '2']:
-            if user_input == '1' and "json" in response.lower():
+        if user_input in ['1', '2', '네', '아니오','맞아요','틀려요']:
+            if user_input == '1' or user_input == '네' or user_input == '맞아요' and "json" in response.lower():
                 try:
                     # JSON 파싱
                     json_part = response.split(
@@ -283,10 +283,11 @@ class ChatbotProcessView(APIView):
                         "error": str(e)
                     }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            elif user_input == '2':
+            elif user_input == '2' or user_input == '아니요' or user_input == '틀려요':
                 return Response({
                     "message": "입력한 내용을 다시 한 번 확인해 주시고, 용돈기입장을 다시 작성해 주세요!"
                 })
+
 
         return Response({"response": response})
 
