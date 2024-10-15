@@ -32,6 +32,28 @@ body {
     transform: scale(1.1);
 }
 
+/* 로그아웃 버튼 기본적으로 숨기기 */
+#logoutBtn {
+    display: none;
+}
+
+#backBtn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-right: auto; /* 뒤로가기 버튼을 왼쪽으로 밀기 */
+}
+
+#backBtn img {
+    width: 30px;
+    height: 30px;
+    transition: transform 0.3s ease;
+}
+
+#backBtn:hover img {
+    transform: scale(1.1);
+}
+
 .navbar-brand {
     position: absolute;
     left: 50%;

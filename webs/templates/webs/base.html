@@ -117,6 +117,10 @@
                         <a href="#" class="navbar-brand" id="parent_profile">
                             <img src="{% static 'webs/images/banner_logo.png' %}" width="150" height="auto" class="d-inline-block align-top" alt="Logo">
                         </a>
+                        <button id="backBtn" class="btn btn-link">
+                            <img src="{% static 'webs/images/back_btn.png' %}" width="30" height="30" alt="Back">
+                        </button>
+
                         <button id="logoutBtn" class="btn btn-link">
                             <img src="{% static 'webs/images/logout_btn.png' %}" width="30" height="30" alt="Logout">
                         </button>
@@ -168,8 +172,12 @@
             });
         }
         
-    
-    /* 로그아웃 */
+        /* 뒤로가기 */
+        document.getElementById('backBtn').addEventListener('click', function() {
+            window.history.back();  // 이전 페이지로 이동
+        });
+
+        /* 로그아웃 */
         document.getElementById('logoutBtn').addEventListener('click', function() {
             if (confirm('정말 로그아웃 하시겠습니까?')) {  // 수정된 부분
                 logoutButton();
