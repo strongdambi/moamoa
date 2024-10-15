@@ -291,9 +291,11 @@ class ChildrenPRView(APIView):
                     child.images.save(profile_image.name, profile_image)
 
                 # serializer.save()  # 자녀 정보 저장
-                if 'first_name' in request.data:
+                #1015 s
+                if 'firstname' in request.data:
                     # 요청 데이터에 first_name이 있는 경우, first_name 수정
-                    child.first_name = request.data['first_name']
+                    child.first_name = request.data['firstname']
+                #1015 e
 
                 # 요청 데이터에 비밀번호가 포함되어 있으면, 비밀번호를 업데이트
                 if 'password' in request.data:
