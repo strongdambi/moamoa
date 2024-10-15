@@ -224,20 +224,19 @@
             if (data.message) {
               console.log(data.message)
               document.querySelector('.spending-summary-red').textContent = data.message
-              document.querySelector('.spending-chart').style.display = 'none' //1013
-              document.querySelector('.max-expenditure-container').style.display = 'none' //1013
+              document.querySelector('.spending-chart').style.display = 'none'
+              document.querySelector('.max-expenditure-container').style.display = 'none'
               document.querySelector('.spending-summary').style.display = 'none'
-              document.querySelector('.summaryview').style.display = 'none' //1013
+              document.querySelector('.summaryview').style.display = 'none'
               document.querySelector('.evaluation').style.display = 'none'
     
-              //1013 시작
             } else if (data.summary) {
               document.querySelector('.spending-summary').style.display = 'block'
               document.querySelector('.spending-chart').style.display = 'block'
               document.querySelector('.max-expenditure-container').style.display = 'block'
               document.querySelector('.evaluation').style.display = 'block'
               document.querySelector('.summaryview').style.display = 'block'
-              loadingMessage.style.display = 'none' //1013
+              loadingMessage.style.display = 'none'
     
               let parsedData = data.summary
     
@@ -263,14 +262,13 @@
               const selectedMonthText = month
               document.querySelector('.summarymonth').textContent = selectedMonthText
     
-              //1013 끝
             } else if (data.content) {
               document.querySelector('.spending-summary').style.display = 'block'
-              document.querySelector('.spending-chart').style.display = 'block' //1013
+              document.querySelector('.spending-chart').style.display = 'block'
               document.querySelector('.evaluation').style.display = 'block'
-              document.querySelector('.summaryview').style.display = 'block' //1013
-              document.querySelector('.max-expenditure-container').style.display = 'block' //1013
-              loadingMessage.style.display = 'none' //1013
+              document.querySelector('.summaryview').style.display = 'block'
+              document.querySelector('.max-expenditure-container').style.display = 'block'
+              loadingMessage.style.display = 'none'
     
               let jsonString = data.content.replace(/'/g, '"')
               let parsedData = JSON.parse(jsonString)
@@ -297,13 +295,11 @@
               const selectedMonthText = month
               document.querySelector('.summarymonth').textContent = selectedMonthText
             }
-            // 1013 시작
           })
           .catch((error) => {
             console.error('Error:', error)
             loadingMessage.textContent = '데이터를 불러오는 중 오류가 발생했습니다.'
             loadingMessage.style.display = 'block'
-            //1013 끝
           })
       }
     
