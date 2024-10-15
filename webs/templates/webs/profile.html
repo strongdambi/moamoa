@@ -181,7 +181,7 @@
             }
             if (newEncouragement) {
                 formData.append('encouragement', newEncouragement);
-
+            }
             fetch(`/api/v1/accounts/children/${childId}/`, {
                 method: 'PUT',
                 credentials: 'include',

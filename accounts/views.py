@@ -251,7 +251,7 @@ class ChildrenPRView(APIView):
                     return Response({"error": "자신의 정보만 조회할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
 
                 child = request.user
-
+            
             # child 객체에서 부모 ID가 있는지 확인
             if child.parents_id:
                 parent = child.parents  # 부모 객체를 가져옴

@@ -98,15 +98,16 @@
               formattedContent = formattedContent
                 .replace(/\n\n/g, '<br>')
                 .replace(/\n/g, '<br>')
-                .replace(/---/g, '')
                 .replace(/\"1\. /g, '<br> 1.')
                 .replace(/\"2\. /g, '<br> 2.')
+                .replace(/---/g, '')
                 .replace(/\? /g, '?<br>')
                 .replace(/\"/g, "")
                 .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
                 .replace(/1\. 네 (또는|아니면)/g, '<br>1. 네')
                 .replace(/1\. 맞아요/g, '<br>1. 맞아요')
                 .replace(/2\. 아니요/g, '<br>2. 아니요')
+                .replace(/해줘\! /g, '해줘!<br>')
                 .trim();
   
               const sanitizeConfig = {
