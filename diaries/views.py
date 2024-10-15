@@ -344,9 +344,7 @@ class MonthlySummaryView(APIView):
 
             # 해당 연도와 월에 맞는 계획서를 조회
             summary = MonthlySummary.objects.filter(child=child, parent=parent, year=year, month=month).first()
-            # print(summary)
-            #
-            #
+
             if summary:
                 # 계획서가 존재하는 경우, 기존 계획서를 반환
                 serializer = MonthlySummarySerializer(summary)

@@ -222,7 +222,6 @@
           .then((response) => response.json())
           .then((data) => {
             if (data.message) {
-              console.log(data.message)
               document.querySelector('.spending-summary-red').textContent = data.message
               document.querySelector('.spending-chart').style.display = 'none'
               document.querySelector('.max-expenditure-container').style.display = 'none'
