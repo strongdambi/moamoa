@@ -202,3 +202,30 @@ svg {
 .ui-datepicker-header {
     width: 100%;
 }
+
+#edit-encouragement {
+    width: 70%;  
+    height: 120px;  
+    padding: 15px;  
+    border-radius: 10px;  
+    align-items: center;
+    border: 2px solid #6D9C48;
+    margin-bottom: 15px;
+    font-size: 16px; 
+    resize: none; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: block;
+    margin: 0 auto;
+}
+
+#save-encouragement {
+    background-color: #FFCD00;
+    color: white;
+    border: none;
+    width: 60%;
+    height: 50px;
+    font-size: 18px;
+    border-radius: 25px;
+    display: block;
+    margin: 0 auto;
+}
