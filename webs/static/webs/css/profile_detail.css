@@ -8,10 +8,11 @@ svg {
     height: auto;
 }
 
-.greeting {
+.greeting h4 {
     margin: 20px auto;
     text-align: center;
     font-size: 18px;
+    font-family: 'EliceDigitalBaeum-Bd', sans-serif;
 }
 
 .profile-card {
@@ -37,7 +38,8 @@ svg {
 
 .profile-info h5 {
     margin: 0;
-}
+    font-family: 'EliceDigitalBaeum-Bd', sans-serif;
+}   
 
 .profile-info p {
     margin: 5px 0;
@@ -46,6 +48,7 @@ svg {
 /* 내용 부분 */
 .summaryview {
     text-align: center;
+    font-family: 'EliceDigitalBaeum-Bd', sans-serif;
 }
 /* 차트와 최대 소비 카테고리를 한 줄에 배치 */
 .spending-summary-container {
@@ -85,6 +88,7 @@ svg {
     overflow: hidden; /* 넘치는 텍스트 숨기기 */
     text-overflow: ellipsis; /* 말줄임 표시 (...) */
     margin: 0px;
+    font-weight: bold;
 }
 
 .category-box {
@@ -103,8 +107,9 @@ svg {
     background-color: rgba(255, 255, 255, 0);
     border-radius: 10px;
     padding: 10px;
+    margin-left: 10px;
     text-align: center;
-    width: 180px;
+    width: 180px !important;
     height: 100px;
     font-size: 12px;
 }
@@ -114,15 +119,15 @@ svg {
 }
 
 .apricot {
-    color: #FFCC99;
+    color: #FFB76F;
 }
 
 .yellow {
-    color: #FFFF99;
+    color: #FDEA3B;
 }
 
 .green {
-    color: #99FF99;
+    color: #7BEF7B;
 }
 
 .sky {
@@ -134,7 +139,7 @@ svg {
 }
 
 .teal {
-    color: #99FFFF; 
+    color: #21FFFF; 
 }
 
 .lavender {
@@ -162,6 +167,15 @@ svg {
     padding: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
+}
+.evaluation h6, .suggestions h6 {
+    font-family: 'EliceDigitalBaeum-Bd', sans-serif;
+    color: #527835;
+}
+
+.evaluationmsg, .encouragement{
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .bottom-nav {
