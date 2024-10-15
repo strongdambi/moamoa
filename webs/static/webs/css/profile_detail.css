@@ -205,7 +205,7 @@ svg {
 
 #edit-encouragement {
     width: 70%;  
-    height: 120px;  
+    height: 80px;  
     padding: 15px;  
     border-radius: 10px;  
     align-items: center;
@@ -222,8 +222,8 @@ svg {
     background-color: #FFCD00;
     color: white;
     border: none;
-    width: 60%;
-    height: 50px;
+    width: 30%;
+    height: 40px;
     font-size: 18px;
     border-radius: 25px;
     display: block;

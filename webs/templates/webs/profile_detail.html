@@ -59,7 +59,7 @@
         <div class="max-expenditure-box">
           <p>이번 달 최대 소비</p>
           <div class="category-box">
-            <strong class="maximumconsumption">데이터가 없습니다.</strong>
+            <strong class="maximumconsumption"></strong>
           </div>
         </div>
         <!-- 투명 박스 -->
@@ -212,7 +212,7 @@
     function diaries_monthlysummary(id, year, month) {
       // 시작
       const loadingMessage = document.querySelector('.spending-summary-red')
-      loadingMessage.textContent = '잠시만 기다려주세요. 분석중입니다...'
+      loadingMessage.textContent = '잠시만 기다려주세요. 모아모아가 열심히 분석중입니다!'
       loadingMessage.style.display = 'block'
 
       document.querySelector('.spending-chart').style.display = 'none'
