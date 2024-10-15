@@ -72,7 +72,7 @@ def is_allowance_related(input_text):
         return True
     
     # 금액 패턴 (숫자+원 또는 한글로 만원, 천원 등)
-    if re.search(r"\d+(원|만원|천원|백원)|[일이삼사오육칠팔구십]만원|[일이삼사오육칠팔구십]천원|[일이삼사오육칠팔구십]백원", input_text):
+    if re.search(r"\d+(원|만원|천원|백원)|[일이삼사오육칠팔구십]만원|[일이삼사오육칠팔구십]천원|[일이삼사오육칠팔구십]백원|만원|천원|백원", input_text):
         return True
 
     return False  # 금액이나 예/아니오가 아니면 용돈기입장과 관련 없는 것으로 처리
