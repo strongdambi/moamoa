@@ -20,7 +20,7 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.models import User
 from .models import FinanceDiary, User, MonthlySummary
 from .chat_history import get_message_history
-from .utils import chat_with_bot, calculate_age, is_allowance_related, convert_relative_dates
+from .utils import chat_with_bot, calculate_age, update_remaining_balance
 # 직렬화 라이브러리
 from .serializers import FinanceDiarySerializer, MonthlySummarySerializer
 # langchain 관련 라이브러리
@@ -57,26 +57,6 @@ class ChatbotProcessDelete(APIView):
         
         # 항목 삭제
         diary_entry.delete()
-
-        # 잔액을 다시 계산하는 함수
-        def update_remaining_balance(child):
-            # 해당 child의 모든 finance_diary 기록을 today 날짜 기준으로 정렬해서 불러옵니다.
-            finance_entries = FinanceDiary.objects.filter(child=child).order_by('today')
-            
-            total_balance = 0
-            for entry in finance_entries:
-                if entry.transaction_type == "수입":
-                    total_balance += entry.amount
-                elif entry.transaction_type == "지출":
-                    total_balance -= entry.amount
-                
-                # 각 항목의 remaining을 업데이트
-                entry.remaining = total_balance
-                entry.save()
-
-            # child.total 업데이트
-            child.total = total_balance
-            child.save()
         
         # 잔액 업데이트
         update_remaining_balance(child)
@@ -181,16 +161,6 @@ class ChatbotProcessView(APIView):
         except User.DoesNotExist:
             return Response({"message": "다른 유저는 이 기능을 사용할 수 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
-        # 용돈기입 관련 메시지가 아닌 경우
-        if not is_allowance_related(user_input):
-            response_message = "용돈기입장과 관련된 정보를 입력해 주세요! <br>예시: '친구랑 간식으로 떡볶이를 3000원어치 사먹었어.'"
-            session_id = f"user_{child.id}"
-            chat_histories = get_message_history(session_id)
-            chat_histories.add_user_message(user_input)
-            chat_histories.add_ai_message(response_message)
-
-            return Response({})
-
         # 다중 항목 입력 방지: 금액 패턴이 2개 이상이면 오류 반환
         amount_count = len(re.findall(r'\d+(원|만원|천원|백원)', user_input))
         if amount_count > 1:
@@ -201,92 +171,66 @@ class ChatbotProcessView(APIView):
         # OpenAI 프롬프트를 통해 채팅 응답을 받음
         response = chat_with_bot(user_input, child_pk)
 
-        # 잔액 업데이트 함수 정의
-        def update_remaining_balance(child):
-            # 해당 child의 모든 finance_diary 기록을 today 날짜 기준으로 정렬해서 불러옵니다.
-            finance_entries = FinanceDiary.objects.filter(child=child).order_by('today')
-            
-            total_balance = 0
-            for entry in finance_entries:
-                if entry.transaction_type == "수입":
-                    total_balance += entry.amount
-                elif entry.transaction_type == "지출":
-                    total_balance -= entry.amount
-                
-                # 각 항목의 remaining을 업데이트
-                entry.remaining = total_balance
-                entry.save()
-
-            # child.total 업데이트
-            child.total = total_balance
-            child.save()
-
         # 1 또는 2 입력에 대한 처리
-        if user_input in ['1', '2', '네', '아니오','맞아요','틀려요','예', '아니요', '응', '아니']:
-            if user_input == '1' or user_input == '네' or user_input == '맞아요' or user_input == '예' or user_input == '응' and "json" in response.lower():
-                try:
-                    # JSON 파싱
-                    json_part = response.split(
-                        "```json")[-1].split("```")[0].replace("'", '"')
+        if "json" in response.lower():
+            try:
+                # JSON 파싱
+                json_part = response.split(
+                    "```json")[-1].split("```")[0].replace("'", '"')
 
-                    # 단일 JSON 객체만 처리 (배열이 아닌 경우 오류 처리)
-                    plan_json = json.loads(json_part)
+                # 단일 JSON 객체만 처리 (배열이 아닌 경우 오류 처리)
+                plan_json = json.loads(json_part)
 
-                    if isinstance(plan_json, list):
-                        return Response({
-                            "message": "한 번에 여러 항목을 입력할 수 없습니다. 한 번에 하나씩만 입력해 주세요."
-                        }, status=400)
-
-                    # 오늘 날짜 확인 및 문자열 -> 날짜 변환
-                    today_str = plan_json.get('today')
-                    if today_str:
-                        today_date = datetime.strptime(today_str, '%Y-%m-%d').date()  # 문자열을 날짜로 변환
-                    else:
-                        today_date = timezone.now().date()
-
-                    # 수입/지출에 따른 잔액 계산
-                    transaction_type = plan_json.get("transaction_type")
-                    amount = plan_json.get('amount')
-
-                    # 정상적인 단일 항목 처리
-                    finance_diary = FinanceDiary(
-                        diary_detail=plan_json.get('diary_detail'),
-                        today=today_date,
-                        category=plan_json.get('category'),
-                        transaction_type=transaction_type,
-                        amount=amount,
-                        remaining=child.total,  # 추가 전에 잔액 설정
-                        child=child,
-                        parent=user.parents
-                    )
-                    finance_diary.save()
-
-                    # 새로운 항목이 저장된 후 잔액 업데이트
-                    update_remaining_balance(child)
-
-                    # 저장된 계획서를 시리얼라이즈
-                    serializer = FinanceDiarySerializer(finance_diary)
+                if isinstance(plan_json, list):
                     return Response({
-                        "message": "용돈기입장이 성공적으로 저장되었습니다.",
-                        "plan": serializer.data  # 단일 계획서만 직렬화
-                    })
+                        "message": "한 번에 여러 항목을 입력할 수 없습니다. 한 번에 하나씩만 입력해 주세요."
+                    }, status=400)
 
-                except json.JSONDecodeError as e:
-                    return Response({
-                        "message": "JSON 파싱 오류가 발생했습니다.",
-                        "error": str(e)
-                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                # 오늘 날짜 확인 및 문자열 -> 날짜 변환
+                today_str = plan_json.get('today')
+                if today_str:
+                    today_date = datetime.strptime(today_str, '%Y-%m-%d').date()  # 문자열을 날짜로 변환
+                else:
+                    today_date = timezone.now().date()
 
-                except Exception as e:
-                    return Response({
-                        "message": "처리 중 오류가 발생했습니다.",
-                        "error": str(e)
-                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                # 수입/지출에 따른 잔액 계산
+                transaction_type = plan_json.get("transaction_type")
+                amount = plan_json.get('amount')
 
-            elif user_input == '2' or user_input == '아니요' or user_input == '틀려요' or user_input == '아니' or user_input == '아니오':
+                # 정상적인 단일 항목 처리
+                finance_diary = FinanceDiary(
+                    diary_detail=plan_json.get('diary_detail'),
+                    today=today_date,
+                    category=plan_json.get('category'),
+                    transaction_type=transaction_type,
+                    amount=amount,
+                    remaining=child.total,  # 추가 전에 잔액 설정
+                    child=child,
+                    parent=user.parents
+                )
+                finance_diary.save()
+
+                # 새로운 항목이 저장된 후 잔액 업데이트
+                update_remaining_balance(child)
+
+                # 저장된 계획서를 시리얼라이즈
+                serializer = FinanceDiarySerializer(finance_diary)
                 return Response({
-                    "message": "입력한 내용을 다시 한 번 확인해 주시고, 용돈기입장을 다시 작성해 주세요!"
+                    "message": "용돈기입장이 성공적으로 저장되었습니다.",
+                    "plan": serializer.data  # 단일 계획서만 직렬화
                 })
+
+            except json.JSONDecodeError as e:
+                return Response({
+                    "message": "JSON 파싱 오류가 발생했습니다.",
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            except Exception as e:
+                return Response({
+                    "message": "처리 중 오류가 발생했습니다.",
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
         return Response({"response": response})
