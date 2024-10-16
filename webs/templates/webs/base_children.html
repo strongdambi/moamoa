@@ -126,6 +126,10 @@
                         <a href="#" class="navbar-brand" id="children_profile">
                             <img src="{% static 'webs/images/banner_logo.png' %}" width="150" height="auto" class="d-inline-block align-top" alt="Logo">
                         </a>
+                        <button id="backBtn" class="btn btn-link">
+                            <img src="{% static 'webs/images/back_btn.png' %}" width="30" height="30" alt="Back">
+                        </button>
+                        
                         <button id="logoutBtn" class="btn btn-link">
                             <img src="{% static 'webs/images/logout_btn.png' %}" width="30" height="30" alt="Logout">
                         </button>
@@ -144,7 +148,7 @@
             const pathSegments = window.location.pathname.split('/');
             return pathSegments[pathSegments.length - 2];
         }
-    
+        
         document.getElementById('children_profile').addEventListener('click', function(event) {
             event.preventDefault(); // 기본 동작 방지
             const childPk = getChildPkFromUrl();
@@ -175,8 +179,37 @@
                 window.location.href = '/';
             });
         }
-        
+    
+    /* 뒤로 가기 버튼 클릭 시 뒤로 가기 후 페이지 새로고침 */
+    document.getElementById('backBtn').addEventListener('click', function() {
+        window.history.back();  // 이전 페이지로 이동
+    });
 
+    /* pageshow 이벤트로 캐시된 페이지가 로드될 때 새로고침 */
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            location.reload();  // 캐시된 페이지일 경우 새로고침
+        }
+    });
+
+    /* 로그아웃 버튼 표시를 위해 로그인 상태 확인 */
+    document.addEventListener("DOMContentLoaded", function () {
+        fetch('/api/v1/accounts/check_token/', {
+            credentials: 'include',
+            method: 'GET',
+        })
+            .then(response => {
+                if (response.ok) {
+                    // 로그아웃 버튼 표시
+                    document.getElementById('logoutBtn').style.display = 'block';
+                } else {
+                    console.log("로그아웃 버튼을 표시할 수 없음: 유효한 access_token이 없음");
+                }
+            })
+            .catch(error => {
+                console.error('로그인 상태 확인 중 오류 발생:', error);
+            });
+    });
 
     /* 로그아웃 */
     document.getElementById('logoutBtn').addEventListener('click', function() {
@@ -203,6 +236,7 @@
                 alert('로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요')
             });
         }
+
 </script>
     
     {% block extra_script %}
