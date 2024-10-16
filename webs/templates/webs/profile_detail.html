@@ -555,9 +555,9 @@
       .selectAll('text')
       .data(data_ready)
       .join('text')
-      .text((d, i) => {
+      .text((d) => {
         const percentage = (d.data[1] / total) * 100;
-        if (i < 5 && percentage >= 5) {
+        if (percentage >= 5) {
           return `${((d.data[1] / total) * 100).toFixed(1)}%`; // 5번째까지면서 5% 이상인 경우만 퍼센트 표시
         }
         return ''; // 5% 미만이거나 6번째부터는 표시 안 함
