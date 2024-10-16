@@ -70,6 +70,10 @@ svg {
     margin-bottom: 20px;
 }
 
+.spending-summary-red {
+    margin-bottom: 30px;
+}
+
 .spending-chart {
     flex: 1;
     text-align: center;
