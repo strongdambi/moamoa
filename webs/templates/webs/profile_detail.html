@@ -164,19 +164,39 @@
     })
       .then((response) => response.json())
       .then((data) => {
-        const availableMonths = data.available_months // DB에서 가져온 사용 가능한 월 리스트
-        availableMonths.forEach((month) => {
-          const [year] = month.split('-') // 년도 추출
-          availableYears[year] = true // 해당 년도를 저장
-        })
 
-        // 사용 가능한 년도 옵션 추가
-        Object.keys(availableYears).forEach((year) => {
-          const option = document.createElement('option')
-          option.value = year
-          option.textContent = year
-          yearPicker.appendChild(option)
-        })
+        const availableMonths = data.available_months || [] // DB에서 가져온 사용 가능한 월 리스트 1015
+
+          //1015 s
+          if (availableMonths.length === 0) {
+
+              const currentYear = new Date().getFullYear().toString();
+              availableYears[currentYear] = true;
+
+              const option = document.createElement('option');
+              option.value = currentYear;
+              option.textContent = currentYear;
+              yearPicker.appendChild(option);
+
+          } else {
+
+                  availableMonths.forEach((month) => {
+                  const [year] = month.split('-') // 년도 추출
+                  availableYears[year] = true // 해당 년도를 저장
+              })
+
+              // 사용 가능한 년도 옵션 추가
+              Object.keys(availableYears).forEach((year) => {
+                  const option = document.createElement('option')
+                  option.value = year
+                  option.textContent = year
+                  yearPicker.appendChild(option)
+              })
+
+
+          }
+          
+          //1015 e
 
         // 월 옵션을 미리 설정
         populateMonthPicker()
@@ -337,7 +357,7 @@
     loadProfileAndEncouragement(id) // 프로필 및 조언 데이터 로딩
   })
     // 현재 아이의 ID를 URL에서 추출하여 전역 변수로 설정
-    const id = window.location.href.split('/').slice(-2)[0]; 
+    const id = window.location.href.split('/').slice(-2)[0];
 
     // 나머지 함수와 이벤트 리스너가 id를 참조할 수 있게 설정
     loadProfileAndEncouragement(id);
