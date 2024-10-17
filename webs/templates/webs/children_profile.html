@@ -18,6 +18,7 @@
         margin-right: 5px;
     }
 </style>
+
 <div class="container">
   <!-- 아이 환영 메시지 -->
   <div class="text-center mt-3-1">
@@ -64,9 +65,11 @@
 <!-- 하단 네비게이션 -->
 <div class="bottom-nav text-center">
   <a href="#" id="chatbot-button" class="nav-btn">
-    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" class="bi bi-plus-lg" viewBox="0 0 16 16">
-      <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v6.5H15a.5.5 0 0 1 0 1H8.5v6.5a.5.5 0 0 1-1 0V9H1a.5.5 0 0 1 0-1h6.5V1.5a.5.5 0 0 1 .5-.5z"/>
-    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="white" class="bi bi-journal-plus" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M8 5.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V10a.5.5 0 0 1-1 0V8.5H6a.5.5 0 0 1 0-1h1.5V6a.5.5 0 0 1 .5-.5"/>
+        <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
+        <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z"/>
+    </svg>      
   </a>
 </div>
 {% endblock %}
@@ -94,36 +97,26 @@ document.addEventListener('DOMContentLoaded', function () {
             'Content-Type': 'application/json',
         },
     })
-    .then((response) => {
-        if (response.status === 401) {  // 401 Unauthorized 상태 확인
-            window.location.href = '/login/';  // 로그인 페이지로 리다이렉트
+    .then(response => {
+        if (response.status === 403) {  // 403 Forbidden이면 잘못된 접근
+            window.location.href = '/access-error/';  // 에러 페이지 엔드포인트로 이동
+            return;  // 에러 페이지로 이동 후 코드 실행 중단
+        } else if (response.status === 401) {  // 401 Unauthorized이면 로그인 필요
+            window.location.href = '/login/';
             return;
         }
         return response.json();
     })
-    .then((data) => {
-        // 이름 표시
-        greeting.textContent = `${data.child.first_name} 반가워!`;  // 자녀 이름을 표시
-        
-        // 프로필 이미지 설정 (이미지가 있는 경우만)
-        if (data.child.images) {
-            profileImageElement.src = `${data.child.images}`;  // 이미지 URL을 설정
-        } else {
-            profileImageElement.src = `{% static 'webs/images/default_profile.png' %}`;  // 기본 이미지 사용
-        }
-        
-        // 응원 메시지가 있으면 업데이트
-        if (data.child.encouragement) {
-            encouragementElement.textContent = data.child.encouragement;  // 응원 메시지 표시
-        } else {
-            encouragementElement.textContent = "비어있음";  // 응원 메시지가 없을 경우 기본값
+    .then(data => {
+        if (data && data.child) {
+            greeting.textContent = `${data.child.first_name} 반가워!`;
+            profileImageElement.src = data.child.images ? data.child.images : `{% static 'webs/images/default_profile.png' %}`;
+            encouragementElement.textContent = data.child.encouragement || "비어있음";
         }
     })
-    .catch((error) => {
+    .catch(error => {
         console.error('프로필을 불러올 수 없습니다.', error);
-        encouragementElement.textContent = "비어있음";  // 오류 발생 시 기본값
-        profileImageElement.src = `{% static 'webs/images/default_profile.png' %}`;  // 기본 이미지 사용
-    });
+    });    
 
     // 기록이 있는 년/월 가져오기
     fetch(`/api/v1/diary/${childId}/available-months/`, {
@@ -287,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
-})
+
     // 특정 항목 삭제 로직
     function deleteEntry(entryId) {
         fetch(`/api/v1/diary/chat/${entryId}/delete/`, {
@@ -310,5 +303,6 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => console.error('Error:', error));
     }
+});
 </script>
 {% endblock %}
