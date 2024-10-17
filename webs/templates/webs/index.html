@@ -35,7 +35,8 @@
     }
 
     #app { background-color: #FFF3D6; padding: 0; }
-    .logo { width: 180px; margin: 200px auto; display: block; }
+    .logo { width: 180px; margin: 160px auto; display: block; }
+
     /* 물결 애니메이션 */
     @keyframes waveIn {
         0% {
@@ -70,6 +71,13 @@
     /* 애니메이션 속성 */
     opacity: 0;
     animation: waveIn 1.5s ease-out forwards; /* 1.5초 동안 물결 애니메이션 적용 */
+    }
+
+    .how-to-use {
+        width: 30px;
+        height: 30px;
+        margin: 20px;
+        float: right;
     }
 
 </style>
@@ -145,6 +153,9 @@
 
                 <!-- 오른쪽 콘텐츠 영역 -->
                 <div id="app" class="col-lg-5 mx-auto">
+                    <a href="https://youtu.be/P7OqX4Nd_LA" target="_blank">
+                        <img src="{% static 'webs/images/how_to_use.png' %}" alt="How to Use" class="how-to-use"/>
+                    </a>
                     <img src="{% static 'webs/images/moamoa_icon.png' %}" alt="Logo" class="logo">
                     <div class="container content">
                         <div class="login-buttons">
@@ -156,7 +167,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
