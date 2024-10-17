@@ -49,12 +49,13 @@
       },
     })
       .then(response => {
+        if (response.status === 403) {  // 권한 없음 상태 (잘못된 접근)
+          window.location.href = '/access-error/';  // 접근 불가 에러 페이지로 리다이렉트
+          return;
+        }
         if (response.status === 401) {  // 401 Unauthorized 상태 확인
           window.location.href = '/login/';  // 로그인 페이지로 리다이렉트
           return;
-        }
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
       })

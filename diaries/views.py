@@ -132,6 +132,9 @@ class ChatMessageHistory(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능
 
     def get(self, request, child_pk):
+        if request.user.pk != child_pk:
+                    return Response({"error": "자신의 정보만 조회할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
+
         try:
             child = User.objects.get(pk=child_pk)
         except User.DoesNotExist:
