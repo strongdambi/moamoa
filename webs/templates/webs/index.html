@@ -34,7 +34,7 @@
     height: 100%;
     }
 
-    #app { background-color: #FFF3D6; padding: 0; }
+    #app { background-color: #FFF3D6; padding: 0; position: relative;}
     .logo { width: 180px; margin: 160px auto; display: block; }
 
     /* 물결 애니메이션 */
@@ -80,6 +80,30 @@
         float: right;
     }
 
+    .speech-bubble {
+        position: absolute;
+        right: 10px;
+        top: 60px;
+        width: 200px;
+        padding: 10px;
+        background-color: #cdedc9;
+        border-radius: 10px;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        font-family: 'Noto Sans KR', sans-serif;
+        font-size: 14px;
+        z-index: 999;
+        text-align: center;
+    }
+
+    .speech-bubble:before {
+        content: "";
+        position: absolute;
+        top: -20px;
+        right: 20px;
+        border-width: 10px;
+        border-style: solid;
+        border-color: transparent transparent #cdedc9 transparent; 
+    }
 </style>
 <title>{% block title %}모아모아 :: 똑똑한 용돈 관리 습관{% endblock %}</title>
     {% block extra_head %}{% endblock %}
@@ -152,10 +176,13 @@
                 </div>
 
                 <!-- 오른쪽 콘텐츠 영역 -->
-                <div id="app" class="col-lg-5 mx-auto">
+                <div id="app" class="col-lg-5 mx-auto">                    
                     <a href="https://youtu.be/P7OqX4Nd_LA" target="_blank">
                         <img src="{% static 'webs/images/how_to_use.png' %}" alt="How to Use" class="how-to-use"/>
                     </a>
+                    <div id="tooltip" class="speech-bubble">
+                        모아모아 사용방법 보러가기
+                    </div>
                     <img src="{% static 'webs/images/moamoa_icon.png' %}" alt="Logo" class="logo">
                     <div class="container content">
                         <div class="login-buttons">
@@ -173,5 +200,24 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'webs/js/script.js' %}"></script>
+    <script>
+        // 페이지가 로드되면 실행
+        window.onload = function() {
+            const tooltip = document.getElementById('tooltip');
+            const howToUse = document.querySelector('.how-to-use');
+
+            // "How to Use" 이미지를 클릭하면 말풍선 제거
+            howToUse.addEventListener('click', function() {
+                tooltip.style.display = 'none';
+            });
+
+            // 다른 곳을 클릭해도 말풍선이 사라지도록 설정
+            document.body.addEventListener('click', function(event) {
+                if (!event.target.classList.contains('how-to-use')) {
+                    tooltip.style.display = 'none';
+                }
+            });
+        };
+    </script>
 </body>
 </html>
