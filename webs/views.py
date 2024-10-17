@@ -40,6 +40,7 @@ def Chatbot_view(request, child_pk):
     user = get_object_or_404(User, pk=child_pk)
     user_image = request.build_absolute_uri(
                         user.images.url)
+    
     context = {
         'user': user,
         'user_image': user_image,

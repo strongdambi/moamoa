@@ -20,7 +20,7 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.models import User
 from .models import FinanceDiary, User, MonthlySummary
 from .chat_history import get_message_history
-from .utils import chat_with_bot, calculate_age, update_remaining_balance
+from .utils import chat_with_bot, calculate_age, update_remaining_balance, is_allowance_related
 # 직렬화 라이브러리
 from .serializers import FinanceDiarySerializer, MonthlySummarySerializer
 # langchain 관련 라이브러리
@@ -167,6 +167,15 @@ class ChatbotProcessView(APIView):
             return Response({
                 "message": "한 번에 하나씩만 말씀해 주세요! 예를 들어 '장난감 사는데 5000원 썼어요'처럼 말해 주시면 제가 더 쉽게 기록할 수 있어요!"
             }, status=400)
+            
+        # if not is_allowance_related(user_input):
+        #     response_message = "<strong>용돈기입장과 관련된 정보를 입력해 주세요!<br> 지출 또는 용돈 날짜와 금액 그리고 어떻게 사용했는지 꼭 입력하셔야되요! <br> 입력하지 않으면 모아모아는 알아듣지를 못한답니다</strong>🥺"
+        #     session_id = f"user_{child.id}"
+        #     chat_histories = get_message_history(session_id)
+        #     chat_histories.add_user_message(user_input)
+        #     chat_histories.add_ai_message(response_message)
+
+        #     return Response({})
 
         # OpenAI 프롬프트를 통해 채팅 응답을 받음
         response = chat_with_bot(user_input, child_pk)
