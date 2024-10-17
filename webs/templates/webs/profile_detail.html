@@ -92,8 +92,14 @@
         </p>
       </div>
     </div>
+
+    <!-- 로딩 메시지와 프로그래스 바를 담을 컨테이너 -->
     <div class="spending-summary-red"></div>
-  </div>
+    <div class="loading-container" style="display: none;">
+      <div class="progress" role="progressbar" aria-label="Loading" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-bar text-bg-warning" id="progress-bar" style="width: 0%">0%</div>
+      </div>
+    </div>
 
   <!-- Evaluation -->
   <div class="evaluation">
@@ -196,8 +202,6 @@
 
           }
           
-          //1015 e
-
         // 월 옵션을 미리 설정
         populateMonthPicker()
 
@@ -227,13 +231,36 @@
       .catch((error) => {
         console.error('월별 데이터를 불러올 수 없습니다.', error)
       })
+    // 프로그래스 바 업데이트 함수
+    function updateProgressBar(percent) {
+      const progressBar = document.getElementById('progress-bar');
+      progressBar.style.width = percent + '%'; // 프로그래스 바 너비 설정
+      progressBar.textContent = percent + '%'; // 퍼센트 표시
+    }
+
+    // 로딩 시작 함수
+    function startLoading() {
+      let percent = 0;
+      const interval = setInterval(() => {
+        percent += 10;
+        if (percent > 100) {
+          clearInterval(interval); // 퍼센트가 100%를 넘으면 멈춤
+        } else {
+          updateProgressBar(percent);
+        }
+      }, 500); // 0.5초마다 10%씩 증가
+    }
 
     // 소비 요약 API 호출
     function diaries_monthlysummary(id, year, month) {
-      // 시작
-      const loadingMessage = document.querySelector('.spending-summary-red')
-      loadingMessage.textContent = '잠시만 기다려주세요. 분석중입니다...'
-      loadingMessage.style.display = 'block'
+      startLoading(); // 로딩 시작 시 퍼센트 바 업데이트 시작
+      const loadingContainer = document.querySelector('.loading-container');
+      loadingContainer.style.display = 'block'; // 로딩 중 표시
+
+      const loadingMessage = document.querySelector('.spending-summary-red');
+      loadingMessage.textContent = '모아모아가 열심히 분석중입니다..🔎';
+      loadingMessage.style.display = 'block';
+      document.querySelector('.loading-container').style.display = 'block'; // 로딩 컨테이너 표시
 
       document.querySelector('.spending-chart').style.display = 'none'
       document.querySelector('.max-expenditure-container').style.display = 'none'
@@ -249,6 +276,9 @@
       })
         .then((response) => response.json())
         .then((data) => {
+          // 데이터 불러오기 완료 후 로딩 숨기기
+          loadingContainer.style.display = 'none'; 
+    
           if (data.message) {
             document.querySelector('.spending-summary-red').textContent = data.message
             document.querySelector('.spending-chart').style.display = 'none'
@@ -258,13 +288,15 @@
             document.querySelector('.evaluation').style.display = 'none'
 
           } else if (data.summary) {
+            document.querySelector('.spending-summary-red').style.display = 'none'
             document.querySelector('.spending-summary').style.display = 'block'
             document.querySelector('.spending-chart').style.display = 'block'
             document.querySelector('.max-expenditure-container').style.display = 'block'
             document.querySelector('.evaluation').style.display = 'block'
             document.querySelector('.summaryview').style.display = 'block'
-            loadingMessage.style.display = 'none'
-
+            updateProgressBar(100); // 데이터가 로딩되면 100%로 설정
+            document.querySelector('.loading-container').style.display = 'none'; // 로딩 완료 후 숨김
+            
             let parsedData = data.summary
 
             // 요약 내용 업데이트
@@ -326,7 +358,7 @@
         .catch((error) => {
           console.error('Error:', error)
           loadingMessage.textContent = '데이터를 불러오는 중 오류가 발생했습니다.'
-          loadingMessage.style.display = 'block'
+          loadingContainer.style.display = 'none'; // 에러 발생 시 로딩 숨기기
         })
     }
 
@@ -523,9 +555,9 @@
       .selectAll('text')
       .data(data_ready)
       .join('text')
-      .text((d, i) => {
+      .text((d) => {
         const percentage = (d.data[1] / total) * 100;
-        if (i < 5 && percentage >= 5) {
+        if (percentage >= 5) {
           return `${((d.data[1] / total) * 100).toFixed(1)}%`; // 5번째까지면서 5% 이상인 경우만 퍼센트 표시
         }
         return ''; // 5% 미만이거나 6번째부터는 표시 안 함

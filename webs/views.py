@@ -50,3 +50,8 @@ def Chatbot_view(request, child_pk):
 # 부모 프로필
 def ProfileDetail_view(request, pk):
     return render(request, 'webs/profile_detail.html')
+
+# Access-error 페이지
+def access_error_view(request):
+    return render(request, 'webs/access_error.html', status=200)  # 에러 페이지 렌더링
+
