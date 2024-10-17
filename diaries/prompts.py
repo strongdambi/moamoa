@@ -21,8 +21,8 @@ chat_prompt = ChatPromptTemplate.from_messages([
                 - A brief description of how the child was received.
             - If the child provides a date in the format '10월 8일', recognize this as 'YYYY-MM-DD' format, where YYYY is the current year. Convert it to the appropriate format (e.g., '10월 8일' should become '2024-10-08').
             - If the date is not provided, assume it is today ({recent_day}).          
-            - The amount of money a child can enter must not exceed 1000000 won. If the child mentions an amount greater than 1000000, respond immediately with "{limit}".
-            -Just give user the final report
+            - The amount of money a child can enter must not exceed 200만원. If the child mentions an amount greater than 200만원, respond immediately with "{limit}".
+            - Just give user the final report
         - When the child don't provides the details of ther pocket money report like above lists:
             - Tell the child that I need to fill out the contents related to the allowance entry  
 
@@ -38,7 +38,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
             - 선물
             - 저축
             - 기타/지출
-    
+
         - Based on the input, use the following transaction type to classify the pocket money entry:
             - 수입
             - 지출
