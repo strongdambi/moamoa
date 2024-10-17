@@ -7,11 +7,12 @@ from django.conf import settings
 # 시간 관련 라이브러리
 from datetime import timedelta, date
 from .chat_history import get_current_korea_date
-# 정규표현식
-import re
 # 캡슐 라이브러리
 from .prompts import chat_prompt
 from .chat_history import get_message_history
+from .models import FinanceDiary
+# 정규표현식 라이브러리
+import re
 
 llm = ChatOpenAI(model="gpt-4o-mini", api_key=settings.OPENAI_API_KEY)
 
@@ -35,7 +36,19 @@ def convert_relative_dates(user_input):
         return today - timedelta(days=2)
     else:
         return None
-
+# 프롬프트 전달 데이터
+prompt_data = {
+    "limit" : "<strong>사용하기에는 너무 많은 금액이에요!<br> 100만원 밑으로 입력해보는게 어때요?</strong>🤗",
+    "chat_format" : """입력하신 내용을 바탕으로 기록을 정리해 보았습니다.
+1. <strong>날짜</strong>: 2024-10-15
+2. <strong>금액</strong>: 5000원
+3. <strong>사용 내역</strong>: 탕후루를 샀음
+4. <strong>분류</strong>: 음식
+5. <strong>거래 유형</strong>: 지출
+위 내용이 맞는지 확인해 주세요!
+<br>1. 맞아요! <br> 2. 아니요, 다시 수정할래요!""",
+    "notice" : "<strong>용돈기입장과 관련된 정보를 입력해 주세요!<br> 지출 또는 용돈 날짜와 금액 그리고 어떻게 사용했는지 꼭 입력하셔야되요! <br> 입력하지 않으면 모아모아는 알아듣지를 못한답니다</strong>🥺",
+}
 
 # Views.py와 함수 연결
 def chat_with_bot(user_input, user_id):
@@ -43,7 +56,7 @@ def chat_with_bot(user_input, user_id):
         session_id = f"user_{user_id}"
         current_date = get_current_korea_date()
         response = with_message_history.invoke(
-            {"recent_day": current_date, "input": user_input},
+            {"limit":prompt_data.get("limit"), "chat_format":prompt_data.get("chat_format"),"answer_check": prompt_data.get("answer_check"), "notice": prompt_data.get("notice"), "recent_day": current_date, "input": user_input},
             config={"configurable": {"session_id": session_id}}
         )
 
@@ -81,3 +94,24 @@ def is_allowance_related(input_text):
 def calculate_age(birth_date):
     today = date.today()
     return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+
+
+# 잔액 업데이트 함수 정의
+def update_remaining_balance(child):
+    # 해당 child의 모든 finance_diary 기록을 today 날짜 기준으로 정렬해서 불러옵니다.
+    finance_entries = FinanceDiary.objects.filter(child=child).order_by('today')
+    
+    total_balance = 0
+    for entry in finance_entries:
+        if entry.transaction_type == "수입":
+            total_balance += entry.amount
+        elif entry.transaction_type == "지출":
+            total_balance -= entry.amount
+        
+        # 각 항목의 remaining을 업데이트
+        entry.remaining = total_balance
+        entry.save()
+
+    # child.total 업데이트
+    child.total = total_balance
+    child.save()
