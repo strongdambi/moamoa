@@ -15,7 +15,7 @@ if (kidsLoginButton) {
 var addAccountButton = document.querySelector('.add-account');
 if (addAccountButton) {
     addAccountButton.addEventListener('click', function () {
-        location.href = '/signin/';
+        location.href = '/signup/';
     });
 }
 
