@@ -82,7 +82,7 @@
             font-family: 'Noto Sans KR', sans-serif;
         }
     </style>
-<title>{% block title %}모아모아 :: 경고{% endblock %}</title>
+    <title>{% block title %}모아모아 :: 경고{% endblock %}</title>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -97,7 +97,8 @@
                             <div class="mb-2 leftdesc">
                                 <!-- 타이틀 -->
                                 <h2 class="main-title">아이들을 위한 <span class="strong-text">똑</span><span class="strong-text">똑</span>한 용돈 관리</h2>
-                                <h1 class="moamoa-title-index">모아모아</h1>                           
+                                <h1 class="moamoa-title-index">모아모아</h1>
+                                <p>로그인된 사용자 ID: {{ logged_in_user.id }}</p>                     
                             </div>
 
                             <!-- 해시태그 -->
@@ -123,8 +124,8 @@
                         경고: 잘못된 접근입니다! 이 페이지에 접근할 수 없습니다.
                     </div>
                     
-                    <!-- 뒤로가기 버튼 -->
-                    <button class="btn-home" onclick="backspace()">뒤로 가기</button>
+                    <!-- 뒤로가기 버튼 대신 프로필 페이지로 이동 -->
+                    <button class="btn-home" onclick="redirectToProfile()">용돈기입장으로 이동하기</button>
                 </div>
 
             </div>
@@ -134,10 +135,15 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'webs/js/script.js' %}"></script>
     <script>
-        function backspace(){
-            history.back(-1);
-            Event.preventDefault();
-            history.back(-1)};
+        function redirectToProfile(){
+            // logged_in_user.id 값을 템플릿에서 가져옴
+            const childId = "{{ logged_in_user.id }}";
+            if (childId) {
+                window.location.href = `/child_profile/${childId}/`;  // 해당 프로필 페이지로 이동
+            } else {
+                alert('로그인된 사용자 정보를 찾을 수 없습니다.');
+            }
+        }
     </script>
 </body>
 </html>
