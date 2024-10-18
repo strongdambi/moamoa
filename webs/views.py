@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user
 from accounts.models import User
 
 
@@ -33,7 +33,9 @@ def ChildrenProfile_view(request, child_pk):
     # 키즈 정보 가져오기
     child = get_object_or_404(User, pk=child_pk)
     # 템플릿으로 child 객체 전달
-    return render(request, 'webs/children_profile.html', {'child': child})
+    return render(request, 'webs/children_profile.html', {
+        'child': child,
+        })
 
 # AI 채팅
 def Chatbot_view(request, child_pk):
@@ -47,11 +49,14 @@ def Chatbot_view(request, child_pk):
         'child_pk': child_pk,
     }
     return render(request, 'webs/chatbot.html', context)
+
 # 부모 프로필
 def ProfileDetail_view(request, pk):
     return render(request, 'webs/profile_detail.html')
 
 # Access-error 페이지
 def access_error_view(request):
-    return render(request, 'webs/access_error.html', status=200)  # 에러 페이지 렌더링
+    # 현재 세션에 로그인된 사용자를 가져옴
+    logged_in_user = get_user(request)
+    return render(request, 'webs/access_error.html', {'logged_in_user': logged_in_user})  # 에러 페이지 렌더링
 
