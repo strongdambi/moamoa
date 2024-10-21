@@ -3,6 +3,53 @@ from django.contrib.auth import get_user
 from accounts.models import User
 
 
+#10.24 삭제 시작
+from django.shortcuts import redirect
+from django.conf import settings
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import get_user_model, login
+
+from . import config
+@api_view(['GET'])
+def TestLogin(request, pk):
+
+    allowed_users = config.ALLOWED_USERS
+
+    # 사용자가 허용된 사용자 목록에 있는지 확인
+    if pk not in allowed_users:
+        return Response({'detail': '허용되지 않은 사용자입니다.'}, status=status.HTTP_403_FORBIDDEN)
+
+    # 사용자 ID로 해당 유저를 조회합니다.
+    User = get_user_model()
+    try:
+        user = User.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return Response({'detail': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+    # 사용자를 로그인 시킵니다.
+    login(request, user)
+
+    # JWT 토큰을 발급합니다.
+    refresh = RefreshToken.for_user(user)
+    access_token = str(refresh.access_token)
+    refresh_token = str(refresh)
+
+    # 프론트엔드로 리다이렉트할 URL (프로필 페이지로 리다이렉트)
+    frontend_url = settings.FRONTEND_URL + '/profile/'  # 설정된 프론트엔드 도메인 사용
+
+    # 리다이렉트 시, JWT 토큰을 쿠키에 설정 (HTTP-Only 쿠키로 저장)
+    response = redirect(frontend_url)
+
+    # 쿠키에 JWT 토큰 설정 (HTTPOnly=True로 보안을 강화)
+    response.set_cookie('access_token', access_token, httponly=True, samesite='Lax', secure=False)
+    response.set_cookie('refresh_token', refresh_token, httponly=True, samesite='Lax', secure=True)
+
+    return response
+
+#10.24 삭제 끝
 
 # index
 def Index(request):

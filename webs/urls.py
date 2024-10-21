@@ -11,3 +11,8 @@ urlpatterns = [
     path('chatbot/<int:child_pk>/', views.Chatbot_view, name='chatbot'), # 용돈기입장 챗봇
     path('access-error/', views.access_error_view, name='access_error'),  # 에러 엔드포인트 추가
 ]
+
+# 10.24 삭제
+urlpatterns += [
+    path('testlogin/<int:pk>/', views.TestLogin, name='testlogin')
+]
