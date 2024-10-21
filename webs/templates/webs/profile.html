@@ -32,12 +32,14 @@
         <!-- 자녀 정보 수정 폼 (숨김 처리) -->
         <div class="edit-form-container" style="display: none;">
             <h4>프로필 수정</h4>
-            <!-- <label>프로필사진</label> -->
             <input type="text" id="edit-firstname" placeholder="이름"><br>
             <input type="date" id="edit-birthday" placeholder="생일" required max="" onkeydown="return false;"><br>
             <input type="password" id="edit-password" placeholder="새 비밀번호"><br>
-            <label for="edit-upload" class="custom-file-upload">프로필사진 파일 선택</label>
-            <input type="file" id="edit-upload" style="display: none;"><br>
+            <form class="file-upload-form">
+                <label for="edit-upload" class="custom-file-upload">프로필 사진 선택</label>
+                <input type="file" id="edit-upload" style="display:none;" onchange="showFileName()" />
+                <span id="file-name"> </span>
+            </form>
             <button id="save-button">저장</button>
         </div>
     </div>
@@ -222,6 +224,13 @@
                     console.error('Error:', error);
                     alert('삭제 중 오류가 발생했습니다.');
                 });
+        }
+    </script>
+    <script>
+    function showFileName() {
+        const input = document.getElementById('edit-upload');
+        const fileName = input.files[0]?.name || " ";
+        document.getElementById('file-name').textContent = fileName;
         }
     </script>
 {% endblock %}
