@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .validators import validate_signup
+from .validators import validate_signup, validate_password
 from .serializers import UserSerializer
 from .models import User
 
@@ -150,6 +150,9 @@ class LoginView(APIView):
         # 인증된 사용자가 없고, 즉 비밀번호가 틀렸다면 오류 메시지 반환
         if not user:
             return Response({"error": "패스워드가 틀렸습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+        login(request, user)
 
         # 인증된 사용자에 대한 정보를 시리얼라이즈하여 응답 데이터에 포함
         serializer = UserSerializer(user)
@@ -284,7 +287,15 @@ class ChildrenPRView(APIView):
             child = User.objects.get(pk=pk, parents=request.user)
             serializer = UserSerializer(child, data=request.data, partial=True)
             if serializer.is_valid():
-
+                if 'password' in request.data:
+                    is_valid, error_msg = validate_password(request.data['password'])
+                    if not is_valid:
+                        return Response({"error": error_msg}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                # 요청 데이터에 비밀번호가 포함되어 있으면, 비밀번호를 업데이트
+                if 'password' in request.data:
+                    child.set_password(request.data['password'])
+                    
                 # 파일 업로드 처리
                 profile_image = request.FILES.get('profile_image')
                 if profile_image:
@@ -297,9 +308,6 @@ class ChildrenPRView(APIView):
                     child.first_name = request.data['firstname']
                 #1015 e
 
-                # 요청 데이터에 비밀번호가 포함되어 있으면, 비밀번호를 업데이트
-                if 'password' in request.data:
-                    child.set_password(request.data['password'])
 
                 if 'birthday' in request.data:
                     child.birthday = request.data['birthday']

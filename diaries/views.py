@@ -1,6 +1,8 @@
 import re
 import json
 import redis
+import logging
+logger = logging.getLogger(__name__)
 # 장고 라이브러리
 from django.db.models import Sum
 from django.conf import settings
@@ -21,6 +23,7 @@ from accounts.models import User
 from .models import FinanceDiary, User, MonthlySummary
 from .chat_history import get_message_history
 from .utils import chat_with_bot, calculate_age, update_remaining_balance, is_allowance_related
+from .streaming_test import MicrophoneStream
 # 직렬화 라이브러리
 from .serializers import FinanceDiarySerializer, MonthlySummarySerializer
 # langchain 관련 라이브러리
@@ -28,6 +31,10 @@ from langchain_core.messages.human import HumanMessage
 from langchain_core.messages.ai import AIMessage
 # openai 관련 라이브러리
 from openai import OpenAI
+# 보이스채팅 관련 라이브러리
+from google.cloud import speech
+import queue
+import threading
 # 시간 라이브러리
 from datetime import datetime
 
@@ -158,18 +165,18 @@ class ChatbotProcessView(APIView):
         user_input = request.data.get('message')
         child_pk = request.data.get('child_pk')  # body에서 child_pk를 추출
         user = request.user
-
+        
         try:
             child = User.objects.get(pk=child_pk)
         except User.DoesNotExist:
             return Response({"message": "다른 유저는 이 기능을 사용할 수 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
         # 다중 항목 입력 방지: 금액 패턴이 2개 이상이면 오류 반환
-        amount_count = len(re.findall(r'\d+(원|만원|천원|백원)', user_input))
-        if amount_count > 1:
-            return Response({
-                "message": "한 번에 하나씩만 말씀해 주세요! 예를 들어 '장난감 사는데 5000원 썼어요'처럼 말해 주시면 제가 더 쉽게 기록할 수 있어요!"
-            }, status=400)
+        # amount_count = len(re.findall(r'\d+(원|만원|천원|백원)', user_input))
+        # if amount_count > 1:
+        #     return Response({
+        #         "message": "한 번에 하나씩만 말씀해 주세요! 예를 들어 '장난감 사는데 5000원 썼어요'처럼 말해 주시면 제가 더 쉽게 기록할 수 있어요!"
+        #     }, status=400)
             
         # if not is_allowance_related(user_input):
         #     response_message = "<strong>용돈기입장과 관련된 정보를 입력해 주세요!<br> 지출 또는 용돈 날짜와 금액 그리고 어떻게 사용했는지 꼭 입력하셔야되요! <br> 입력하지 않으면 모아모아는 알아듣지를 못한답니다</strong>🥺"
@@ -192,41 +199,62 @@ class ChatbotProcessView(APIView):
 
                 # 단일 JSON 객체만 처리 (배열이 아닌 경우 오류 처리)
                 plan_json = json.loads(json_part)
-
+                
+                saved_diaries = []
+                # 여러개 항목일때
                 if isinstance(plan_json, list):
-                    return Response({
-                        "message": "한 번에 여러 항목을 입력할 수 없습니다. 한 번에 하나씩만 입력해 주세요."
-                    }, status=400)
+                    for item in plan_json:
+                        today_str = item.get('today')
+                        if today_str:
+                            today_date = datetime.strptime(today_str, '%Y-%m-%d').date()  # 문자열을 날짜로 변환
+                        else:
+                            today_date = timezone.now().date()
+
+
+                        finance_diary = FinanceDiary(
+                            diary_detail=item.get('diary_detail'),
+                            today=today_date,
+                            category=item.get('category'),
+                            transaction_type=item.get('transaction_type'),
+                            amount=item.get('amount'),
+                            remaining=child.total,  # 추가 전에 잔액 설정
+                            child=child,
+                            parent=user.parents
+                        )
+                        finance_diary.save()
+                        saved_diaries.append(finance_diary)
+                    # return Response({
+                    #     "message": "한 번에 여러 항목을 입력할 수 없습니다. 한 번에 하나씩만 입력해 주세요."
+                    # }, status=400)
+                else:
 
                 # 오늘 날짜 확인 및 문자열 -> 날짜 변환
-                today_str = plan_json.get('today')
-                if today_str:
-                    today_date = datetime.strptime(today_str, '%Y-%m-%d').date()  # 문자열을 날짜로 변환
-                else:
-                    today_date = timezone.now().date()
+                    today_str = plan_json.get('today')
+                    if today_str:
+                        today_date = datetime.strptime(today_str, '%Y-%m-%d').date()  # 문자열을 날짜로 변환
+                    else:
+                        today_date = timezone.now().date()
 
-                # 수입/지출에 따른 잔액 계산
-                transaction_type = plan_json.get("transaction_type")
-                amount = plan_json.get('amount')
 
-                # 정상적인 단일 항목 처리
-                finance_diary = FinanceDiary(
-                    diary_detail=plan_json.get('diary_detail'),
-                    today=today_date,
-                    category=plan_json.get('category'),
-                    transaction_type=transaction_type,
-                    amount=amount,
-                    remaining=child.total,  # 추가 전에 잔액 설정
-                    child=child,
-                    parent=user.parents
-                )
-                finance_diary.save()
+                    # 정상적인 단일 항목 처리
+                    finance_diary = FinanceDiary(
+                        diary_detail=plan_json.get('diary_detail'),
+                        today=today_date,
+                        category=plan_json.get('category'),
+                        transaction_type=plan_json.get('transaction_type'),
+                        amount=plan_json.get('amount'),
+                        remaining=child.total,  # 추가 전에 잔액 설정
+                        child=child,
+                        parent=user.parents
+                    )
+                    finance_diary.save()
+                    saved_diaries.append(finance_diary)
 
                 # 새로운 항목이 저장된 후 잔액 업데이트
                 update_remaining_balance(child)
 
                 # 저장된 계획서를 시리얼라이즈
-                serializer = FinanceDiarySerializer(finance_diary)
+                serializer = FinanceDiarySerializer(saved_diaries, many=True)
                 return Response({
                     "message": "용돈기입장이 성공적으로 저장되었습니다.",
                     "plan": serializer.data  # 단일 계획서만 직렬화
@@ -247,6 +275,14 @@ class ChatbotProcessView(APIView):
 
         return Response({"response": response})
 
+class ChatbotProcessVoiceView(APIView):
+    
+    RATE = 16000
+    CHUNK = int(RATE / 10)  # 100ms
+    LANGUAGE_CODE = "ko-KR"
+    TIMEOUT = 60
+    def post(self, request):
+        pass
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
