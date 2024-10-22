@@ -1,6 +1,4 @@
-import re
 import json
-import redis
 import logging
 logger = logging.getLogger(__name__)
 # 장고 라이브러리
@@ -11,7 +9,6 @@ from django.db.models import Sum
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import DateField
-from django.db.models.functions import TruncMonth
 # drf 라이브러리
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -22,19 +19,13 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.models import User
 from .models import FinanceDiary, User, MonthlySummary
 from .chat_history import get_message_history
-from .utils import chat_with_bot, calculate_age, update_remaining_balance, is_allowance_related
-from .streaming_test import MicrophoneStream
-# 직렬화 라이브러리
+from .utils import chat_with_bot, calculate_age, update_remaining_balance
 from .serializers import FinanceDiarySerializer, MonthlySummarySerializer
 # langchain 관련 라이브러리
 from langchain_core.messages.human import HumanMessage
 from langchain_core.messages.ai import AIMessage
 # openai 관련 라이브러리
 from openai import OpenAI
-# 보이스채팅 관련 라이브러리
-from google.cloud import speech
-import queue
-import threading
 # 시간 라이브러리
 from datetime import datetime
 
@@ -171,22 +162,6 @@ class ChatbotProcessView(APIView):
         except User.DoesNotExist:
             return Response({"message": "다른 유저는 이 기능을 사용할 수 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
-        # 다중 항목 입력 방지: 금액 패턴이 2개 이상이면 오류 반환
-        # amount_count = len(re.findall(r'\d+(원|만원|천원|백원)', user_input))
-        # if amount_count > 1:
-        #     return Response({
-        #         "message": "한 번에 하나씩만 말씀해 주세요! 예를 들어 '장난감 사는데 5000원 썼어요'처럼 말해 주시면 제가 더 쉽게 기록할 수 있어요!"
-        #     }, status=400)
-            
-        # if not is_allowance_related(user_input):
-        #     response_message = "<strong>용돈기입장과 관련된 정보를 입력해 주세요!<br> 지출 또는 용돈 날짜와 금액 그리고 어떻게 사용했는지 꼭 입력하셔야되요! <br> 입력하지 않으면 모아모아는 알아듣지를 못한답니다</strong>🥺"
-        #     session_id = f"user_{child.id}"
-        #     chat_histories = get_message_history(session_id)
-        #     chat_histories.add_user_message(user_input)
-        #     chat_histories.add_ai_message(response_message)
-
-        #     return Response({})
-
         # OpenAI 프롬프트를 통해 채팅 응답을 받음
         response = chat_with_bot(user_input, child_pk)
         print(response)
@@ -272,15 +247,6 @@ class ChatbotProcessView(APIView):
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"response": response})
-
-class ChatbotProcessVoiceView(APIView):
-    
-    RATE = 16000
-    CHUNK = int(RATE / 10)  # 100ms
-    LANGUAGE_CODE = "ko-KR"
-    TIMEOUT = 60
-    def post(self, request):
-        pass
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 

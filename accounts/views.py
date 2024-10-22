@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .validators import validate_signup, validate_password
+from .validators import validate_signup, custom_validate_password
 from .serializers import UserSerializer
 from .models import User
 
@@ -288,7 +288,7 @@ class ChildrenPRView(APIView):
             serializer = UserSerializer(child, data=request.data, partial=True)
             if serializer.is_valid():
                 if 'password' in request.data:
-                    is_valid, error_msg = validate_password(request.data['password'])
+                    is_valid, error_msg = custom_validate_password(request.data['password'])
                     if not is_valid:
                         return Response({"error": error_msg}, status=status.HTTP_400_BAD_REQUEST)
                     

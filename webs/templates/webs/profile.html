@@ -175,6 +175,15 @@
                     return;
                 }
 
+                // 문자와 숫자 포함 여부
+                const hasLetter = /[a-zA-Z]/.test(newPassword);
+                const hasNumber = /[0-9]/.test(newPassword);
+
+                if (!(hasLetter && hasNumber)) {
+                    alert('비밀번호는 문자와 숫자를 모두 포함해야 합니다.');
+                    return;
+                }
+
                 for (let i = 0; i < newPassword.length - 3; i++) {
                     if (newPassword[i] === newPassword[i+1] &&
                     newPassword[i+1] === newPassword[i+2] &&
