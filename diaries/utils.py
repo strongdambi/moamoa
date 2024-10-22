@@ -5,14 +5,14 @@ from langchain_core.output_parsers import StrOutputParser
 # 장고 라이브러리
 from django.conf import settings
 # 시간 관련 라이브러리
-from datetime import timedelta, date
+from datetime import date
 from .chat_history import get_current_korea_date
 # 캡슐 라이브러리
 from .prompts import chat_prompt
 from .chat_history import get_message_history
 from .models import FinanceDiary
-# 정규표현식 라이브러리
-import re
+
+
 
 llm = ChatOpenAI(model="gpt-4o-mini", api_key=settings.OPENAI_API_KEY)
 
@@ -24,18 +24,6 @@ with_message_history = RunnableWithMessageHistory(
     input_messages_key="input",
     history_messages_key="chat_history",
 )
-
-# 사용자 입력값을 토대로 날짜 계산
-def convert_relative_dates(user_input):
-    today = get_current_korea_date()
-    if "오늘" in user_input:
-        return today
-    elif "어제" in user_input:
-        return today - timedelta(days=1)
-    elif "그저께" in user_input:
-        return today - timedelta(days=2)
-    else:
-        return None
     
 # 프롬프트 전달 데이터
 prompt_data = {
@@ -104,19 +92,6 @@ def chat_with_bot(user_input, user_id):
     except Exception as e:
         print(f"챗봇 오류: {str(e)}")
         return "죄송합니다. 채팅 서비스에 일시적인 문제가 발생했습니다."
-
-
-# 우리들의 소악마들을 위한 결계
-def is_allowance_related(input_text):
-    # 예/아니오 선택이 있을 경우
-    if input_text in ['1', '2','네','아니오','맞아요','틀려요', '예', '아니요', '응', '아니']:
-        return True
-    
-    # 금액 패턴 (숫자+원 또는 한글로 만원, 천원 등)
-    if re.search(r"\d+(원|만원|천원|백원)|[일이삼사오육칠팔구십]만원|[일이삼사오육칠팔구십]천원|[일이삼사오육칠팔구십]백원|만원|천원|백원", input_text):
-        return True
-
-    return False  # 금액이나 예/아니오가 아니면 용돈기입장과 관련 없는 것으로 처리
 
 # 생년월일을 이용한 나이 계산 함수
 def calculate_age(birth_date):
