@@ -6,6 +6,8 @@ urlpatterns = [
     path('monthly/<int:child_id>/', views.MonthlySummaryView.as_view(), name='monthly-summary'),
     # 아이들만 사용할수 있는 챗봇
     path('chat/', views.ChatbotProcessView.as_view()),
+    # 챗봇 보이스챗 기능
+    path('voicechat/', views.ChatbotProcessVoiceView.as_view()),
     # 아이 채팅 기록
     path('chat/messages/<int:child_pk>/', views.ChatMessageHistory.as_view()),
     # 기입장 특정 삭제

@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import get_user
 from accounts.models import User
+from django.contrib.auth import get_user
 
 
 
@@ -40,6 +41,10 @@ def ChildrenProfile_view(request, child_pk):
 # AI 채팅
 def Chatbot_view(request, child_pk):
     user = get_object_or_404(User, pk=child_pk)
+    current_user = get_user(request)
+    
+    
+
     user_image = request.build_absolute_uri(
                         user.images.url)
     
