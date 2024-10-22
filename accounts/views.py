@@ -150,8 +150,8 @@ class LoginView(APIView):
         # 인증된 사용자가 없고, 즉 비밀번호가 틀렸다면 오류 메시지 반환
         if not user:
             return Response({"error": "패스워드가 틀렸습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        
+                
+        # 사용자를 세션에 로그인 처리
         login(request, user)
 
         # 인증된 사용자에 대한 정보를 시리얼라이즈하여 응답 데이터에 포함
