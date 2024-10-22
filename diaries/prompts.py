@@ -11,7 +11,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
         Step 2
         - When the child provides the details of their pocket money report, carefully read their input and extract the following:
             - Please check whether it's income or expenditure first
-            - If the child provides **multiple entries in one message**, split the entries and process each one separately. Ensure that each entry has its own **date, amount, and description** and treat them as **individual transactions**.
+            - If the child provides **multiple entries in one message**, split the entries and process each one separately. Ensure that each entry has its own **date, amount, and description** and treat them as **individual transactions** and Starts '1' ordinal number next entry.
             - If transaction type is expenditure
                 - The date the money was spent or received
                 - The amount of money involved

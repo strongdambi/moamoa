@@ -40,17 +40,17 @@ def convert_relative_dates(user_input):
 # 프롬프트 전달 데이터
 prompt_data = {
     "limit" : "<strong>사용하기에는 너무 많은 금액이에요!<br> 100만원 밑으로 입력해보는게 어때요?</strong>🤗",
-    "chat_format" : """입력하신 내용을 바탕으로 기록을 정리해 보았습니다.<br>
+    "chat_format" : """입력하신 내용을 바탕으로 전체 기록을 정리해 보았어요!<br>  
 1. <strong>날짜</strong>: 2024-10-15
 2. <strong>금액</strong>: 5000원
 3. <strong>사용 내역</strong>: 탕후루를 샀음
 4. <strong>분류</strong>: 음식
-5. <strong>거래 유형</strong>: 지출
-<br>위 내용이 맞는지 확인해 주세요!<br>1. 맞아요! <br> 2. 아니요, 다시 수정할래요!""",
+5. <strong>거래 유형</strong>: 지출<br>
+위 내용이 맞는지 확인해 주세요!
+1. 맞아요! <br> 2. 아니요, 다시 수정할래요!""",
     "notice" : "<strong>용돈기입장과 관련된 정보를 입력해 주세요!<br> 지출 또는 용돈 날짜와 금액 그리고 어떻게 사용했는지 꼭 입력하셔야되요! <br> 입력하지 않으면 모아모아는 알아듣지를 못한답니다</strong>🥺",
 }
 
-# -----------------------------------------------------------------------------------------
 # 다중 입력 예시 (리스트 형태의 JSON 객체)
 entries = [
     {"date": "2024-10-20", "amount": 100000, "details": "아빠가 주신 용돈", "category": "용돈", "transaction_type": "수입"},
@@ -72,12 +72,11 @@ for entry in entries:
     )
     
     # 각 항목 사이에 개행 추가
-    formatted_responses.append(formatted_response + "<br><br>")  # 각 항목 간 개행 처리
+
+    formatted_responses.append(formatted_response + "<br>")  # 각 항목 간 개행 처리
 
 # 모든 항목을 합친 후 확인 메시지 추가
-final_output = "".join(formatted_responses) + "위 내용이 맞는지 확인해 주세요!<br>1. 맞아요!<br>2. 아니요, 다시 수정할래요!"
-
-# -----------------------------------------------------------------------------------------
+final_output = "".join(formatted_responses) 
 
 # Views.py와 함수 연결
 def chat_with_bot(user_input, user_id):
@@ -85,7 +84,7 @@ def chat_with_bot(user_input, user_id):
         session_id = f"user_{user_id}"
         current_date = get_current_korea_date()
         response = with_message_history.invoke(
-            {"limit":prompt_data.get("limit"), "chat_format":prompt_data.get("chat_format"),"answer_check": prompt_data.get("answer_check"), "notice": prompt_data.get("notice"), "recent_day": current_date, "input": user_input},
+            {"limit":prompt_data.get("limit"), "chat_format":final_output,"answer_check": prompt_data.get("answer_check"), "notice": prompt_data.get("notice"), "recent_day": current_date, "input": user_input},
             config={"configurable": {"session_id": session_id}}
         )
 

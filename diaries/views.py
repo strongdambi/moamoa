@@ -1,6 +1,8 @@
 import re
 import json
 import redis
+import logging
+logger = logging.getLogger(__name__)
 # 장고 라이브러리
 from django.db.models import Sum
 from django.conf import settings
@@ -21,6 +23,7 @@ from accounts.models import User
 from .models import FinanceDiary, User, MonthlySummary
 from .chat_history import get_message_history
 from .utils import chat_with_bot, calculate_age, update_remaining_balance, is_allowance_related
+from .streaming_test import MicrophoneStream
 # 직렬화 라이브러리
 from .serializers import FinanceDiarySerializer, MonthlySummarySerializer
 # langchain 관련 라이브러리
@@ -28,6 +31,10 @@ from langchain_core.messages.human import HumanMessage
 from langchain_core.messages.ai import AIMessage
 # openai 관련 라이브러리
 from openai import OpenAI
+# 보이스채팅 관련 라이브러리
+from google.cloud import speech
+import queue
+import threading
 # 시간 라이브러리
 from datetime import datetime
 
@@ -158,7 +165,7 @@ class ChatbotProcessView(APIView):
         user_input = request.data.get('message')
         child_pk = request.data.get('child_pk')  # body에서 child_pk를 추출
         user = request.user
-
+        
         try:
             child = User.objects.get(pk=child_pk)
         except User.DoesNotExist:
@@ -219,7 +226,9 @@ class ChatbotProcessView(APIView):
                     #     "message": "한 번에 여러 항목을 입력할 수 없습니다. 한 번에 하나씩만 입력해 주세요."
                     # }, status=400)
                 else:
-                    # 오늘 날짜 확인 및 문자열 -> 날짜 변환
+
+
+                # 오늘 날짜 확인 및 문자열 -> 날짜 변환
                     today_str = plan_json.get('today')
                     if today_str:
                         today_date = datetime.strptime(today_str, '%Y-%m-%d').date()  # 문자열을 날짜로 변환
@@ -264,6 +273,14 @@ class ChatbotProcessView(APIView):
 
         return Response({"response": response})
 
+class ChatbotProcessVoiceView(APIView):
+    
+    RATE = 16000
+    CHUNK = int(RATE / 10)  # 100ms
+    LANGUAGE_CODE = "ko-KR"
+    TIMEOUT = 60
+    def post(self, request):
+        pass
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
