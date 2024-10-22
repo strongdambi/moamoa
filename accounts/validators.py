@@ -38,3 +38,23 @@ def validate_signup(user, user_data):
     if err_msg:
         return False, err_msg
     return True, err_msg
+
+# 수정했을때 비밀번호 유효성 검사
+def custom_validate_password(password):
+    # 새로운 비밀번호에 대한 유효성 검사 진행
+    new_password = password
+    if len(new_password) < 8:
+        return False, "비밀번호는 8자 이상이어야 합니다."
+    
+    has_letter = any(c.isalpha() for c in new_password)
+    has_number = any(c.isdigit() for c in new_password)
+    
+    if not (has_letter and has_number):
+        return False, "비밀번호는 문자와 숫자를 모두 포함해야 합니다."
+    
+    for i in range(len(new_password) - 3):
+        if new_password[i] == new_password[i+1] == new_password[i+2] == new_password[i+3]:
+            return False, "동일한 문자를 4번 이상 연속해서 사용할 수 없습니다."
+    
+    return True, None
+        
