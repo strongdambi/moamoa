@@ -189,13 +189,13 @@ class ChatbotProcessView(APIView):
 
         # OpenAI 프롬프트를 통해 채팅 응답을 받음
         response = chat_with_bot(user_input, child_pk)
+        print(response)
 
         # 1 또는 2 입력에 대한 처리
         if "json" in response.lower():
             try:
                 # JSON 파싱
-                json_part = response.split(
-                    "```json")[-1].split("```")[0].replace("'", '"')
+                json_part = response.split("```json")[-1].split("```")[0].strip().replace("'", '"')
 
                 # 단일 JSON 객체만 처리 (배열이 아닌 경우 오류 처리)
                 plan_json = json.loads(json_part)
@@ -209,7 +209,6 @@ class ChatbotProcessView(APIView):
                             today_date = datetime.strptime(today_str, '%Y-%m-%d').date()  # 문자열을 날짜로 변환
                         else:
                             today_date = timezone.now().date()
-
 
                         finance_diary = FinanceDiary(
                             diary_detail=item.get('diary_detail'),
@@ -228,13 +227,13 @@ class ChatbotProcessView(APIView):
                     # }, status=400)
                 else:
 
+
                 # 오늘 날짜 확인 및 문자열 -> 날짜 변환
                     today_str = plan_json.get('today')
                     if today_str:
                         today_date = datetime.strptime(today_str, '%Y-%m-%d').date()  # 문자열을 날짜로 변환
                     else:
                         today_date = timezone.now().date()
-
 
                     # 정상적인 단일 항목 처리
                     finance_diary = FinanceDiary(
@@ -271,7 +270,6 @@ class ChatbotProcessView(APIView):
                     "message": "처리 중 오류가 발생했습니다.",
                     "error": str(e)
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
         return Response({"response": response})
 
