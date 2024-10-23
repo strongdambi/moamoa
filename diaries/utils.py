@@ -60,7 +60,6 @@ for entry in entries:
     )
     
     # 각 항목 사이에 개행 추가
-
     formatted_responses.append(formatted_response + "<br>")  # 각 항목 간 개행 처리
 
 # 모든 항목을 합친 후 확인 메시지 추가

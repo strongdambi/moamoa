@@ -1,7 +1,7 @@
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 import pytz
 from django.utils import timezone
-from moamoa.config import TIME_ZONE, REDIS_URL
+from moamoa.config import REDIS_URL
 from django.conf import settings
 
 
@@ -25,6 +25,7 @@ def get_current_korea_date():
 
 # redis 저장 기간
 three_months = 90 * 24 * 60 * 60
+
 # Redis 방식 저장
 def get_message_history(session_id: str) -> RedisChatMessageHistory:
     # 세션 id를 기반으로 RedisChatMessageHistory 객체를 반환

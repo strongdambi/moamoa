@@ -18,15 +18,3 @@ if (addAccountButton) {
         location.href = '/signup/';
     });
 }
-
-// var addAccountButton2 = document.querySelector('.btn submit-button');
-// if (addAccountButton) {
-//     addAccountButton.addEventListener('click', function () {
-//         location.href = '/webs/profile/';
-//     });
-// }
-
-// document.querySelector('.kids-login').addEventListener('click', function () {
-//     alert(31)
-//     location.href = './';
-// });

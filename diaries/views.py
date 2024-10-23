@@ -1,6 +1,5 @@
 import json
 import logging
-logger = logging.getLogger(__name__)
 # 장고 라이브러리
 from django.db.models import Sum
 from django.conf import settings
@@ -197,12 +196,7 @@ class ChatbotProcessView(APIView):
                         )
                         finance_diary.save()
                         saved_diaries.append(finance_diary)
-                    # return Response({
-                    #     "message": "한 번에 여러 항목을 입력할 수 없습니다. 한 번에 하나씩만 입력해 주세요."
-                    # }, status=400)
                 else:
-
-
                 # 오늘 날짜 확인 및 문자열 -> 날짜 변환
                     today_str = plan_json.get('today')
                     if today_str:

@@ -57,4 +57,3 @@ def custom_validate_password(password):
             return False, "동일한 문자를 4번 이상 연속해서 사용할 수 없습니다."
     
     return True, None
-        

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+
 class User(AbstractUser):
     parents = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children',
                                 help_text='부모님 기본 0 | 아이들은 부모님 번호')
