@@ -52,7 +52,7 @@
 - Programming Language : **Python 3.10**
 - Web Framework : **Django 4.2**
 - API Toolkit : **DjangoRestFramework 3.15.2**
-- Database : **SQLite, MariaDB**
+- Database : **MariaDB**
 - Version Control : **Git, Github**
 - LLM : **Open AI, LangChain**
 
@@ -146,7 +146,7 @@ python manage.py runserver
 
 - **Django REST Framework**: API 설계를 위한 프레임워크.
 - **KAKAO API**: 카카오 소셜 로그인을 위한 API.
-- **SQLite3**: 데이터베이스 관리.
+- **MariaDB**: 데이터베이스 관리.
 - **Redis**: AI 채팅 내역 저장 관리.
 - **Langchain**: AI 서비스 사용을 위한 라이브러리.
 - **OpenAI**: GPT 4o-mini
